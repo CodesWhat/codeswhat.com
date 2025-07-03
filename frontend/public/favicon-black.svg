@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <style>
+    .logo-fill { fill: #000000; }
+    @media (prefers-color-scheme: dark) {
+      .logo-fill { fill: #FFFFFF; }
+    }
+  </style>
+  <g class="logo-fill">
+    <!-- Outer circle -->
+    <path d="M100 10 A90 90 0 1 1 99.9 10 Z M100 30 A70 70 0 1 0 100.1 30 Z" fill-rule="evenodd"/>
+    
+    <!-- Letter C -->
+    <path d="M 75 60 Q 50 60 50 85 Q 50 110 75 110 L 75 95 Q 65 95 65 85 Q 65 75 75 75 Z"/>
+    
+    <!-- Question mark -->
+    <path d="M 125 60 Q 140 60 140 70 Q 140 80 130 85 L 130 95 L 115 95 L 115 80 Q 125 75 125 70 Q 125 75 125 75 Z"/>
+    <circle cx="122.5" cy="105" r="7.5"/>
+    
+    <!-- Letter W -->
+    <path d="M 50 130 L 60 170 L 70 170 L 80 140 L 90 170 L 100 170 L 110 140 L 120 170 L 130 170 L 140 130 L 125 130 L 120 150 L 115 130 L 105 130 L 100 150 L 95 130 L 85 130 L 80 150 L 75 130 Z"/>
+  </g>
+</svg> 

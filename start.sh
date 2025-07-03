@@ -111,8 +111,8 @@ setup_environment() {
             echo -e "${YELLOW}   Creating basic .env.local...${NC}"
             cat > "$ENV_FILE" << EOF
 # Site Configuration
-NEXT_PUBLIC_SITE_NAME=My Portfolio
-NEXT_PUBLIC_SITE_DESCRIPTION=Personal Blog and Portfolio
+NEXT_PUBLIC_SITE_NAME=CodesWhat
+NEXT_PUBLIC_SITE_DESCRIPTION=Digital Solutions & Software Consulting
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 EOF
             echo -e "${GREEN}✅ Created basic .env.local${NC}"

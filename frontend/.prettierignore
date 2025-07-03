@@ -1,0 +1,34 @@
+# Dependencies
+node_modules
+
+# Production
+.next
+build
+dist
+out
+
+# Environment
+.env
+.env.*
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache
+.turbo
+
+# Generated
+*.d.ts
+next-env.d.ts
+
+# Lock files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock 

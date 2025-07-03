@@ -1,103 +1,96 @@
 import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Github, Mail, Bell } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900">
+      {/* Background Pattern */}
+      <div className="bg-grid-neutral-200/50 dark:bg-grid-neutral-800/50 absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-16">
+        {/* Logo Animation */}
+        <div className="animate-float mb-8">
+          <Image
+            src="/logos/codeswhat-logo-green.png"
+            alt="CodesWhat Logo"
+            width={180}
+            height={180}
+            className="drop-shadow-2xl"
+            priority
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+
+        {/* Coming Soon Badge */}
+        <Badge variant="secondary" className="mb-6 px-4 py-1.5 text-sm font-medium">
+          🚀 Coming Soon
+        </Badge>
+
+        {/* Main Content */}
+        <div className="max-w-3xl text-center">
+          <h1 className="mb-4 text-5xl font-bold tracking-tight text-neutral-900 sm:text-6xl lg:text-7xl dark:text-neutral-50">
+            <span className="bg-gradient-to-r from-neutral-900 to-neutral-600 bg-clip-text text-transparent dark:from-neutral-100 dark:to-neutral-400">
+              CodesWhat?
+            </span>
+          </h1>
+
+          <p className="mb-8 text-lg text-neutral-600 sm:text-xl dark:text-neutral-400">
+            Where curiosity meets code. Crafting innovative digital solutions and transforming ideas
+            into elegant, scalable applications.
+          </p>
+
+          {/* Email Signup */}
+          <Card className="mx-auto mb-8 max-w-md border-neutral-200 bg-white/50 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
+            <div className="p-6">
+              <h3 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold">
+                <Bell className="h-5 w-5" />
+                Get Notified
+              </h3>
+              <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
+                Be the first to know when we launch our services!
+              </p>
+              <form className="flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  className="flex-1 rounded-md border border-neutral-200 bg-white px-4 py-2 text-sm focus:border-neutral-400 focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 focus:outline-none dark:border-neutral-800 dark:bg-neutral-950 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
+                  required
+                />
+                <Button type="submit" className="w-full sm:w-auto">
+                  Notify Me
+                </Button>
+              </form>
+            </div>
+          </Card>
+
+          {/* Social Links */}
+          <div className="flex items-center justify-center gap-4">
+            <a
+              href="https://github.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="rounded-full p-2 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+              aria-label="GitHub"
+            >
+              <Github className="h-5 w-5" />
+            </a>
+            <a
+              href="mailto:hello@codeswhat.com"
+              className="rounded-full p-2 text-neutral-600 transition-colors hover:bg-neutral-200 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-neutral-100"
+              aria-label="Email"
+            >
+              <Mail className="h-5 w-5" />
+            </a>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="absolute bottom-4 text-center text-sm text-neutral-500 dark:text-neutral-500">
+          <p>&copy; {new Date().getFullYear()} CodesWhat. All rights reserved.</p>
+        </footer>
+      </div>
+    </main>
   );
 }
