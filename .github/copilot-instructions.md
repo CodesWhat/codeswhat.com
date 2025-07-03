@@ -13,6 +13,7 @@
 - 🐛 **fix**: Bug fixes and error corrections
 - ✨ **feat**: New features and functionality
 - 🔧 **config**: Configuration and settings changes
+- 🔨 **chore**: Maintenance tasks, tooling changes, and other updates that don't modify src or test files
 - 📝 **docs**: Documentation updates
 - 🎨 **style**: UI/UX and styling improvements
 - ⚡ **perf**: Performance optimizations
