@@ -1,7 +1,7 @@
-# Cursor Rules for Next.js 15.3 Blog/Portfolio
+# Cursor Rules for Next.js 15.3 Business/Portfolio Site
 
 ## Project Context
-You are working on a modern Next.js 15.3 blog/portfolio application with the following stack:
+You are working on a modern Next.js 15.3 business/portfolio website for a software consultancy with the following stack:
 - **Framework**: Next.js 15.3.4 with App Router
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS v4 + shadcn/ui components (canary)
@@ -20,6 +20,9 @@ You are working on a modern Next.js 15.3 blog/portfolio application with the fol
   - Environment setup
   - Browser opening
 - Files auto-refresh when saved, no need to restart servers
+- Run `npm run check` before committing code (runs ESLint + TypeScript)
+- Run `npm run check:all` for full validation (includes Prettier)
+- ESLint errors will show in the terminal and browser console
 
 ## Creating a New Project
 
@@ -53,6 +56,7 @@ npx shadcn@latest init
 - Use `const` assertions for literal types
 - Always define explicit return types for functions
 - Use proper type imports: `import type { ... }`
+- ESLint will enforce these rules automatically
 
 ### React & Next.js Patterns
 ```typescript
@@ -369,6 +373,67 @@ export default function Loading() {
 }
 ```
 
+## Code Quality & Linting
+
+### Linting Tools
+- **ESLint**: Already configured with Next.js
+- **Prettier**: For consistent code formatting
+- **TypeScript**: Built-in type checking
+
+### Running Linters
+```bash
+# Run ALL checks with one command
+npm run check          # Runs ESLint + TypeScript checking
+npm run check:all      # Runs ESLint + TypeScript + Prettier check
+
+# Individual commands
+npm run lint           # ESLint only
+npm run lint:fix       # ESLint with auto-fix
+npm run type-check     # TypeScript type checking
+npm run format         # Prettier format all files
+npm run format:check   # Check if files are formatted
+
+# Before committing
+npm run check:all      # Ensures code quality
+```
+
+### Prettier Configuration (.prettierrc)
+```json
+{
+  "semi": false,
+  "singleQuote": true,
+  "tabWidth": 2,
+  "trailingComma": "es5",
+  "printWidth": 100,
+  "plugins": ["prettier-plugin-tailwindcss"]
+}
+```
+
+### Pre-commit Hooks (Optional)
+```bash
+# Install husky and lint-staged
+npm install -D husky lint-staged
+
+# Add to package.json
+"lint-staged": {
+  "*.{js,jsx,ts,tsx}": [
+    "eslint --fix",
+    "prettier --write"
+  ]
+}
+```
+
+### VS Code Settings
+```json
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+  }
+}
+```
+
 ## Testing Approach
 - Unit tests for utilities: Vitest
 - Component tests: React Testing Library
@@ -400,6 +465,13 @@ npx shadcn@canary add [component] --overwrite  # Update specific component
 - Tailwind v4 works best with PostCSS 8.4+
 - shadcn/ui canary supports both Tailwind v3 and v4
 
+## Documentation
+- **Project Docs**: See `/docs` folder in root directory
+  - `LINT_COMMANDS.md` - Quick reference for code quality commands
+  - `TAGLINE_OPTIONS.md` - Branding and messaging alternatives
+- **Future Plans**: See `FUTURE_SECTIONS.md` in root directory
+- **Logo Assets**: See `frontend/public/logos/README.md` for logo usage
+
 ## Remember
 1. The dev server auto-restarts - no manual intervention needed
 2. Always use Server Components unless client interactivity is required
@@ -407,4 +479,5 @@ npx shadcn@canary add [component] --overwrite  # Update specific component
 4. Use shadcn/ui components for consistent UI
 5. Keep it simple - you might not need a database for a basic portfolio
 6. Use Node.js 20+ for best compatibility with latest features
-7. Use `npx shadcn@canary` commands for Tailwind v4 support 
+7. Use `npx shadcn@canary` commands for Tailwind v4 support
+8. Run `npm run check` before committing (or `npm run check:all` for full validation) 
