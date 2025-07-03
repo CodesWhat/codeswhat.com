@@ -4,8 +4,10 @@
 You are working on a modern Next.js 15.3 blog/portfolio application with the following stack:
 - **Framework**: Next.js 15.3.4 with App Router
 - **Language**: TypeScript (strict mode)
-- **Styling**: Tailwind CSS v4 + shadcn/ui components
-- **React**: Version 19 (latest features)
+- **Styling**: Tailwind CSS v4 + shadcn/ui components (canary)
+- **React**: Version 19 (latest stable)
+- **Node.js**: Version 20.9.0 or higher
+- **Package Manager**: npm (default) or pnpm
 - **Deployment**: Vercel
 - **Dev Server**: Turbopack enabled for fast refresh
 
@@ -18,6 +20,30 @@ You are working on a modern Next.js 15.3 blog/portfolio application with the fol
   - Environment setup
   - Browser opening
 - Files auto-refresh when saved, no need to restart servers
+
+## Creating a New Project
+
+### Using Next.js with Latest Versions
+```bash
+# Create Next.js app with canary (for Tailwind v4)
+npx create-next-app@canary my-blog --tailwind --typescript --eslint --app --no-src-dir
+
+# Navigate to frontend directory
+cd frontend
+
+# Initialize shadcn/ui with Tailwind v4
+npx shadcn@canary init
+
+# Add components as needed
+npx shadcn@canary add button card form
+```
+
+### Using Stable Versions (Alternative)
+```bash
+# If canary has issues, use stable with Tailwind v3
+npx create-next-app@latest my-blog --tailwind --typescript --eslint --app --no-src-dir
+npx shadcn@latest init
+```
 
 ## Code Style & Conventions
 
@@ -72,10 +98,21 @@ frontend/
 
 ## UI Development with shadcn/ui
 
+### Initializing shadcn/ui (First Time)
+```bash
+# Initialize shadcn/ui with Tailwind v4 support
+npx shadcn@canary init
+
+# This will ask you:
+# - Style (choose your preference)
+# - Base color (choose your preference)
+# - CSS variables (recommended: yes)
+```
+
 ### Installing Components
 ```bash
-# Use npx shadcn@latest add [component]
-npx shadcn@latest add button card form
+# Use npx shadcn@canary add [component] for Tailwind v4 support
+npx shadcn@canary add button card form
 ```
 
 ### Component Usage
@@ -94,6 +131,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 - Prefer semantic color tokens: `bg-background`, `text-foreground`
 - Use CSS variables for theming
 - Dark mode support built-in
+- New features in v4:
+  - `@theme` directive for custom properties
+  - `@theme inline` for scoped themes
+  - Native cascade layers
+  - Improved performance (no PostCSS required)
+  - CSS-first configuration approach
 
 ## Database Considerations
 
@@ -337,9 +380,31 @@ export default function Loading() {
 - Monitor bundle size with `next-bundle-analyzer`
 - Implement proper error tracking (Sentry)
 
+## Upgrading Existing Projects
+
+### To Latest Versions
+```bash
+# Update Next.js to latest
+npm update next@latest react@latest react-dom@latest
+
+# For Tailwind v4 (if using v3)
+npm install tailwindcss@next @tailwindcss/postcss@next
+
+# Update shadcn components
+npx shadcn@canary diff  # Check what changed
+npx shadcn@canary add [component] --overwrite  # Update specific component
+```
+
+### Version Compatibility
+- Next.js 15.3+ requires Node.js 20.9.0+
+- Tailwind v4 works best with PostCSS 8.4+
+- shadcn/ui canary supports both Tailwind v3 and v4
+
 ## Remember
 1. The dev server auto-restarts - no manual intervention needed
 2. Always use Server Components unless client interactivity is required
 3. Leverage Next.js 15's built-in optimizations
 4. Use shadcn/ui components for consistent UI
-5. Keep it simple - you might not need a database for a basic portfolio 
+5. Keep it simple - you might not need a database for a basic portfolio
+6. Use Node.js 20+ for best compatibility with latest features
+7. Use `npx shadcn@canary` commands for Tailwind v4 support 

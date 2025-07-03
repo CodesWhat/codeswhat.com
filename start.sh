@@ -21,8 +21,8 @@ FRONTEND_PID=""
 # Display header
 display_header() {
     echo -e "${CYAN}╔═══════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}║${NC}   ${GREEN}🚀 Home Lab Launcher${NC}              ${CYAN}║${NC}"
-    echo -e "${CYAN}║${NC}   ${BLUE}Next.js Development Server${NC}        ${CYAN}║${NC}"
+    echo -e "${CYAN}║${NC}   ${GREEN}🚀 Next.js Project Launcher${NC}        ${CYAN}║${NC}"
+    echo -e "${CYAN}║${NC}   ${BLUE}Development Server${NC}                 ${CYAN}║${NC}"
     echo -e "${CYAN}╚═══════════════════════════════════════╝${NC}"
     echo ""
 }
@@ -63,16 +63,18 @@ check_node() {
     
     if ! command -v node &> /dev/null; then
         echo -e "${RED}❌ Node.js is not installed${NC}"
-        echo -e "${YELLOW}💡 Install Node.js 18.17 or higher from https://nodejs.org${NC}"
+        echo -e "${YELLOW}💡 Install Node.js 20 or higher from https://nodejs.org${NC}"
+        echo -e "${YELLOW}💡 Or use nvm: nvm install 20.9.0 && nvm use 20.9.0${NC}"
         exit 1
     fi
     
     NODE_VERSION=$(node -v)
     NODE_MAJOR=$(echo $NODE_VERSION | cut -d. -f1 | cut -dv -f2)
     
-    if [ $NODE_MAJOR -lt 18 ]; then
-        echo -e "${RED}❌ Node.js 18.17 or higher is required (found $NODE_VERSION)${NC}"
+    if [ $NODE_MAJOR -lt 20 ]; then
+        echo -e "${RED}❌ Node.js 20 or higher is required (found $NODE_VERSION)${NC}"
         echo -e "${YELLOW}💡 Update Node.js from https://nodejs.org${NC}"
+        echo -e "${YELLOW}💡 Or use nvm: nvm install 20.9.0 && nvm use 20.9.0${NC}"
         exit 1
     fi
     
@@ -108,9 +110,10 @@ setup_environment() {
             echo -e "${YELLOW}⚠️  No .env.local file found${NC}"
             echo -e "${YELLOW}   Creating basic .env.local...${NC}"
             cat > "$ENV_FILE" << EOF
-# Home Lab Configuration
-NEXT_PUBLIC_SITE_NAME=Home Lab
-NEXT_PUBLIC_SITE_DESCRIPTION=Personal Infrastructure Hub
+# Site Configuration
+NEXT_PUBLIC_SITE_NAME=My Portfolio
+NEXT_PUBLIC_SITE_DESCRIPTION=Personal Blog and Portfolio
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
 EOF
             echo -e "${GREEN}✅ Created basic .env.local${NC}"
         fi
@@ -179,7 +182,7 @@ display_status() {
     echo -e "\n${GREEN}╔════════════════════════════════════════════════╗${NC}"
     echo -e "${GREEN}║${NC}  ✨ Development server is running!             ${GREEN}║${NC}"
     echo -e "${GREEN}╠════════════════════════════════════════════════╣${NC}"
-    echo -e "${GREEN}║${NC}  ${BLUE}🏠 Home Lab UI:${NC} http://localhost:3000        ${GREEN}║${NC}"
+    echo -e "${GREEN}║${NC}  ${BLUE}🌐 Local Server:${NC}  http://localhost:3000       ${GREEN}║${NC}"
     echo -e "${GREEN}║${NC}  ${CYAN}⚡ Turbopack:${NC}   Enabled for fast refresh     ${GREEN}║${NC}"
     echo -e "${GREEN}║${NC}  ${MAGENTA}📱 Framework:${NC}   Next.js 15.3.4              ${GREEN}║${NC}"
     echo -e "${GREEN}║${NC}  ${YELLOW}⚛️  React:${NC}       Version 19                  ${GREEN}║${NC}"
