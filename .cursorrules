@@ -1,0 +1,345 @@
+# Cursor Rules for Next.js 15.3 Blog/Portfolio
+
+## Project Context
+You are working on a modern Next.js 15.3 blog/portfolio application with the following stack:
+- **Framework**: Next.js 15.3.4 with App Router
+- **Language**: TypeScript (strict mode)
+- **Styling**: Tailwind CSS v4 + shadcn/ui components
+- **React**: Version 19 (latest features)
+- **Deployment**: Vercel
+- **Dev Server**: Turbopack enabled for fast refresh
+
+## Important: Development Workflow
+- **DO NOT** manually start the development server or run npm commands
+- The project uses `./start.sh` which handles:
+  - Auto-restarting on file changes
+  - Port management (kills existing processes on port 3000)
+  - Dependency installation
+  - Environment setup
+  - Browser opening
+- Files auto-refresh when saved, no need to restart servers
+
+## Code Style & Conventions
+
+### TypeScript
+- Use TypeScript strict mode
+- Prefer `interface` over `type` for object shapes
+- Use `const` assertions for literal types
+- Always define explicit return types for functions
+- Use proper type imports: `import type { ... }`
+
+### React & Next.js Patterns
+```typescript
+// Use modern Next.js 15 patterns
+export default async function Page() {
+  // Server Components by default
+  const data = await fetchData()
+  return <ClientComponent initialData={data} />
+}
+
+// Client Components only when needed
+'use client'
+export function ClientComponent({ initialData }) {
+  // Interactive features here
+}
+```
+
+### Component Structure
+- Server Components by default
+- Client Components only for:
+  - useState, useEffect, other hooks
+  - onClick, onChange handlers
+  - Browser-only APIs
+  - Third-party client libraries
+
+### File Organization
+```
+frontend/
+├── app/
+│   ├── (routes)/           # Route groups
+│   ├── api/                # API routes
+│   ├── layout.tsx          # Root layout
+│   └── page.tsx            # Home page
+├── components/
+│   ├── ui/                 # shadcn/ui components
+│   └── [feature]/          # Feature components
+├── lib/
+│   ├── utils.ts            # Utility functions
+│   └── types.ts            # Shared types
+├── public/                 # Static assets
+└── content/                # MDX blog posts (if using)
+```
+
+## UI Development with shadcn/ui
+
+### Installing Components
+```bash
+# Use npx shadcn@latest add [component]
+npx shadcn@latest add button card form
+```
+
+### Component Usage
+```typescript
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+
+// Always use the shadcn/ui design system
+<Button variant="default" size="lg">
+  Click me
+</Button>
+```
+
+### Tailwind CSS v4
+- Use Tailwind CSS v4 syntax
+- Prefer semantic color tokens: `bg-background`, `text-foreground`
+- Use CSS variables for theming
+- Dark mode support built-in
+
+## Database Considerations
+
+For a blog/portfolio, you have several options:
+
+### Option 1: No Database (Recommended for simple blogs)
+```typescript
+// Use MDX files in content directory
+import { getAllPosts } from '@/lib/mdx'
+
+export default async function BlogPage() {
+  const posts = await getAllPosts()
+  return <PostList posts={posts} />
+}
+```
+
+### Option 2: Vercel KV (For view counts, likes)
+```typescript
+import { kv } from '@vercel/kv'
+
+export async function incrementViews(slug: string) {
+  await kv.incr(`views:${slug}`)
+}
+```
+
+### Option 3: Vercel Postgres (For comments, contact forms)
+```typescript
+import { sql } from '@vercel/postgres'
+
+export async function getComments(postId: string) {
+  const { rows } = await sql`
+    SELECT * FROM comments WHERE post_id = ${postId}
+  `
+  return rows
+}
+```
+
+## Performance Best Practices
+
+### Image Optimization
+```typescript
+import Image from 'next/image'
+
+// Always use Next.js Image component
+<Image
+  src="/hero.jpg"
+  alt="Hero image"
+  width={1200}
+  height={600}
+  priority // for above-fold images
+/>
+```
+
+### Font Optimization
+```typescript
+import { Inter, Playfair_Display } from 'next/font/google'
+
+const inter = Inter({ 
+  subsets: ['latin'],
+  variable: '--font-inter'
+})
+```
+
+### Static Generation
+```typescript
+// Prefer static generation for blog posts
+export async function generateStaticParams() {
+  const posts = await getAllPosts()
+  return posts.map((post) => ({
+    slug: post.slug,
+  }))
+}
+```
+
+## SEO & Metadata
+
+### Use Next.js 15 Metadata API
+```typescript
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Your Name - Portfolio',
+  description: 'Full-stack developer specializing in...',
+  openGraph: {
+    title: 'Your Name - Portfolio',
+    description: 'Full-stack developer specializing in...',
+    url: 'https://yoursite.com',
+    siteName: 'Your Portfolio',
+    images: ['/og-image.jpg'],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Your Name - Portfolio',
+    description: 'Full-stack developer specializing in...',
+    images: ['/twitter-image.jpg'],
+  },
+}
+```
+
+### Dynamic Metadata
+```typescript
+export async function generateMetadata({ params }): Promise<Metadata> {
+  const post = await getPost(params.slug)
+  return {
+    title: post.title,
+    description: post.excerpt,
+  }
+}
+```
+
+## Deployment to Vercel
+
+### Environment Variables
+```env
+# .env.local
+NEXT_PUBLIC_SITE_URL=https://yourdomain.com
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+
+# .env.production (in Vercel dashboard)
+DATABASE_URL=postgres://...
+KV_REST_API_URL=https://...
+```
+
+### Build Configuration
+```json
+// vercel.json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install"
+}
+```
+
+## Common Patterns
+
+### Blog Post List
+```typescript
+// app/blog/page.tsx
+import { getPosts } from '@/lib/posts'
+import { PostCard } from '@/components/post-card'
+
+export default async function BlogPage() {
+  const posts = await getPosts()
+  
+  return (
+    <div className="container py-10">
+      <h1 className="text-4xl font-bold mb-8">Blog</h1>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {posts.map((post) => (
+          <PostCard key={post.slug} post={post} />
+        ))}
+      </div>
+    </div>
+  )
+}
+```
+
+### Contact Form (Server Actions)
+```typescript
+// app/contact/actions.ts
+'use server'
+
+import { z } from 'zod'
+import { resend } from '@/lib/resend'
+
+const schema = z.object({
+  name: z.string().min(2),
+  email: z.string().email(),
+  message: z.string().min(10)
+})
+
+export async function sendMessage(formData: FormData) {
+  const parsed = schema.parse({
+    name: formData.get('name'),
+    email: formData.get('email'),
+    message: formData.get('message')
+  })
+  
+  await resend.emails.send({
+    from: 'contact@yoursite.com',
+    to: 'you@email.com',
+    subject: `Contact from ${parsed.name}`,
+    text: parsed.message
+  })
+}
+```
+
+## Error Handling
+
+### Error Boundaries
+```typescript
+// app/error.tsx
+'use client'
+
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[400px]">
+      <h2 className="text-2xl font-bold mb-4">Something went wrong!</h2>
+      <Button onClick={() => reset()}>Try again</Button>
+    </div>
+  )
+}
+```
+
+### Loading States
+```typescript
+// app/blog/loading.tsx
+import { Skeleton } from "@/components/ui/skeleton"
+
+export default function Loading() {
+  return (
+    <div className="container py-10">
+      <Skeleton className="h-10 w-[200px] mb-8" />
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <Skeleton key={i} className="h-[300px]" />
+        ))}
+      </div>
+    </div>
+  )
+}
+```
+
+## Testing Approach
+- Unit tests for utilities: Vitest
+- Component tests: React Testing Library
+- E2E tests: Playwright
+- Run tests before deployment
+
+## Performance Monitoring
+- Use Vercel Analytics for Core Web Vitals
+- Monitor bundle size with `next-bundle-analyzer`
+- Implement proper error tracking (Sentry)
+
+## Remember
+1. The dev server auto-restarts - no manual intervention needed
+2. Always use Server Components unless client interactivity is required
+3. Leverage Next.js 15's built-in optimizations
+4. Use shadcn/ui components for consistent UI
+5. Keep it simple - you might not need a database for a basic portfolio 
