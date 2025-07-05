@@ -4,7 +4,7 @@ This folder contains development documentation for the CodesWhat frontend.
 
 ## Contents
 
-- **[LINT_COMMANDS.md](./LINT_COMMANDS.md)** - Quick reference for all linting and code quality commands
+- **[Linting Documentation](../linting101/)** - Complete linting and code quality documentation
 - **[TAGLINE_OPTIONS.md](./TAGLINE_OPTIONS.md)** - Alternative taglines and branding options (if present)
 
 ## Quick Links

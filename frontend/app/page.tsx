@@ -5,8 +5,34 @@ import { Github, Mail } from "lucide-react";
 import { EmailSignupForm } from "@/components/EmailSignupForm";
 
 export default function Home() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://codeswhat.com';
+  
+  // Structured data for SEO
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'CodesWhat',
+    url: baseUrl,
+    logo: `${baseUrl}/logo-transparent.png`,
+    description: 'Where curiosity meets code. Crafting innovative digital solutions and transforming ideas into elegant, scalable applications.',
+    sameAs: [
+      'https://github.com/codeswhat',
+      'https://twitter.com/codeswhat',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'hello@codeswhat.com',
+      contactType: 'customer service',
+    },
+  };
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <main className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900">
       {/* Background Pattern */}
       <div className="bg-grid-neutral-200/50 dark:bg-grid-neutral-800/50 absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
 
@@ -18,7 +44,7 @@ export default function Home() {
             alt="CodesWhat Logo"
             width={180}
             height={180}
-            className="drop-shadow-2xl"
+            className="drop-shadow-2xl dark:invert dark:brightness-200 transition-all duration-300"
             priority
           />
         </div>
@@ -75,5 +101,6 @@ export default function Home() {
         </footer>
       </div>
     </main>
+    </>
   );
 }
