@@ -86,7 +86,7 @@ export default function RootLayout({
       <body className={inter.className}>
         {children}
         <Toaster
-          position="top-right"
+          position="bottom-right"
           theme="system"
           toastOptions={{
             style: {
