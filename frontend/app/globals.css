@@ -75,7 +75,12 @@
     border-color: theme(colors.border);
   }
 
+  html {
+    min-height: 100%;
+  }
+
   body {
+    min-height: 100%;
     background-color: theme(colors.background);
     color: theme(colors.foreground);
     font-feature-settings:

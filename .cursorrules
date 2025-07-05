@@ -7,7 +7,7 @@ You are working on a modern Next.js 15.3 business/portfolio website for a softwa
 - **Styling**: Tailwind CSS v4 + shadcn/ui components (canary)
 - **React**: Version 19 (latest stable)
 - **Node.js**: Version 20.9.0 or higher
-- **Package Manager**: npm (default) or pnpm
+- **Package Manager**: npm
 - **Deployment**: Vercel
 - **Dev Server**: Turbopack enabled for fast refresh
 

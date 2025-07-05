@@ -30,9 +30,9 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <main className="min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900">
-        {/* Background Pattern */}
-        <div className="bg-grid-neutral-200/50 dark:bg-grid-neutral-800/50 absolute inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
+      <main className="relative min-h-screen bg-gradient-to-br from-neutral-50 to-neutral-100 dark:from-neutral-950 dark:to-neutral-900">
+        {/* Background Pattern - Fixed position to cover entire viewport */}
+        <div className="bg-grid-neutral-200/50 dark:bg-grid-neutral-800/50 fixed inset-0 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
 
         <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-4 py-16">
           {/* Logo Animation */}
