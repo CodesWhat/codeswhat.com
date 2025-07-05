@@ -1,8 +1,8 @@
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Github, Mail, Bell } from "lucide-react";
+import { Github, Mail } from "lucide-react";
+import { EmailSignupForm } from "@/components/EmailSignupForm";
 
 export default function Home() {
   return (
@@ -44,24 +44,7 @@ export default function Home() {
           {/* Email Signup */}
           <Card className="mx-auto mb-8 max-w-md border-neutral-200 bg-white/50 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/50">
             <div className="p-6">
-              <h3 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold">
-                <Bell className="h-5 w-5" />
-                Get Notified
-              </h3>
-              <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
-                Be the first to know when we launch our services!
-              </p>
-              <form className="flex flex-col gap-3 sm:flex-row">
-                <input
-                  type="email"
-                  placeholder="your@email.com"
-                  className="flex-1 rounded-md border border-neutral-200 bg-white px-4 py-2 text-sm focus:border-neutral-400 focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 focus:outline-none dark:border-neutral-800 dark:bg-neutral-950 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
-                  required
-                />
-                <Button type="submit" className="w-full sm:w-auto">
-                  Notify Me
-                </Button>
-              </form>
+              <EmailSignupForm />
             </div>
           </Card>
 

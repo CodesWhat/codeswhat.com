@@ -24,6 +24,19 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      // Light mode favicon
+      {
+        url: "/favicon-green.svg",
+        media: "(prefers-color-scheme: light)",
+        type: "image/svg+xml",
+      },
+      // Dark mode favicon
+      {
+        url: "/favicon-green.svg",
+        media: "(prefers-color-scheme: dark)",
+        type: "image/svg+xml",
+      },
+      // Fallback for browsers that don't support media queries
       {
         url: "/favicon.ico",
         sizes: "32x32",
@@ -51,15 +64,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link
-          rel="icon"
-          type="image/svg+xml"
-          href="/favicon-black.svg"
-        />
-        <link
-          rel="alternate icon"
-          href="/favicon.ico"
-        />
         <meta name="apple-mobile-web-app-title" content={process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?"} />
       </head>
       <body className={inter.className}>{children}</body>
