@@ -1,10 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "outputDirectory": ".next",
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "devCommand": "cd frontend && npm run dev",
+  "installCommand": "cd frontend && npm install",
+  "outputDirectory": "frontend/.next",
+  "rootDirectory": "frontend",
   
   "headers": [
     {
@@ -33,6 +34,24 @@
       ]
     },
     {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)\\.(jpg|jpeg|png|gif|ico|svg)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/api/(.*)",
       "headers": [
         {
@@ -51,10 +70,19 @@
   ],
   
   "functions": {
-    "app/api/subscribe/route.ts": {
+    "frontend/app/api/subscribe/route.ts": {
+      "maxDuration": 10
+    },
+    "frontend/app/api/*/route.ts": {
       "maxDuration": 10
     }
   },
   
-  "crons": []
+  "crons": [],
+  
+  "env": {
+    "NEXT_TELEMETRY_DISABLED": "1"
+  },
+  
+  "regions": ["iad1"]
 } 
