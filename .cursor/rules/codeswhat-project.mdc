@@ -68,4 +68,4 @@ Private: `EMAILOCTOPUS_API_KEY`, `EMAILOCTOPUS_LIST_ID`
 1. `npm run check:all`
 2. Test email subscription
 3. Verify dark mode
-4. Check mobile responsive 
+4. Check mobile responsive
