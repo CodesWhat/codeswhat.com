@@ -1,10 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "outputDirectory": ".next",
+  "buildCommand": "cd frontend && npm run build",
+  "devCommand": "cd frontend && npm run dev",
+  "installCommand": "cd frontend && npm install",
+  "outputDirectory": "frontend/.next",
   
   "headers": [
     {
@@ -69,10 +69,10 @@
   ],
   
   "functions": {
-    "app/api/subscribe/route.ts": {
+    "frontend/app/api/subscribe/route.ts": {
       "maxDuration": 10
     },
-    "app/api/*/route.ts": {
+    "frontend/app/api/*/route.ts": {
       "maxDuration": 10
     }
   },
