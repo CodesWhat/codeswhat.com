@@ -1,51 +1,51 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Bell, Loader2 } from 'lucide-react';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Bell, Loader2 } from "lucide-react";
 
 export function EmailSignupForm() {
-  const [email, setEmail] = useState('');
-  const [honeypot, setHoneypot] = useState(''); // Bot trap
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [message, setMessage] = useState('');
+  const [email, setEmail] = useState("");
+  const [honeypot, setHoneypot] = useState(""); // Bot trap
+  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Check honeypot (anti-bot)
     if (honeypot) {
-      setStatus('success');
-      setMessage('Thanks for subscribing!');
+      setStatus("success");
+      setMessage("Thanks for subscribing!");
       return; // Silently fail for bots
     }
-    
+
     // Client-side validation
     const trimmedEmail = email.trim().toLowerCase();
-    
+
     // Basic email format check
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
-      setStatus('error');
-      setMessage('Please enter a valid email address');
+      setStatus("error");
+      setMessage("Please enter a valid email address");
       return;
     }
-    
+
     // Length check
     if (trimmedEmail.length > 254) {
-      setStatus('error');
-      setMessage('Email address is too long');
+      setStatus("error");
+      setMessage("Email address is too long");
       return;
     }
-    
-    setStatus('loading');
-    setMessage('');
+
+    setStatus("loading");
+    setMessage("");
 
     try {
-      const response = await fetch('/api/subscribe', {
-        method: 'POST',
+      const response = await fetch("/api/subscribe", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email: trimmedEmail }),
       });
@@ -53,33 +53,33 @@ export function EmailSignupForm() {
       const data = await response.json();
 
       if (response.ok) {
-        setStatus('success');
+        setStatus("success");
         setMessage(data.message);
-        setEmail(''); // Clear the input
-        
+        setEmail(""); // Clear the input
+
         // Reset form after 10 seconds
         setTimeout(() => {
-          setStatus('idle');
-          setMessage('');
+          setStatus("idle");
+          setMessage("");
         }, 10000);
       } else {
-        setStatus('error');
-        setMessage(data.error || 'Something went wrong');
-        
+        setStatus("error");
+        setMessage(data.error || "Something went wrong");
+
         // Reset error after 5 seconds
         setTimeout(() => {
-          setStatus('idle');
-          setMessage('');
+          setStatus("idle");
+          setMessage("");
         }, 5000);
       }
-    } catch (error) {
-      setStatus('error');
-      setMessage('Network error. Please check your connection and try again.');
-      
+    } catch {
+      setStatus("error");
+      setMessage("Network error. Please check your connection and try again.");
+
       // Reset error after 5 seconds
       setTimeout(() => {
-        setStatus('idle');
-        setMessage('');
+        setStatus("idle");
+        setMessage("");
       }, 5000);
     }
   };
@@ -101,21 +101,21 @@ export function EmailSignupForm() {
       <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
         Be the first to know when we launch our services!
       </p>
-      
+
       <form onSubmit={handleSubmit} className="flex flex-col gap-3 sm:flex-row">
         <input
           type="email"
           placeholder="your@email.com"
           value={email}
           onChange={handleEmailChange}
-          className="flex-1 rounded-md border border-neutral-200 bg-white px-4 py-2 text-sm focus:border-neutral-400 focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 focus:outline-none dark:border-neutral-800 dark:bg-neutral-950 dark:focus:border-neutral-600 dark:focus:ring-neutral-600 disabled:opacity-50"
+          className="flex-1 rounded-md border border-neutral-200 bg-white px-4 py-2 text-sm focus:border-neutral-400 focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 focus:outline-none disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
           required
-          disabled={status === 'loading' || status === 'success'}
+          disabled={status === "loading" || status === "success"}
           maxLength={254}
           autoComplete="email"
           inputMode="email"
         />
-        
+
         {/* Honeypot field - hidden from users, visible to bots */}
         <input
           type="text"
@@ -127,32 +127,36 @@ export function EmailSignupForm() {
           autoComplete="off"
           aria-hidden="true"
         />
-        
-        <Button 
-          type="submit" 
+
+        <Button
+          type="submit"
           className="w-full sm:w-auto"
-          disabled={status === 'loading' || status === 'success'}
+          disabled={status === "loading" || status === "success"}
         >
-          {status === 'loading' ? (
+          {status === "loading" ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Subscribing...
             </>
-          ) : status === 'success' ? (
-            '✓ Subscribed!'
+          ) : status === "success" ? (
+            "✓ Subscribed!"
           ) : (
-            'Notify Me'
+            "Notify Me"
           )}
         </Button>
       </form>
-      
+
       {message && (
-        <p className={`mt-3 text-sm text-center ${
-          status === 'success' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
-        }`}>
+        <p
+          className={`mt-3 text-center text-sm ${
+            status === "success"
+              ? "text-green-600 dark:text-green-400"
+              : "text-red-600 dark:text-red-400"
+          }`}
+        >
           {message}
         </p>
       )}
     </div>
   );
-} 
+}

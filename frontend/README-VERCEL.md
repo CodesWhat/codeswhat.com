@@ -7,6 +7,7 @@
 ## Manual Deployment
 
 1. Install Vercel CLI (optional):
+
    ```bash
    npm i -g vercel
    ```
@@ -22,20 +23,20 @@ Add these in your Vercel dashboard under Settings → Environment Variables:
 
 ### Required Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_SITE_NAME` | Your site name | `CodesWhat?` |
+| Variable                       | Description              | Example                          |
+| ------------------------------ | ------------------------ | -------------------------------- |
+| `NEXT_PUBLIC_SITE_NAME`        | Your site name           | `CodesWhat?`                     |
 | `NEXT_PUBLIC_SITE_DESCRIPTION` | Site description for SEO | `Modern software consultancy...` |
-| `NEXT_PUBLIC_SITE_URL` | Your production URL | `https://codeswhat.com` |
-| `EMAILOCTOPUS_API_KEY` | EmailOctopus API key | `abc123...` |
-| `EMAILOCTOPUS_LIST_ID` | EmailOctopus list ID | `123e4567-e89b...` |
+| `NEXT_PUBLIC_SITE_URL`         | Your production URL      | `https://codeswhat.com`          |
+| `EMAILOCTOPUS_API_KEY`         | EmailOctopus API key     | `abc123...`                      |
+| `EMAILOCTOPUS_LIST_ID`         | EmailOctopus list ID     | `123e4567-e89b...`               |
 
 ### Optional Variables
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_GA_ID` | Google Analytics ID | `G-XXXXXXXXXX` |
-| `NEXT_PUBLIC_VERCEL_ANALYTICS_ID` | Vercel Analytics | `auto-generated` |
+| Variable                          | Description         | Example          |
+| --------------------------------- | ------------------- | ---------------- |
+| `NEXT_PUBLIC_GA_ID`               | Google Analytics ID | `G-XXXXXXXXXX`   |
+| `NEXT_PUBLIC_VERCEL_ANALYTICS_ID` | Vercel Analytics    | `auto-generated` |
 
 ## Domain Configuration
 
@@ -47,8 +48,9 @@ Add these in your Vercel dashboard under Settings → Environment Variables:
 ## Build Settings
 
 The `vercel.json` file includes:
+
 - ✅ Security headers
-- ✅ API route configuration  
+- ✅ API route configuration
 - ✅ Function timeouts
 - ✅ Caching rules
 
@@ -68,16 +70,19 @@ The `vercel.json` file includes:
 ## Troubleshooting
 
 ### Environment Variables Not Working
+
 - Ensure variables are added to the correct environment (Production/Preview/Development)
 - Redeploy after adding variables
 - Check for typos in variable names
 
 ### Build Failures
+
 - Check build logs in Vercel dashboard
 - Ensure Node.js version matches locally (20.9.0+)
 - Verify all dependencies are in package.json
 
 ### Email Signup Not Working
+
 - Verify EmailOctopus credentials
 - Check function logs in Vercel dashboard
-- Ensure API routes are correctly configured 
+- Ensure API routes are correctly configured
