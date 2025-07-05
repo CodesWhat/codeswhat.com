@@ -63,17 +63,31 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta
           name="apple-mobile-web-app-title"
           content={process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?"}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                  document.documentElement.classList.add('dark')
+                } else {
+                  document.documentElement.classList.remove('dark')
+                }
+              } catch (_) {}
+            `,
+          }}
         />
       </head>
       <body className={inter.className}>
         {children}
         <Toaster
           position="bottom-center"
+          theme="system"
           toastOptions={{
             style: {
               background: "var(--background)",
