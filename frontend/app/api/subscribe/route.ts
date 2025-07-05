@@ -208,7 +208,7 @@ export async function POST(request: Request) {
       // Check for duplicate subscriber error
       if (response.status === 409 || data.title?.includes("already exists")) {
         return NextResponse.json(
-          { message: "You're already subscribed! Check your inbox for updates." },
+          { message: "Hey, you're already on the list! 🎉 No FOMO here." },
           { status: 200 }
         );
       }
@@ -223,7 +223,7 @@ export async function POST(request: Request) {
 
     // Success!
     return NextResponse.json(
-      { message: "Welcome aboard! Check your inbox for updates." },
+      { message: "You're in! We'll slide into your inbox soon 💌" },
       { status: 200 }
     );
   } catch (error) {
