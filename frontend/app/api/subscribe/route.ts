@@ -223,7 +223,7 @@ export async function POST(request: Request) {
 
     // Success!
     return NextResponse.json(
-      { message: "You're in! We'll slide into your inbox soon 💌" },
+      { message: "What's next? Check your inbox to find out 👀" },
       { status: 200 }
     );
   } catch (error) {

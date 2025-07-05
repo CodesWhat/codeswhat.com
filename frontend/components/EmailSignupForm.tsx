@@ -16,8 +16,8 @@ export function EmailSignupForm() {
     // Check honeypot (anti-bot)
     if (honeypot) {
       setStatus("success");
-      toast.success("You're in! We'll slide into your inbox soon 💌", {
-        icon: "✨",
+      toast.success("What's next? Check your inbox to find out 👀", {
+        icon: "🎯",
         duration: 5000,
       });
       return; // Silently fail for bots
@@ -56,8 +56,8 @@ export function EmailSignupForm() {
 
       if (response.ok) {
         setStatus("success");
-        toast.success("You're in! We'll slide into your inbox soon 💌", {
-          icon: "✨",
+        toast.success("What's next? Check your inbox to find out 👀", {
+          icon: "🎯",
           duration: 5000,
         });
         setEmail(""); // Clear the input
