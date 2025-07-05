@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Bell, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export function EmailSignupForm() {
   const [email, setEmail] = useState("");
   const [honeypot, setHoneypot] = useState(""); // Bot trap
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,7 +16,7 @@ export function EmailSignupForm() {
     // Check honeypot (anti-bot)
     if (honeypot) {
       setStatus("success");
-      setMessage("Thanks for subscribing!");
+      toast.success("✉️ Welcome aboard! Check your inbox for updates.");
       return; // Silently fail for bots
     }
 
@@ -27,19 +27,18 @@ export function EmailSignupForm() {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(trimmedEmail)) {
       setStatus("error");
-      setMessage("Please enter a valid email address");
+      toast.error("⚠️ Please enter a valid email address");
       return;
     }
 
     // Length check
     if (trimmedEmail.length > 254) {
       setStatus("error");
-      setMessage("Email address is too long");
+      toast.error("📏 Email address is too long");
       return;
     }
 
     setStatus("loading");
-    setMessage("");
 
     try {
       const response = await fetch("/api/subscribe", {
@@ -54,32 +53,36 @@ export function EmailSignupForm() {
 
       if (response.ok) {
         setStatus("success");
-        setMessage(data.message);
+        toast.success("✉️ Welcome aboard! Check your inbox for updates.", {
+          icon: "📬",
+          duration: 5000,
+        });
         setEmail(""); // Clear the input
 
         // Reset form after 10 seconds
         setTimeout(() => {
           setStatus("idle");
-          setMessage("");
         }, 10000);
       } else {
         setStatus("error");
-        setMessage(data.error || "Something went wrong");
+        toast.error(data.error || "❌ Something went wrong", {
+          duration: 5000,
+        });
 
         // Reset error after 5 seconds
         setTimeout(() => {
           setStatus("idle");
-          setMessage("");
         }, 5000);
       }
     } catch {
       setStatus("error");
-      setMessage("Network error. Please check your connection and try again.");
+      toast.error("🌐 Network error. Please check your connection and try again.", {
+        duration: 5000,
+      });
 
       // Reset error after 5 seconds
       setTimeout(() => {
         setStatus("idle");
-        setMessage("");
       }, 5000);
     }
   };
@@ -145,18 +148,6 @@ export function EmailSignupForm() {
           )}
         </Button>
       </form>
-
-      {message && (
-        <p
-          className={`mt-3 text-center text-sm ${
-            status === "success"
-              ? "text-green-600 dark:text-green-400"
-              : "text-red-600 dark:text-red-400"
-          }`}
-        >
-          {message}
-        </p>
-      )}
     </div>
   );
 }

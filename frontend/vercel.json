@@ -5,7 +5,7 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install --force",
   "outputDirectory": ".next",
-  
+
   "headers": [
     {
       "source": "/(.*)",
@@ -60,14 +60,14 @@
       ]
     }
   ],
-  
+
   "rewrites": [
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
     }
   ],
-  
+
   "functions": {
     "app/api/subscribe/route.ts": {
       "maxDuration": 10
@@ -76,12 +76,12 @@
       "maxDuration": 10
     }
   },
-  
+
   "crons": [],
-  
+
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1"
   },
-  
+
   "regions": ["iad1"]
-} 
+}
