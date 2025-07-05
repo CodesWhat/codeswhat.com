@@ -86,15 +86,23 @@ export default function RootLayout({
       <body className={inter.className}>
         {children}
         <Toaster
-          position="bottom-center"
+          position="top-right"
           theme="system"
           toastOptions={{
             style: {
-              background: "var(--background)",
-              color: "var(--foreground)",
-              border: "1px solid var(--border)",
+              background: "hsl(var(--background))",
+              color: "hsl(var(--foreground))",
+              border: "1px solid hsl(var(--border))",
+              backdropFilter: "blur(8px)",
             },
+            className:
+              "!bg-white dark:!bg-neutral-900 !text-neutral-900 dark:!text-neutral-100 !border-neutral-200 dark:!border-neutral-800 !shadow-lg group",
+            duration: 5000, // 5 seconds before auto-dismiss
           }}
+          richColors
+          closeButton
+          expand={false} // Don't expand on hover
+          gap={12} // Space between toasts
         />
       </body>
     </html>
