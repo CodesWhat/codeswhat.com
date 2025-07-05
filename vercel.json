@@ -5,7 +5,6 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "outputDirectory": ".next",
-  "rootDirectory": "frontend",
   
   "headers": [
     {
