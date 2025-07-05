@@ -1,4 +1,33 @@
-# GitHub Copilot Custom Instructions
+# GitHub Copilot Custom Instructions for CodesWhat
+
+## Project Context
+You are working on **CodesWhat** - a modern software consultancy website built with:
+- Next.js 15.4.0 (App Router)
+- TypeScript (strict mode)
+- Tailwind CSS v4 + shadcn/ui
+- Deployed on Vercel (frontend directory as root)
+- EmailOctopus for email subscriptions
+- Sonner for toast notifications
+
+## Code Generation Guidelines
+
+### React Components
+- Prefer Server Components by default
+- Use `'use client'` only when necessary (hooks, event handlers)
+- Follow shadcn/ui component patterns
+- Include proper TypeScript types
+
+### Styling
+- Use Tailwind CSS classes
+- Dark mode support with `dark:` prefix
+- Semantic color tokens: `bg-background`, `text-foreground`
+- Fixed positioning for background patterns
+
+### API Routes
+- Follow Next.js 15 App Router conventions
+- Include proper error handling
+- Add rate limiting where appropriate
+- Return appropriate status codes
 
 ## Commit Message Standards
 
@@ -82,5 +111,31 @@ This makes commit messages more informative and helps readers quickly understand
 - **ALWAYS** start commit titles with an appropriate emoji
 - **ALWAYS** use emojis in bullet points for multi-change commits
 - Use the emoji mapping table above for consistency
+
+## CodesWhat-Specific Guidelines
+
+### File Paths
+- Main application code is in `frontend/` directory
+- Components go in `frontend/components/`
+- API routes in `frontend/app/api/`
+- Documentation in `docs/` (root level)
+
+### Environment Variables
+Always prefix public variables with `NEXT_PUBLIC_`:
+- `NEXT_PUBLIC_SITE_URL`
+- `NEXT_PUBLIC_SITE_NAME`
+- `NEXT_PUBLIC_SITE_DESCRIPTION`
+
+Private variables (server-side only):
+- `EMAILOCTOPUS_API_KEY`
+- `EMAILOCTOPUS_LIST_ID`
+
+### Common Tasks
+When suggesting fixes or improvements, consider:
+- Toast notifications use Sonner (bottom-right position)
+- Dark mode is supported via Tailwind CSS
+- Background patterns use fixed positioning
+- Email subscription has 5 req/min rate limiting
+- Logo inverts colors in dark mode
 
 Always use the appropriate emoji and type to maintain consistent commit history.
