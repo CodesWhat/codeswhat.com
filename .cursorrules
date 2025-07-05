@@ -1,15 +1,34 @@
-# Cursor Rules for Next.js 15.3 Business/Portfolio Site
+# Cursor Rules for CodesWhat - Software Consultancy Website
 
 ## Project Context
-You are working on a modern Next.js 15.3 business/portfolio website for a software consultancy with the following stack:
-- **Framework**: Next.js 15.3.4 with App Router
+You are working on the CodesWhat website - a modern software consultancy landing page with email subscription:
+- **Project Name**: CodesWhat (codeswhat-website)
+- **Type**: Software consultancy coming soon/landing page
+- **Framework**: Next.js 15.4.0 with App Router
 - **Language**: TypeScript (strict mode)
 - **Styling**: Tailwind CSS v4 + shadcn/ui components (canary)
 - **React**: Version 19 (latest stable)
 - **Node.js**: Version 20.9.0 or higher
 - **Package Manager**: npm
-- **Deployment**: Vercel
+- **Deployment**: Vercel (frontend directory as root)
 - **Dev Server**: Turbopack enabled for fast refresh
+- **Email Service**: EmailOctopus integration
+- **Toast Notifications**: Sonner (bottom-right position)
+
+## Project Structure
+```
+codeswhat-website/
+├── frontend/               # Main Next.js application
+│   ├── app/               # App Router pages
+│   ├── components/        # React components
+│   ├── public/           # Static assets & logos
+│   └── vercel.json       # Vercel configuration
+├── linting101/            # Linting documentation
+├── docs/                  # Project documentation
+│   ├── SEO-PLAN.md       # SEO implementation strategy
+│   └── ...               # Other docs
+└── start.sh              # Development startup script
+```
 
 ## Important: Development Workflow
 - **DO NOT** manually start the development server or run npm commands
@@ -24,29 +43,69 @@ You are working on a modern Next.js 15.3 business/portfolio website for a softwa
 - Run `npm run check:all` for full validation (includes Prettier)
 - ESLint errors will show in the terminal and browser console
 
-## Creating a New Project
+## Git Commit Message Standards
 
-### Using Next.js with Latest Versions
-```bash
-# Create Next.js app with canary (for Tailwind v4)
-npx create-next-app@canary my-blog --tailwind --typescript --eslint --app --no-src-dir
+**MANDATORY**: ALL commit messages MUST include emojis. Use conventional commits with emojis for clear, semantic commit history.
 
-# Navigate to frontend directory
-cd frontend
+### Format
+`<emoji> <type>: <description>`
 
-# Initialize shadcn/ui with Tailwind v4
-npx shadcn@canary init
+### Common Commit Types
+- 🐛 **fix**: Bug fixes and error corrections
+- ✨ **feat**: New features and functionality
+- 🔧 **config**: Configuration and settings changes
+- 🔨 **chore**: Maintenance tasks, tooling changes
+- 📝 **docs**: Documentation updates
+- 🎨 **style**: UI/UX and styling improvements
+- ⚡ **perf**: Performance optimizations
+- 🔒 **security**: Security-related changes
+- 🗃️ **data**: Database and data-related changes
+- 🔄 **refactor**: Code refactoring without functional changes
+- 🧪 **test**: Testing additions and updates
+- 🚀 **deploy**: Deployment and CI/CD changes
+- 📦 **deps**: Dependency management
+- 🗑️ **remove**: Code or feature removal
+- 🚨 **hotfix**: Critical fixes requiring immediate attention
 
-# Add components as needed
-npx shadcn@canary add button card form
+### Multi-Type Commits (PREFERRED FORMAT)
+**Always use emojis for bullet points** when a commit includes multiple changes:
+
+```
+🔧 fix: Address compatibility issues
+
+- 📦 deps: Updated dependencies for better compatibility
+- 🐛 fix: Resolved toast notification positioning
+- 🎨 style: Improved dark mode visibility
+- 🧹 cleanup: Removed unused imports
 ```
 
-### Using Stable Versions (Alternative)
-```bash
-# If canary has issues, use stable with Tailwind v3
-npx create-next-app@latest my-blog --tailwind --typescript --eslint --app --no-src-dir
-npx shadcn@latest init
-```
+## CodesWhat-Specific Features
+
+### Email Subscription
+- EmailOctopus integration via API route `/api/subscribe`
+- Environment variables:
+  - `EMAILOCTOPUS_API_KEY`
+  - `EMAILOCTOPUS_LIST_ID`
+- Toast notifications for success/error states
+- Rate limiting: 5 requests per minute per IP
+
+### Dark Mode
+- System preference detection
+- Logo color inversion in dark mode
+- Solid backgrounds for toast notifications
+- CSS variables for theming
+
+### SEO Implementation
+- Dynamic sitemap at `/sitemap.xml`
+- Robots.txt at `/robots.txt`
+- JSON-LD structured data on homepage
+- OpenGraph image generation
+
+### UI Components
+- Sonner for toast notifications (bottom-right, 5s duration)
+- shadcn/ui components with Tailwind v4
+- Custom animations: float, gradient
+- Background grid pattern with fixed positioning
 
 ## Code Style & Conventions
 
@@ -56,13 +115,11 @@ npx shadcn@latest init
 - Use `const` assertions for literal types
 - Always define explicit return types for functions
 - Use proper type imports: `import type { ... }`
-- ESLint will enforce these rules automatically
 
 ### React & Next.js Patterns
 ```typescript
-// Use modern Next.js 15 patterns
+// Server Components by default
 export default async function Page() {
-  // Server Components by default
   const data = await fetchData()
   return <ClientComponent initialData={data} />
 }
@@ -82,402 +139,95 @@ export function ClientComponent({ initialData }) {
   - Browser-only APIs
   - Third-party client libraries
 
-### File Organization
-```
-frontend/
-├── app/
-│   ├── (routes)/           # Route groups
-│   ├── api/                # API routes
-│   ├── layout.tsx          # Root layout
-│   └── page.tsx            # Home page
-├── components/
-│   ├── ui/                 # shadcn/ui components
-│   └── [feature]/          # Feature components
-├── lib/
-│   ├── utils.ts            # Utility functions
-│   └── types.ts            # Shared types
-├── public/                 # Static assets
-└── content/                # MDX blog posts (if using)
-```
-
-## UI Development with shadcn/ui
-
-### Initializing shadcn/ui (First Time)
-```bash
-# Initialize shadcn/ui with Tailwind v4 support
-npx shadcn@canary init
-
-# This will ask you:
-# - Style (choose your preference)
-# - Base color (choose your preference)
-# - CSS variables (recommended: yes)
-```
-
-### Installing Components
-```bash
-# Use npx shadcn@canary add [component] for Tailwind v4 support
-npx shadcn@canary add button card form
-```
-
-### Component Usage
-```typescript
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
-// Always use the shadcn/ui design system
-<Button variant="default" size="lg">
-  Click me
-</Button>
-```
+## Styling Guidelines
 
 ### Tailwind CSS v4
-- Use Tailwind CSS v4 syntax
-- Prefer semantic color tokens: `bg-background`, `text-foreground`
-- Use CSS variables for theming
-- Dark mode support built-in
-- New features in v4:
-  - `@theme` directive for custom properties
-  - `@theme inline` for scoped themes
-  - Native cascade layers
-  - Improved performance (no PostCSS required)
-  - CSS-first configuration approach
+- Use semantic color tokens: `bg-background`, `text-foreground`
+- CSS variables for theming in `globals.css`
+- Dark mode classes: `dark:bg-neutral-900`
+- Custom utilities in `@layer utilities`
+- Grid background pattern with mask image
 
-## Database Considerations
-
-For a blog/portfolio, you have several options:
-
-### Option 1: No Database (Recommended for simple blogs)
-```typescript
-// Use MDX files in content directory
-import { getAllPosts } from '@/lib/mdx'
-
-export default async function BlogPage() {
-  const posts = await getAllPosts()
-  return <PostList posts={posts} />
-}
+### Toast Styling
+```css
+/* Solid backgrounds for visibility */
+background-color: hsl(0 0% 9%) !important;  /* dark mode */
+background-color: hsl(0 0% 100%) !important; /* light mode */
 ```
 
-### Option 2: Vercel KV (For view counts, likes)
-```typescript
-import { kv } from '@vercel/kv'
-
-export async function incrementViews(slug: string) {
-  await kv.incr(`views:${slug}`)
-}
-```
-
-### Option 3: Vercel Postgres (For comments, contact forms)
-```typescript
-import { sql } from '@vercel/postgres'
-
-export async function getComments(postId: string) {
-  const { rows } = await sql`
-    SELECT * FROM comments WHERE post_id = ${postId}
-  `
-  return rows
-}
-```
-
-## Performance Best Practices
-
-### Image Optimization
-```typescript
-import Image from 'next/image'
-
-// Always use Next.js Image component
-<Image
-  src="/hero.jpg"
-  alt="Hero image"
-  width={1200}
-  height={600}
-  priority // for above-fold images
-/>
-```
-
-### Font Optimization
-```typescript
-import { Inter, Playfair_Display } from 'next/font/google'
-
-const inter = Inter({ 
-  subsets: ['latin'],
-  variable: '--font-inter'
-})
-```
-
-### Static Generation
-```typescript
-// Prefer static generation for blog posts
-export async function generateStaticParams() {
-  const posts = await getAllPosts()
-  return posts.map((post) => ({
-    slug: post.slug,
-  }))
-}
-```
-
-## SEO & Metadata
-
-### Use Next.js 15 Metadata API
-```typescript
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: 'Your Name - Portfolio',
-  description: 'Full-stack developer specializing in...',
-  openGraph: {
-    title: 'Your Name - Portfolio',
-    description: 'Full-stack developer specializing in...',
-    url: 'https://yoursite.com',
-    siteName: 'Your Portfolio',
-    images: ['/og-image.jpg'],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Your Name - Portfolio',
-    description: 'Full-stack developer specializing in...',
-    images: ['/twitter-image.jpg'],
-  },
-}
-```
-
-### Dynamic Metadata
-```typescript
-export async function generateMetadata({ params }): Promise<Metadata> {
-  const post = await getPost(params.slug)
-  return {
-    title: post.title,
-    description: post.excerpt,
-  }
-}
-```
-
-## Deployment to Vercel
-
-### Environment Variables
+## Environment Variables
 ```env
-# .env.local
-NEXT_PUBLIC_SITE_URL=https://yourdomain.com
-NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+# Required for production
+NEXT_PUBLIC_SITE_URL=https://codeswhat.com
+NEXT_PUBLIC_SITE_NAME=CodesWhat?
+NEXT_PUBLIC_SITE_DESCRIPTION=Where curiosity meets code...
 
-# .env.production (in Vercel dashboard)
-DATABASE_URL=postgres://...
-KV_REST_API_URL=https://...
+# EmailOctopus (required)
+EMAILOCTOPUS_API_KEY=
+EMAILOCTOPUS_LIST_ID=
+
+# Optional
+NEXT_PUBLIC_GA_ID=
 ```
 
-### Build Configuration
-```json
-// vercel.json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install"
-}
-```
+## Deployment Notes
 
-## Common Patterns
+### Vercel Configuration
+- Root Directory: `frontend` (set in Vercel dashboard)
+- No root-level vercel.json needed
+- Build command: `npm run build`
+- Output directory: `.next`
+- Environment variables set in Vercel dashboard
 
-### Blog Post List
-```typescript
-// app/blog/page.tsx
-import { getPosts } from '@/lib/posts'
-import { PostCard } from '@/components/post-card'
+### Pre-deployment Checklist
+1. Run `npm run check:all` for linting
+2. Test email subscription flow
+3. Verify dark mode functionality
+4. Check SEO meta tags
+5. Test on mobile devices
 
-export default async function BlogPage() {
-  const posts = await getPosts()
-  
-  return (
-    <div className="container py-10">
-      <h1 className="text-4xl font-bold mb-8">Blog</h1>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {posts.map((post) => (
-          <PostCard key={post.slug} post={post} />
-        ))}
-      </div>
-    </div>
-  )
-}
-```
+## Common Tasks
 
-### Contact Form (Server Actions)
-```typescript
-// app/contact/actions.ts
-'use server'
-
-import { z } from 'zod'
-import { resend } from '@/lib/resend'
-
-const schema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  message: z.string().min(10)
-})
-
-export async function sendMessage(formData: FormData) {
-  const parsed = schema.parse({
-    name: formData.get('name'),
-    email: formData.get('email'),
-    message: formData.get('message')
-  })
-  
-  await resend.emails.send({
-    from: 'contact@yoursite.com',
-    to: 'you@email.com',
-    subject: `Contact from ${parsed.name}`,
-    text: parsed.message
-  })
-}
-```
-
-## Error Handling
-
-### Error Boundaries
-```typescript
-// app/error.tsx
-'use client'
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-[400px]">
-      <h2 className="text-2xl font-bold mb-4">Something went wrong!</h2>
-      <Button onClick={() => reset()}>Try again</Button>
-    </div>
-  )
-}
-```
-
-### Loading States
-```typescript
-// app/blog/loading.tsx
-import { Skeleton } from "@/components/ui/skeleton"
-
-export default function Loading() {
-  return (
-    <div className="container py-10">
-      <Skeleton className="h-10 w-[200px] mb-8" />
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <Skeleton key={i} className="h-[300px]" />
-        ))}
-      </div>
-    </div>
-  )
-}
-```
-
-## Code Quality & Linting
-
-### Linting Tools
-- **ESLint**: Already configured with Next.js
-- **Prettier**: For consistent code formatting
-- **TypeScript**: Built-in type checking
-
-### Running Linters
+### Adding New Components
 ```bash
-# Run ALL checks with one command
-npm run check          # Runs ESLint + TypeScript checking
-npm run check:all      # Runs ESLint + TypeScript + Prettier check
-
-# Individual commands
-npm run lint           # ESLint only
-npm run lint:fix       # ESLint with auto-fix
-npm run type-check     # TypeScript type checking
-npm run format         # Prettier format all files
-npm run format:check   # Check if files are formatted
-
-# Before committing
-npm run check:all      # Ensures code quality
+cd frontend
+npx shadcn@canary add [component-name]
 ```
 
-### Prettier Configuration (.prettierrc)
-```json
-{
-  "semi": false,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "trailingComma": "es5",
-  "printWidth": 100,
-  "plugins": ["prettier-plugin-tailwindcss"]
-}
-```
-
-### Pre-commit Hooks (Optional)
+### Running Quality Checks
 ```bash
-# Install husky and lint-staged
-npm install -D husky lint-staged
-
-# Add to package.json
-"lint-staged": {
-  "*.{js,jsx,ts,tsx}": [
-    "eslint --fix",
-    "prettier --write"
-  ]
-}
+cd frontend
+npm run check          # ESLint + TypeScript
+npm run check:all      # + Prettier
+npm run format         # Auto-fix formatting
 ```
 
-### VS Code Settings
-```json
-{
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
-  }
-}
+### Testing Email Subscription
+```bash
+# Test locally with .env.local
+curl -X POST http://localhost:3000/api/subscribe \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com"}'
 ```
-
-## Testing Approach
-- Unit tests for utilities: Vitest
-- Component tests: React Testing Library
-- E2E tests: Playwright
-- Run tests before deployment
 
 ## Performance Monitoring
-- Use Vercel Analytics for Core Web Vitals
-- Monitor bundle size with `next-bundle-analyzer`
-- Implement proper error tracking (Sentry)
-
-## Upgrading Existing Projects
-
-### To Latest Versions
-```bash
-# Update Next.js to latest
-npm update next@latest react@latest react-dom@latest
-
-# For Tailwind v4 (if using v3)
-npm install tailwindcss@next @tailwindcss/postcss@next
-
-# Update shadcn components
-npx shadcn@canary diff  # Check what changed
-npx shadcn@canary add [component] --overwrite  # Update specific component
-```
-
-### Version Compatibility
-- Next.js 15.3+ requires Node.js 20.9.0+
-- Tailwind v4 works best with PostCSS 8.4+
-- shadcn/ui canary supports both Tailwind v3 and v4
+- Vercel Analytics for Core Web Vitals
+- Monitor bundle size
+- Toast notifications include progress bars
+- Background uses fixed positioning for performance
 
 ## Documentation
-- **Project Docs**: See `/docs` folder in root directory
-  - `LINT_COMMANDS.md` - Quick reference for code quality commands
-  - `TAGLINE_OPTIONS.md` - Branding and messaging alternatives
-- **Future Plans**: See `FUTURE_SECTIONS.md` in root directory
-- **Logo Assets**: See `frontend/public/logos/README.md` for logo usage
+- **Linting**: See `/linting101/` folder
+- **SEO Plan**: See `/docs/SEO-PLAN.md`
+- **Logo Usage**: See `/frontend/public/logos/README.md`
+- **API Routes**: EmailOctopus integration in `/frontend/app/api/subscribe/`
 
 ## Remember
-1. The dev server auto-restarts - no manual intervention needed
-2. Always use Server Components unless client interactivity is required
-3. Leverage Next.js 15's built-in optimizations
-4. Use shadcn/ui components for consistent UI
-5. Keep it simple - you might not need a database for a basic portfolio
-6. Use Node.js 20+ for best compatibility with latest features
-7. Use `npx shadcn@canary` commands for Tailwind v4 support
-8. Run `npm run check` before committing (or `npm run check:all` for full validation) 
+1. Always use emojis in commit messages
+2. The dev server auto-restarts - no manual intervention needed
+3. Toast notifications are bottom-right with 5s duration
+4. Background pattern uses fixed positioning
+5. Dark mode inverts logo colors
+6. Run quality checks before committing
+7. Frontend directory is the Vercel root
+8. Email subscription has rate limiting 
