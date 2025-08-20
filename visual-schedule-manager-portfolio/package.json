@@ -23,7 +23,7 @@
     "tailwind-merge": "^2.0.0",
     "framer-motion": "^10.16.0",
     "lucide-react": "^0.540.0",
-    "date-fns": "^2.30.0",
+    "date-fns": "^4.0.0",
     "date-fns-tz": "^2.0.0",
     "zustand": "^4.4.0",
     "sonner": "^1.0.0",
