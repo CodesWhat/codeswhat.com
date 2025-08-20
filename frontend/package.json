@@ -1,7 +1,9 @@
 {
   "name": "codeswhat",
   "version": "0.1.0",
-  "engines": { "node": "22.18.0" },
+  "engines": {
+    "node": "22.18.0"
+  },
   "description": "Where curiosity meets code - Digital solutions and software consulting",
   "private": true,
   "scripts": {
