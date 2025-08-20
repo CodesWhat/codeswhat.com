@@ -26,7 +26,7 @@
     "date-fns": "^4.0.0",
     "date-fns-tz": "^2.0.0",
     "zustand": "^4.4.0",
-    "sonner": "^1.0.0",
+    "sonner": "^2.0.0",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-label": "^2.0.2",
