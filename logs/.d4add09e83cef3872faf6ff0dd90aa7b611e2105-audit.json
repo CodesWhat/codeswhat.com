@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/sbenson/Documents/GitHub/codeswhat-website/logs/.d4add09e83cef3872faf6ff0dd90aa7b611e2105-audit.json",
+    "files": [
+        {
+            "date": 1765398359218,
+            "name": "/Users/sbenson/Documents/GitHub/codeswhat-website/logs/mcp-puppeteer-2025-12-10.log",
+            "hash": "ccd5a8481ee3f00d001daac2efdaadc8dd19a519295b269b8a05ac7d6a00b207"
+        }
+    ],
+    "hashType": "sha256"
+}
