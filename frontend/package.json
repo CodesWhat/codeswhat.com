@@ -2,7 +2,7 @@
   "name": "codeswhat",
   "version": "0.1.0",
   "engines": {
-    "node": "22.19.0"
+    "node": "22.21.1"
   },
   "description": "Where curiosity meets code - Digital solutions and software consulting",
   "private": true,
@@ -37,7 +37,7 @@
     "@types/node": "^25.0.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
-    "eslint": "^9",
+    "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.8",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
