@@ -1,0 +1,12 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      root: frontend/
+      glob: "*.{js,ts,jsx,tsx,json,css}"
+      run: npx @biomejs/biome check --write {staged_files}
+      stage_fixed: true
+
+    - name: typecheck
+      root: frontend/
+      run: npx tsc --noEmit

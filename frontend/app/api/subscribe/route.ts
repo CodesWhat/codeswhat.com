@@ -39,12 +39,12 @@ export async function POST(request: Request) {
     if (!checkRateLimit(rateLimitKey)) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
     // Parse request body
-    let body;
+    let body: { email?: string };
     try {
       body = await request.json();
     } catch {
@@ -198,7 +198,7 @@ export async function POST(request: Request) {
           email_address: normalizedEmail,
           status: "subscribed",
         }),
-      }
+      },
     );
 
     const data = await response.json();
@@ -209,7 +209,7 @@ export async function POST(request: Request) {
       if (response.status === 409 || data.title?.includes("already exists")) {
         return NextResponse.json(
           { message: "Hey, you're already on the list! 🎉 No FOMO here." },
-          { status: 200 }
+          { status: 200 },
         );
       }
 
@@ -217,20 +217,20 @@ export async function POST(request: Request) {
       console.error("EmailOctopus error:", data);
       return NextResponse.json(
         { error: data.detail || "Failed to subscribe. Please try again." },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
     // Success!
     return NextResponse.json(
       { message: "What's next? Check your inbox to find out 👀" },
-      { status: 200 }
+      { status: 200 },
     );
   } catch (error) {
     console.error("Subscription error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred. Please try again." },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
