@@ -1,8 +1,8 @@
-import Image from "next/image";
+import { EmailSignupForm } from "@/components/EmailSignupForm";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Github, Mail } from "lucide-react";
-import { EmailSignupForm } from "@/components/EmailSignupForm";
+import Image from "next/image";
 
 export default function Home() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://codeswhat.com";
@@ -42,7 +42,7 @@ export default function Home() {
               alt="CodesWhat Logo"
               width={180}
               height={180}
-              className="drop-shadow-2xl transition-all duration-300 dark:brightness-200 dark:invert"
+              className="transition-all duration-300 dark:brightness-200 dark:invert"
               priority
             />
           </div>
