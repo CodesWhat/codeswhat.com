@@ -2,7 +2,7 @@
   "name": "codeswhat",
   "version": "0.1.0",
   "engines": {
-    "node": "24.13.1"
+    "node": "24.x"
   },
   "description": "Where curiosity meets code - Digital solutions and software consulting",
   "private": true,
