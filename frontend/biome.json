@@ -1,8 +1,6 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
-  "organizeImports": {
-    "enabled": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
   "linter": {
     "enabled": true,
     "rules": {
@@ -40,20 +38,21 @@
     }
   },
   "files": {
-    "ignore": [
-      "**/*.css",
-      "node_modules",
-      ".next",
-      "build",
-      "dist",
-      "out",
-      ".env",
-      ".env.*",
-      "*.pem",
-      ".turbo",
-      "*.d.ts",
-      "next-env.d.ts",
-      "package-lock.json"
+    "includes": [
+      "**",
+      "!**/*.css",
+      "!**/node_modules",
+      "!**/.next",
+      "!**/build",
+      "!**/dist",
+      "!**/out",
+      "!**/.env",
+      "!**/.env.*",
+      "!**/*.pem",
+      "!**/.turbo",
+      "!**/*.d.ts",
+      "!**/next-env.d.ts",
+      "!**/package-lock.json"
     ]
   }
 }
