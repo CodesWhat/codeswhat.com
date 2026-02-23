@@ -1,8 +1,8 @@
+import { Github, Mail } from "lucide-react";
+import Image from "next/image";
 import { EmailSignupForm } from "@/components/EmailSignupForm";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Github, Mail } from "lucide-react";
-import Image from "next/image";
 
 export default function Home() {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://codeswhat.com";
