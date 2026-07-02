@@ -9,7 +9,7 @@ import { GITHUB_URL, PROJECTS, SITE_CONFIG } from "@/lib/site-config";
 export function SiteFooter() {
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-neutral-200 bg-neutral-50/60 dark:border-white/10 dark:bg-neutral-950/60">
+    <footer className="border-t border-line bg-surface">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-col gap-1.5">
@@ -18,21 +18,21 @@ export function SiteFooter() {
               href={SITE_CONFIG.author.url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex w-fit items-center gap-0.5 text-xs text-neutral-500 transition-colors hover:text-lime-600 dark:hover:text-lime-200"
+              className="inline-flex w-fit items-center gap-0.5 text-xs text-fg-faint transition-colors hover:text-brand-hover"
             >
               by {SITE_CONFIG.author.name}
               <ArrowUpRight className="h-3 w-3 opacity-60" />
             </a>
           </div>
 
-          <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+          <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-fg-muted">
             {PROJECTS.map((p) => (
               <a
                 key={p.slug}
                 href={p.href}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-0.5 transition-colors hover:text-lime-600 dark:hover:text-lime-200"
+                className="inline-flex items-center gap-0.5 transition-colors hover:text-brand-hover"
               >
                 {p.name}
                 <ArrowUpRight className="h-3.5 w-3.5 opacity-60" />
@@ -42,7 +42,7 @@ export function SiteFooter() {
               href={GITHUB_URL}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center gap-1 transition-colors hover:text-lime-600 dark:hover:text-lime-200"
+              className="inline-flex items-center gap-1 transition-colors hover:text-brand-hover"
             >
               <Github className="h-4 w-4" />
               GitHub
@@ -50,7 +50,7 @@ export function SiteFooter() {
           </nav>
         </div>
 
-        <p className="text-xs text-neutral-500 dark:text-neutral-600">
+        <p className="text-xs text-fg-faint">
           © {year} {SITE_CONFIG.name}. All rights reserved.
         </p>
       </div>

@@ -25,13 +25,13 @@ export function Services() {
     <section id="services" className="relative scroll-mt-20 px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 max-w-2xl">
-          <p className="mb-3 font-mono text-xs font-semibold tracking-[0.2em] text-lime-700 uppercase dark:text-lime-300">
+          <p className="mb-3 font-mono text-xs font-semibold tracking-[0.2em] text-brand uppercase">
             Work with me
           </p>
-          <h2 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">
+          <h2 className="text-3xl font-semibold tracking-tight text-fg sm:text-4xl">
             CodesWhat? Anything for you.
           </h2>
-          <p className="mt-3 text-base text-neutral-600 dark:text-neutral-400">
+          <p className="mt-3 text-base text-fg-muted">
             The projects above are just what I've open-sourced. If you're building something, I can
             help you ship it faster.
           </p>
@@ -41,14 +41,10 @@ export function Services() {
           {OFFERINGS.map((offering) => (
             <li
               key={offering.title}
-              className="flex h-full flex-col gap-2 rounded-2xl border border-neutral-200 bg-white/60 p-6 shadow-sm backdrop-blur-sm dark:border-white/5 dark:bg-neutral-900/50 dark:shadow-none"
+              className="flex h-full flex-col gap-2 rounded-2xl border border-line bg-surface p-6 shadow-sm backdrop-blur-sm dark:shadow-none"
             >
-              <h3 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-white">
-                {offering.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
-                {offering.body}
-              </p>
+              <h3 className="text-lg font-semibold tracking-tight text-fg">{offering.title}</h3>
+              <p className="text-sm leading-relaxed text-fg-muted">{offering.body}</p>
             </li>
           ))}
         </ul>
@@ -56,7 +52,7 @@ export function Services() {
         <div className="mt-8">
           <a
             href="mailto:hello@codeswhat.com"
-            className="inline-flex items-center gap-2 rounded-full bg-lime-400 px-5 py-2.5 text-sm font-semibold text-neutral-950 transition-colors hover:bg-lime-500 dark:bg-lime-300 dark:hover:bg-lime-200"
+            className="inline-flex items-center gap-2 rounded-full bg-brand-solid px-5 py-2.5 text-sm font-semibold text-on-brand transition-colors hover:bg-brand-solid-hover"
           >
             Tell me what you need help with
             <ArrowRight className="h-4 w-4" />

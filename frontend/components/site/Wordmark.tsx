@@ -9,10 +9,8 @@ const geistMono = Geist_Mono({ subsets: ["latin"] });
  */
 export function Wordmark() {
   return (
-    <span
-      className={`${geistMono.className} text-[15px] font-medium tracking-tight text-neutral-900 dark:text-neutral-100`}
-    >
-      codeswhat<span className="text-lime-600 dark:text-lime-300">?</span>
+    <span className={`${geistMono.className} text-[15px] font-medium tracking-tight text-fg`}>
+      codeswhat<span className="text-brand">?</span>
     </span>
   );
 }

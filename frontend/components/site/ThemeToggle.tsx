@@ -31,7 +31,7 @@ export function ThemeToggle() {
       type="button"
       onClick={toggle}
       aria-label="Toggle light and dark theme"
-      className="rounded-full p-2 text-neutral-600 transition-colors hover:bg-neutral-200/60 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
+      className="rounded-full p-2 text-fg-muted transition-colors hover:bg-line hover:text-fg"
     >
       {/* Avoid an icon flash before we know the real theme on the client. */}
       {mounted && isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
