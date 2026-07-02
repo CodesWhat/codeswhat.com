@@ -2,7 +2,7 @@
 
 import { Environment, Lightformer } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { type ReactNode, type RefObject, Suspense, useEffect, useRef } from "react";
+import { type ReactNode, type RefObject, Suspense, useEffect, useRef, useState } from "react";
 import type * as THREE from "three";
 import { CodesWhatCoin } from "@/components/concepts/BoardObjects";
 import { MylarBalloon } from "@/components/concepts/balloons/MylarBalloon";
@@ -153,8 +153,24 @@ function ScrollFloat({
   );
 }
 
+/** Tracks the `.dark` class on <html> so the 3D layer can invert its brand
+ *  colors in dark mode (set by ThemeToggle / the init script in layout.tsx). */
+function useIsDark() {
+  const [dark, setDark] = useState(true);
+  useEffect(() => {
+    const el = document.documentElement;
+    const update = () => setDark(el.classList.contains("dark"));
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
+  return dark;
+}
+
 function Scene() {
   const scroll = useRef(0);
+  const dark = useIsDark();
 
   useEffect(() => {
     const onScroll = () => {
@@ -174,12 +190,12 @@ function Scene() {
     <>
       {/* the spinning coin owns the hero — sits up high, drifts out as you scroll */}
       <ScrollFloat scroll={scroll} focus={0} x={2.5} z={-1} restY={1.4}>
-        <CodesWhatCoin position={[0, 0, 0]} radius={1.5} thickness={0.32} />
+        <CodesWhatCoin position={[0, 0, 0]} radius={1.5} thickness={0.32} dark={dark} />
       </ScrollFloat>
 
       {FLOATERS.map(({ key, focus, x, z, ...m }) => (
         <ScrollFloat key={key} scroll={scroll} focus={focus} x={x} z={z}>
-          <MylarBalloon anchor={[0, 0, 0]} baseY={0} showString={false} {...m} />
+          <MylarBalloon anchor={[0, 0, 0]} baseY={0} showString={false} dark={dark} {...m} />
         </ScrollFloat>
       ))}
 

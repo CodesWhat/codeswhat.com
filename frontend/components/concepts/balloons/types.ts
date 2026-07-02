@@ -40,6 +40,9 @@ export type BalloonProps = {
   /** whether to hang the tether string below the balloon (default true). Turn
    *  off for free-floating balloons where a dangling string reads wrong. */
   showString?: boolean;
+  /** dark mode: invert the baked foil colors (the brand's dark-mode treatment —
+   *  green→blue, blue→red, etc). The headshot opts out so faces don't go negative. */
+  dark?: boolean;
 };
 
 /** The balloon styles the switcher can render. */

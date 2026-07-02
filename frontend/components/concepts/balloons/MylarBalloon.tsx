@@ -327,6 +327,7 @@ function bakeMylarColorMap(
   silhouette: MylarSilhouette,
   foilColor: string,
   edgeColor: string,
+  invert = false,
 ): THREE.CanvasTexture {
   const { textureCols, textureRows, maskData, maskAlpha } = silhouette;
   const [foilR, foilG, foilB] = parseHexColor(foilColor);
@@ -379,6 +380,16 @@ function bakeMylarColorMap(
       }
       colorData.data[i * 4 + 3] = 255;
     }
+    // dark-mode brand treatment: RGB-invert the baked albedo (green→blue,
+    // blue→red…) before the foil film so the sheen highlights stay bright.
+    if (invert) {
+      const d = colorData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        d[i] = 255 - d[i];
+        d[i + 1] = 255 - d[i + 1];
+        d[i + 2] = 255 - d[i + 2];
+      }
+    }
     colorCtx.putImageData(
       paintFoilFilmOverlay(colorData, maskAlpha, textureCols, textureRows),
       0,
@@ -415,7 +426,11 @@ export function MylarBalloon({
   behavior,
   spin,
   showString = true,
+  dark = false,
 }: BalloonProps) {
+  // Invert the baked foil in dark mode, but never the headshot (a negative face
+  // reads as horror, not brand).
+  const invert = dark && !url.includes("scott");
   // Neutral face first, then the glance frames, then an optional blink — one
   // shared foil silhouette, one printed face per frame.
   const frameUrls = useMemo(
@@ -452,7 +467,7 @@ export function MylarBalloon({
     const silhouette = buildMylarSilhouette(baseImage, size);
     const colorMaps = textures.map((frame) => {
       const image = (frame.image as HTMLImageElement | undefined) ?? baseImage;
-      return bakeMylarColorMap(image, silhouette, foilColor, edgeColor);
+      return bakeMylarColorMap(image, silhouette, foilColor, edgeColor, invert);
     });
     return {
       geometry: silhouette.geometry,
@@ -460,7 +475,7 @@ export function MylarBalloon({
       colorMaps,
       stringAnchorY: silhouette.stringAnchorY,
     };
-  }, [textures, size, foilColor, edgeColor]);
+  }, [textures, size, foilColor, edgeColor, invert]);
 
   // free the baked canvas textures + geometry when the balloon rebuilds/unmounts
   useEffect(() => {

@@ -2,7 +2,7 @@
 
 import { useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 /**
@@ -57,6 +57,8 @@ type CodesWhatCoinProps = {
   speed?: number;
   reeds?: number;
   reedDepth?: number;
+  /** dark mode: invert the coin (lime → indigo) to match the inverted mascots */
+  dark?: boolean;
 };
 
 export function CodesWhatCoin({
@@ -67,12 +69,34 @@ export function CodesWhatCoin({
   speed = 0.4,
   reeds = 90,
   reedDepth = 0.018,
+  dark = false,
 }: CodesWhatCoinProps) {
-  const texture = useTexture("/logos/codeswhat-coin.png");
-  useMemo(() => {
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 16;
-  }, [texture]);
+  const rawTexture = useTexture("/logos/codeswhat-coin.png");
+  const texture = useMemo(() => {
+    rawTexture.colorSpace = THREE.SRGBColorSpace;
+    rawTexture.anisotropy = 16;
+    const img = rawTexture.image as HTMLImageElement | undefined;
+    if (!dark || !img || !(img.naturalWidth || img.width)) return rawTexture;
+    // dark mode: mint an RGB-inverted coin face (lime logo → indigo)
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth || img.width;
+    canvas.height = img.naturalHeight || img.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return rawTexture;
+    ctx.filter = "invert(1)";
+    ctx.drawImage(img, 0, 0);
+    const inverted = new THREE.CanvasTexture(canvas);
+    inverted.colorSpace = THREE.SRGBColorSpace;
+    inverted.anisotropy = 16;
+    return inverted;
+  }, [rawTexture, dark]);
+
+  // free the inverted canvas texture when it changes / unmounts
+  useEffect(() => {
+    return () => {
+      if (texture !== rawTexture) texture.dispose();
+    };
+  }, [texture, rawTexture]);
 
   const coinGeometry = useMemo(
     () => buildCoinGeometry(radius, thickness, reeds, radius * reedDepth),
@@ -93,7 +117,7 @@ export function CodesWhatCoin({
         {/* scalloped metallic body — ExtrudeGeometry faces already point along ±Z */}
         <mesh geometry={coinGeometry}>
           <meshStandardMaterial
-            color="#b6c800"
+            color={dark ? "#4937ff" : "#b6c800"}
             metalness={0.92}
             roughness={0.28}
             envMapIntensity={1.1}
