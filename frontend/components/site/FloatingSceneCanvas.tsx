@@ -4,9 +4,9 @@ import { Environment, Lightformer } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { type ReactNode, type RefObject, Suspense, useEffect, useRef, useState } from "react";
 import type * as THREE from "three";
-import { CodesWhatCoin } from "@/components/concepts/BoardObjects";
-import { MylarBalloon } from "@/components/concepts/balloons/MylarBalloon";
-import { ContactMarble } from "@/components/concepts/ContactMarble";
+import { CodesWhatCoin } from "@/components/site/scene/BoardObjects";
+import { MylarBalloon } from "@/components/site/scene/balloons/MylarBalloon";
+import { ContactMarble } from "@/components/site/scene/ContactMarble";
 
 type Floater = {
   key: string;

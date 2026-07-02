@@ -1,10 +1,7 @@
 /**
- * Shared contract for the board's balloon variants.
- *
- * Every balloon style (clear-orb, foil-orb, inflated-silhouette, mylar-logo)
- * implements this same prop signature so they are drop-in swappable behind the
- * style switcher in BoardScene. Keep this interface stable — the switcher and
- * every variant depend on it.
+ * Prop contract for the Mylar mascot balloon used in the homepage's floating
+ * 3D scene (see components/site/FloatingSceneCanvas). Kept as its own type so
+ * the scene and the balloon component share one signature.
  */
 export type BalloonProps = {
   /** mascot PNG (transparent) used as the logo texture */
@@ -44,6 +41,3 @@ export type BalloonProps = {
    *  green→blue, blue→red, etc). The headshot opts out so faces don't go negative. */
   dark?: boolean;
 };
-
-/** The balloon styles the switcher can render. */
-export type BalloonVariant = "mylar" | "clear" | "foil" | "inflated" | "keychain";
