@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: `dark:` variants follow the `.dark` class on <html>
+   (toggled by ThemeToggle and set by the no-flash init script in layout.tsx),
+   NOT the OS prefers-color-scheme. Without this, Tailwind v4 defaults to the
+   media query and the theme toggle has no effect. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Define theme colors using CSS variables */
 @theme {
   --color-background: hsl(var(--background));
