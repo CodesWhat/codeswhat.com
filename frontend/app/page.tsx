@@ -26,6 +26,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title,
     description: SITE_CONFIG.description,
+    site: SITE_CONFIG.twitterCreator,
     creator: SITE_CONFIG.twitterCreator,
   },
 };
