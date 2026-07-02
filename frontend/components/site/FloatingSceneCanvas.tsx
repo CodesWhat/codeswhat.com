@@ -38,7 +38,7 @@ const FLOATERS: Floater[] = [
   {
     key: "sockguard",
     url: "/logos/sockguard-balloon.png",
-    focus: 0.38,
+    focus: 0.29,
     x: -3.3,
     z: -0.8,
     size: 2.2,
@@ -51,7 +51,7 @@ const FLOATERS: Floater[] = [
   {
     key: "drydock",
     url: "/logos/drydock-balloon.png",
-    focus: 0.42,
+    focus: 0.32,
     x: 3.3,
     z: -1.2,
     size: 2.4,
@@ -64,7 +64,7 @@ const FLOATERS: Floater[] = [
   {
     key: "portwing",
     url: "/logos/portwing-balloon.png",
-    focus: 0.57,
+    focus: 0.43,
     x: -2.6,
     z: -1.0,
     size: 2.0,
@@ -77,7 +77,7 @@ const FLOATERS: Floater[] = [
   {
     key: "portkey",
     url: "/logos/portkey-balloon.png",
-    focus: 0.57,
+    focus: 0.43,
     x: 3.8,
     z: -1.2,
     size: 2.0,
@@ -89,7 +89,7 @@ const FLOATERS: Floater[] = [
   {
     key: "scott",
     url: "/logos/scott-balloon.png",
-    focus: 0.72,
+    focus: 0.79,
     x: 3.8,
     z: -0.4,
     size: 2.6,
@@ -186,7 +186,7 @@ function Scene() {
       {/* the clear glass "@" marble — stays hidden through the projects, rises
           in around the "Who's behind it" section, then rides a wide orbit
           around the "Get notified" card and darts away from the cursor */}
-      <ScrollFloat scroll={scroll} focus={0.95} x={0} z={-0.5} restY={-0.8} span={12}>
+      <ScrollFloat scroll={scroll} focus={0.96} x={0} z={-0.5} restY={-0.8} span={12}>
         <ContactMarble center={[0, 0, 0]} orbitRadius={3.2} orbitSpeed={0.22} radius={0.6} flee />
       </ScrollFloat>
     </>
