@@ -2,7 +2,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Toaster } from "sonner";
+import { ThemedToaster } from "@/components/site/ThemedToaster";
 import { BASE_URL, OG_IMAGE, SITE_CONFIG } from "@/lib/site-config";
 import "./globals.css";
 
@@ -97,25 +97,7 @@ export default function RootLayout({
         {children}
         <Analytics />
         <SpeedInsights />
-        <Toaster
-          position="bottom-right"
-          theme="system"
-          toastOptions={{
-            style: {
-              background: "hsl(var(--background))",
-              color: "hsl(var(--foreground))",
-              border: "1px solid hsl(var(--border))",
-              backdropFilter: "blur(8px)",
-            },
-            className:
-              "!bg-white dark:!bg-neutral-900 !text-neutral-900 dark:!text-neutral-100 !border-neutral-200 dark:!border-neutral-800 !shadow-lg group",
-            duration: 5000, // 5 seconds before auto-dismiss
-          }}
-          richColors
-          closeButton
-          expand={false} // Don't expand on hover
-          gap={12} // Space between toasts
-        />
+        <ThemedToaster />
       </body>
     </html>
   );
