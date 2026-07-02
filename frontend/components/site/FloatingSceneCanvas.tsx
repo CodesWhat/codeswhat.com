@@ -47,10 +47,11 @@ const FLOATERS: Floater[] = [
     behavior: "walk",
   },
   // top-right card — the whale: glides side to side, turns around at each end
+  // (dropped so it swims lower on its card)
   {
     key: "drydock",
     url: "/logos/drydock-balloon.png",
-    focus: 0.34,
+    focus: 0.42,
     x: 3.3,
     z: -1.2,
     size: 2.4,
@@ -59,23 +60,25 @@ const FLOATERS: Floater[] = [
     behavior: "swim",
   },
   // bottom-left card — the bird: waves back and forth in place, like flapping
+  // (dropped so its head lands under the card heading)
   {
     key: "portwing",
     url: "/logos/portwing-balloon.png",
-    focus: 0.48,
-    x: -2.4,
+    focus: 0.57,
+    x: -2.6,
     z: -1.0,
     size: 2.0,
     tint: "#eef0f4",
     phase: 3.2,
     behavior: "flap",
   },
-  // bottom-right card — the key: spins in place like the coin
+  // bottom-right card — the key: spins in place like the coin, pushed out to
+  // the card's right edge (half on, half off) so more of it shows
   {
     key: "portkey",
     url: "/logos/portkey-balloon.png",
-    focus: 0.52,
-    x: 2.4,
+    focus: 0.57,
+    x: 3.8,
     z: -1.2,
     size: 2.0,
     tint: "#e9edf6",

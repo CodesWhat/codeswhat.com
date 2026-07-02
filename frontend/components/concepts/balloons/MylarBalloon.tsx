@@ -563,8 +563,9 @@ export function MylarBalloon({
       let yaw: number;
       if (behavior === "swim") {
         // holds broadside while gliding, pivots through its edge to turn around
-        // at each end of the sweep (motionX and this cos share a phase)
-        yaw = (Math.PI / 2) * (1 - Math.tanh(Math.cos(t * 0.5 + phase) * 3));
+        // at each end of the sweep (motionX and this cos share a phase) — the
+        // +tanh keeps it nose-first (leading) in whichever way it's heading
+        yaw = (Math.PI / 2) * (1 + Math.tanh(Math.cos(t * 0.5 + phase) * 3));
       } else if (behavior === "flap") {
         yaw = faceCamera + Math.sin(t * 1.15 + phase) * 0.85;
       } else if (spin) {
