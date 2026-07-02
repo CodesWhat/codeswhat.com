@@ -5,7 +5,7 @@ import { Wordmark } from "@/components/site/Wordmark";
 import { GITHUB_URL, SITE_CONFIG } from "@/lib/site-config";
 
 const navLinkCn =
-  "text-sm text-neutral-600 transition-colors hover:text-neutral-900 focus-visible:outline-none focus-visible:text-lime-600 dark:text-neutral-300 dark:hover:text-white dark:focus-visible:text-lime-200";
+  "text-sm text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:text-brand-hover";
 
 /**
  * Sticky, translucent dark header — concept-shell chrome (logo + lime-tracked
@@ -13,7 +13,7 @@ const navLinkCn =
  */
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-50 border-b border-neutral-200/80 bg-white/80 backdrop-blur-xl dark:border-white/10 dark:bg-neutral-950/78">
+    <header className="sticky top-0 z-50 border-b border-line bg-bar backdrop-blur-xl">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" aria-label={`${SITE_CONFIG.name} — home`} className="flex items-center">
           <Wordmark />
@@ -33,7 +33,7 @@ export function SiteHeader() {
             target="_blank"
             rel="noopener noreferrer"
             aria-label="CodesWhat on GitHub"
-            className="rounded-full p-2 text-neutral-600 transition-colors hover:bg-neutral-200/60 hover:text-neutral-900 dark:text-neutral-300 dark:hover:bg-white/10 dark:hover:text-white"
+            className="rounded-full p-2 text-fg-muted transition-colors hover:bg-line hover:text-fg"
           >
             <Github className="h-5 w-5" />
           </a>
