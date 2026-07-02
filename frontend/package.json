@@ -19,7 +19,8 @@
     "format:check": "biome format .",
     "test:scene": "node --test test/scene.test.mjs",
     "og": "node scripts/generate-og.mjs",
-    "coin": "node scripts/capture-coin.mjs",
+    "coin": "node scripts/capture-assets.mjs --subject coin",
+    "balloon": "node scripts/capture-assets.mjs --subject balloon",
     "vercel-build": "npm run build"
   },
   "dependencies": {

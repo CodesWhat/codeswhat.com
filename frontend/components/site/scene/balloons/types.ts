@@ -40,4 +40,9 @@ export type BalloonProps = {
   /** dark mode: invert the baked foil colors (the brand's dark-mode treatment —
    *  green→blue, blue→red, etc). The headshot opts out so faces don't go negative. */
   dark?: boolean;
+  /** dev-only capture (scripts/capture-assets.mjs): when set, freeze all idle
+   *  motion (bob, roll, behavior, collision, glance) and pin the yaw to this
+   *  angle so the balloon can be rendered as a still icon or a seamless spin.
+   *  A function is read live each frame so the capture rig can sweep the angle. */
+  captureAngle?: number | (() => number);
 };
