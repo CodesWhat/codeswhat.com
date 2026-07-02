@@ -1,1 +1,7 @@
 .DS_Store
+
+# coin capture (scripts/capture-coin.mjs): commit the WebP as the source-of-truth
+# asset; the heavy GIF/APNG are regenerable, and frames are scratch.
+exports/coin/*.gif
+exports/coin/*.apng.png
+frontend/.coin-frames/
