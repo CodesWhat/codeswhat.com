@@ -15,7 +15,7 @@ export function Projects() {
             Open source software
           </p>
           <h2 className="text-3xl font-semibold tracking-tight text-neutral-900 sm:text-4xl dark:text-white">
-            Four tools I actually use
+            Tools I actually use
           </h2>
           <p className="mt-3 text-base text-neutral-600 dark:text-neutral-400">
             Containers, security, automation. Each one built because I needed it and couldn't find
