@@ -183,10 +183,11 @@ function Scene() {
         </ScrollFloat>
       ))}
 
-      {/* the clear glass "@" marble — hangs low and orbits behind the "Get
-          notified" card; a short span keeps it lingering down there */}
-      <ScrollFloat scroll={scroll} focus={0.92} x={0} z={-0.5} restY={-1} span={6}>
-        <ContactMarble center={[0, 0, 0]} orbitRadius={2.2} orbitSpeed={0.22} radius={0.6} />
+      {/* the clear glass "@" marble — stays hidden through the projects, rises
+          in around the "Who's behind it" section, then rides a wide orbit
+          around the "Get notified" card and darts away from the cursor */}
+      <ScrollFloat scroll={scroll} focus={0.95} x={0} z={-0.5} restY={-0.8} span={12}>
+        <ContactMarble center={[0, 0, 0]} orbitRadius={3.2} orbitSpeed={0.22} radius={0.6} flee />
       </ScrollFloat>
     </>
   );
