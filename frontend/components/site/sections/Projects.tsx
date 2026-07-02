@@ -15,11 +15,10 @@ export function Projects() {
             The roster
           </p>
           <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Four projects, one obsession
+            Four projects
           </h2>
           <p className="mt-3 text-base text-neutral-400">
-            Open-source infrastructure and security tooling. Each is self-hostable, MIT/Apache/AGPL
-            licensed, and built to be understood.
+            Small tools for containers, security, and automation.
           </p>
         </div>
 
