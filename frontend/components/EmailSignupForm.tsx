@@ -100,7 +100,7 @@ export function EmailSignupForm() {
 
   return (
     <div>
-      <h3 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold">
+      <h3 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold text-neutral-900 dark:text-white">
         <Bell className="h-5 w-5" />
         Get Notified
       </h3>
