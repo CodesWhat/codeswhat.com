@@ -31,6 +31,9 @@ export function SiteHeader() {
           <a href="#projects" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
             Projects
           </a>
+          <a href="#services" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
+            Services
+          </a>
           <a href="#contact" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
             Contact
           </a>

@@ -7,6 +7,7 @@ import { About } from "@/components/site/sections/About";
 import { Contact } from "@/components/site/sections/Contact";
 import { Hero } from "@/components/site/sections/Hero";
 import { Projects } from "@/components/site/sections/Projects";
+import { Services } from "@/components/site/sections/Services";
 import { BASE_URL, GITHUB_URL, OG_IMAGE, PROJECTS, SITE_CONFIG } from "@/lib/site-config";
 
 const title = `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`;
@@ -99,6 +100,7 @@ export default function Home() {
         <main id="main-content">
           <Hero />
           <Projects />
+          <Services />
           <About />
           <Contact />
         </main>
