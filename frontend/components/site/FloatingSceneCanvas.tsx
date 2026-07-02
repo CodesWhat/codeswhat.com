@@ -20,7 +20,8 @@ type Floater = {
   size: number;
   tint: string;
   phase: number;
-  behavior?: "swim" | "walk";
+  behavior?: "swim" | "walk" | "flap";
+  spin?: number;
   glanceFrames?: string[];
   blinkFrame?: string;
 };
@@ -33,10 +34,11 @@ type Floater = {
  */
 const FLOATERS: Floater[] = [
   // top-left card — the guard dog: bouncy steps, keeps turning to look around
+  // (dropped below the section heading so it sits beside its card)
   {
     key: "sockguard",
     url: "/logos/sockguard-balloon.png",
-    focus: 0.3,
+    focus: 0.38,
     x: -3.3,
     z: -0.8,
     size: 2.2,
@@ -44,7 +46,7 @@ const FLOATERS: Floater[] = [
     phase: 0,
     behavior: "walk",
   },
-  // top-right card — the whale: glides side to side and banks into the turn
+  // top-right card — the whale: glides side to side, turns around at each end
   {
     key: "drydock",
     url: "/logos/drydock-balloon.png",
@@ -56,34 +58,36 @@ const FLOATERS: Floater[] = [
     phase: 1.7,
     behavior: "swim",
   },
-  // bottom-left card
+  // bottom-left card — the bird: waves back and forth in place, like flapping
   {
     key: "portwing",
     url: "/logos/portwing-balloon.png",
-    focus: 0.44,
-    x: -3.3,
+    focus: 0.48,
+    x: -2.4,
     z: -1.0,
     size: 2.0,
     tint: "#eef0f4",
     phase: 3.2,
+    behavior: "flap",
   },
-  // bottom-right card
+  // bottom-right card — the key: spins in place like the coin
   {
     key: "portkey",
     url: "/logos/portkey-balloon.png",
-    focus: 0.48,
-    x: 3.3,
+    focus: 0.52,
+    x: 2.4,
     z: -1.2,
     size: 2.0,
     tint: "#e9edf6",
     phase: 5.5,
+    spin: 0.4,
   },
-  // the headshot — rises into view around the "Who's behind it" section
+  // the headshot — sits with the "Who's behind it" section, facing forward
   {
     key: "scott",
     url: "/logos/scott-balloon.png",
-    focus: 0.68,
-    x: 3.2,
+    focus: 0.72,
+    x: 3.8,
     z: -0.4,
     size: 2.6,
     tint: "#eef1f7",
@@ -113,6 +117,7 @@ function ScrollFloat({
   x,
   z,
   restY = 0,
+  span = SPAN,
   children,
 }: {
   scroll: RefObject<number>;
@@ -120,6 +125,7 @@ function ScrollFloat({
   x: number;
   z: number;
   restY?: number;
+  span?: number;
   children: ReactNode;
 }) {
   const group = useRef<THREE.Group>(null);
@@ -127,7 +133,7 @@ function ScrollFloat({
 
   useFrame(() => {
     if (!group.current) return;
-    const targetY = restY + (scroll.current - focus) * SPAN;
+    const targetY = restY + (scroll.current - focus) * span;
     if (!started.current) {
       // snap on the first frame so nothing animates in from center on load
       group.current.position.y = targetY;
@@ -170,13 +176,14 @@ function Scene() {
 
       {FLOATERS.map(({ key, focus, x, z, ...m }) => (
         <ScrollFloat key={key} scroll={scroll} focus={focus} x={x} z={z}>
-          <MylarBalloon anchor={[0, 0, 0]} baseY={0} {...m} />
+          <MylarBalloon anchor={[0, 0, 0]} baseY={0} showString={false} {...m} />
         </ScrollFloat>
       ))}
 
-      {/* the clear glass "@" marble — orbits gently down by the contact section */}
-      <ScrollFloat scroll={scroll} focus={0.86} x={-0.8} z={-0.5}>
-        <ContactMarble center={[0, 0, 0]} orbitRadius={3.2} orbitSpeed={0.22} radius={0.6} />
+      {/* the clear glass "@" marble — hangs low and orbits behind the "Get
+          notified" card; a short span keeps it lingering down there */}
+      <ScrollFloat scroll={scroll} focus={0.92} x={0} z={-0.5} restY={-1} span={6}>
+        <ContactMarble center={[0, 0, 0]} orbitRadius={2.2} orbitSpeed={0.22} radius={0.6} />
       </ScrollFloat>
     </>
   );

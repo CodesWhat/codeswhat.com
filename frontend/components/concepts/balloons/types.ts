@@ -29,10 +29,17 @@ export type BalloonProps = {
   glanceFrames?: string[];
   /** a short blink frame shown occasionally (Mylar headshot only) */
   blinkFrame?: string;
-  /** idle personality motion layered on top of the bob: "swim" sways side to
-   *  side and banks into the turn (whale/fish), "walk" bounces and turns like
-   *  it's padding around (dog). Omit for a plain float. */
-  behavior?: "swim" | "walk";
+  /** idle personality motion layered on top of the bob: "swim" glides side to
+   *  side and turns around at each end (whale/fish), "walk" bounces and turns
+   *  like it's padding around (dog), "flap" waves back and forth in place like
+   *  a bird flapping. Omit for a plain float. */
+  behavior?: "swim" | "walk" | "flap";
+  /** radians/sec of continuous yaw. When set the balloon spins a full 360 to
+   *  show off both foil faces instead of billboarding toward the camera. */
+  spin?: number;
+  /** whether to hang the tether string below the balloon (default true). Turn
+   *  off for free-floating balloons where a dangling string reads wrong. */
+  showString?: boolean;
 };
 
 /** The balloon styles the switcher can render. */

@@ -413,6 +413,8 @@ export function MylarBalloon({
   glanceFrames,
   blinkFrame,
   behavior,
+  spin,
+  showString = true,
 }: BalloonProps) {
   // Neutral face first, then the glance frames, then an optional blink — one
   // shared foil silhouette, one printed face per frame.
@@ -483,19 +485,17 @@ export function MylarBalloon({
     const y = baseY + Math.sin(t * speed + phase) * float;
     const roll = Math.sin(t * 0.58 + phase) * 0.065;
 
-    // idle personality: a slow horizontal drift + extra yaw layered on top of
-    // the bob. "swim" glides side to side and banks into the turn like a fish;
-    // "walk" takes shorter bouncy steps and keeps turning to look around.
+    // idle personality — a slow positional drift on top of the bob. The
+    // matching yaw (turning to face where it's going) is computed below.
     let motionX = 0;
     let motionY = 0;
-    let motionYaw = 0;
     if (behavior === "swim") {
       motionX = Math.sin(t * 0.5 + phase) * size * 0.32;
-      motionYaw = Math.cos(t * 0.5 + phase) * 0.55;
     } else if (behavior === "walk") {
       motionX = Math.sin(t * 0.32 + phase) * size * 0.16;
       motionY = Math.abs(Math.sin(t * 1.5 + phase)) * size * 0.1;
-      motionYaw = Math.sin(t * 0.4 + phase) * 0.6;
+    } else if (behavior === "flap") {
+      motionY = Math.abs(Math.sin(t * 2.3 + phase)) * size * 0.05;
     }
 
     // contact-marble collision: when the orbiting "@" marble reaches this
@@ -556,11 +556,25 @@ export function MylarBalloon({
 
     if (balloon.current) {
       balloon.current.position.set(anchor[0] + d.x + motionX, y + d.y + motionY, anchor[2] + d.z);
-      const yaw = Math.atan2(
+      const faceCamera = Math.atan2(
         state.camera.position.x - anchor[0],
         state.camera.position.z - anchor[2],
       );
-      balloon.current.rotation.y = yaw + Math.sin(t * 0.42 + phase) * 0.1 + motionYaw;
+      let yaw: number;
+      if (behavior === "swim") {
+        // holds broadside while gliding, pivots through its edge to turn around
+        // at each end of the sweep (motionX and this cos share a phase)
+        yaw = (Math.PI / 2) * (1 - Math.tanh(Math.cos(t * 0.5 + phase) * 3));
+      } else if (behavior === "flap") {
+        yaw = faceCamera + Math.sin(t * 1.15 + phase) * 0.85;
+      } else if (spin) {
+        yaw = t * spin + phase; // full continuous 360, like the coin
+      } else if (behavior === "walk") {
+        yaw = faceCamera + Math.sin(t * 0.4 + phase) * 0.6;
+      } else {
+        yaw = faceCamera + Math.sin(t * 0.42 + phase) * 0.1;
+      }
+      balloon.current.rotation.y = yaw;
       balloon.current.rotation.z = roll;
       const target = hovered ? 1.08 : 1;
       const s = balloon.current.scale.x + (target - balloon.current.scale.x) * 0.15;
@@ -653,7 +667,9 @@ export function MylarBalloon({
         </mesh>
       </group>
 
-      <primitive ref={stringLine} object={stringObject} position={[0, assets.stringAnchorY, 0]} />
+      {showString && (
+        <primitive ref={stringLine} object={stringObject} position={[0, assets.stringAnchorY, 0]} />
+      )}
     </group>
   );
 }
