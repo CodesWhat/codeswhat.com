@@ -19,6 +19,7 @@ export function ContactMarble({
   bob = 0.28,
   radius = 0.68,
   onContact,
+  flee = false,
 }: {
   center?: [number, number, number];
   orbitRadius?: number;
@@ -26,11 +27,19 @@ export function ContactMarble({
   bob?: number;
   radius?: number;
   onContact?: () => void;
+  /** dart away from the cursor when it comes near (the canvas is
+   *  pointer-events-none, so the cursor is tracked on window instead) */
+  flee?: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   const texture = useMemo(() => makeAtTexture(), []);
   const planeSize = radius * 1.05;
   const collider = useContext(OrbColliderContext);
+
+  // normalized cursor (-1..1), and the eased "run away" offset it produces
+  const pointer = useRef({ x: 0, y: 0, seen: false });
+  const fleeOffset = useRef({ x: 0, y: 0 });
+  const worldPos = useMemo(() => new THREE.Vector3(), []);
 
   // let balloons see us as a collider; stop deflecting them once we unmount
   useEffect(() => {
@@ -41,20 +50,65 @@ export function ContactMarble({
     };
   }, [collider, radius]);
 
+  useEffect(() => {
+    if (!flee) return;
+    const onMove = (e: PointerEvent) => {
+      pointer.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      pointer.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
+      pointer.current.seen = true;
+    };
+    const onLeave = () => {
+      pointer.current.seen = false;
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerout", onLeave);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerout", onLeave);
+    };
+  }, [flee]);
+
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const a = t * orbitSpeed;
-    if (group.current) {
-      group.current.position.set(
-        center[0] + Math.cos(a) * orbitRadius,
-        center[1] + Math.sin(t * 0.9) * bob,
-        center[2] + Math.sin(a) * orbitRadius,
-      );
-      if (collider) {
-        collider.position.copy(group.current.position);
-        collider.radius = radius;
-        collider.active = true;
+    if (!group.current) return;
+
+    const ox = center[0] + Math.cos(a) * orbitRadius;
+    const oy = center[1] + Math.sin(t * 0.9) * bob;
+    const oz = center[2] + Math.sin(a) * orbitRadius;
+    group.current.position.set(ox, oy, oz);
+
+    // repel from the cursor: map the pointer onto the marble's plane, and if
+    // it gets close, shove the marble radially away (eased in and out)
+    let targetX = 0;
+    let targetY = 0;
+    if (flee && pointer.current.seen) {
+      group.current.getWorldPosition(worldPos);
+      const cam = state.camera as THREE.PerspectiveCamera;
+      const dist = cam.position.z - worldPos.z;
+      const halfH = Math.tan((cam.fov * Math.PI) / 180 / 2) * dist;
+      const halfW = halfH * cam.aspect;
+      const mx = cam.position.x + pointer.current.x * halfW;
+      const my = cam.position.y + pointer.current.y * halfH;
+      const dx = worldPos.x - mx;
+      const dy = worldPos.y - my;
+      const d = Math.hypot(dx, dy);
+      if (d < orbitRadius) {
+        const push = (orbitRadius - d) / orbitRadius;
+        const mag = orbitRadius * 0.9 * push;
+        targetX = (dx / (d || 1e-3)) * mag;
+        targetY = (dy / (d || 1e-3)) * mag;
       }
+    }
+    fleeOffset.current.x += (targetX - fleeOffset.current.x) * 0.18;
+    fleeOffset.current.y += (targetY - fleeOffset.current.y) * 0.18;
+    group.current.position.x = ox + fleeOffset.current.x;
+    group.current.position.y = oy + fleeOffset.current.y;
+
+    if (collider) {
+      collider.position.copy(group.current.position);
+      collider.radius = radius;
+      collider.active = true;
     }
   });
 
