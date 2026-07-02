@@ -2,28 +2,37 @@ import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Toaster } from "sonner";
+import { ThemedToaster } from "@/components/site/ThemedToaster";
+import { BASE_URL, OG_IMAGE, SITE_CONFIG } from "@/lib/site-config";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// env overrides for the shared shell, falling back to the real brand values
+// (not the old scaffolding defaults) so non-homepage routes stay on-brand
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || SITE_CONFIG.name;
+const siteDescription = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || SITE_CONFIG.description;
+
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?",
-  description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || "Personal Blog and Portfolio",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  title: siteName,
+  description: siteDescription,
+  metadataBase: new URL(BASE_URL),
   openGraph: {
-    title: process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?",
-    description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || "Personal Blog and Portfolio",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    siteName: process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?",
+    title: siteName,
+    description: siteDescription,
+    url: BASE_URL,
+    siteName,
     locale: "en_US",
     type: "website",
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
-    title: process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?",
-    description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || "Personal Blog and Portfolio",
-    creator: "@codeswhat",
+    title: siteName,
+    description: siteDescription,
+    site: SITE_CONFIG.twitterCreator,
+    creator: SITE_CONFIG.twitterCreator,
+    images: [OG_IMAGE],
   },
   icons: {
     icon: [
@@ -67,18 +76,17 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta
-          name="apple-mobile-web-app-title"
-          content={process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?"}
-        />
+        <meta name="apple-mobile-web-app-title" content={siteName} />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               try {
-                if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-                  document.documentElement.classList.add('dark')
-                } else {
+                // Dark by default (the 3D layer is tuned for black); light is an
+                // explicit opt-in via the header toggle.
+                if (localStorage.theme === 'light') {
                   document.documentElement.classList.remove('dark')
+                } else {
+                  document.documentElement.classList.add('dark')
                 }
               } catch (_) {}
             `,
@@ -89,25 +97,7 @@ export default function RootLayout({
         {children}
         <Analytics />
         <SpeedInsights />
-        <Toaster
-          position="bottom-right"
-          theme="system"
-          toastOptions={{
-            style: {
-              background: "hsl(var(--background))",
-              color: "hsl(var(--foreground))",
-              border: "1px solid hsl(var(--border))",
-              backdropFilter: "blur(8px)",
-            },
-            className:
-              "!bg-white dark:!bg-neutral-900 !text-neutral-900 dark:!text-neutral-100 !border-neutral-200 dark:!border-neutral-800 !shadow-lg group",
-            duration: 5000, // 5 seconds before auto-dismiss
-          }}
-          richColors
-          closeButton
-          expand={false} // Don't expand on hover
-          gap={12} // Space between toasts
-        />
+        <ThemedToaster />
       </body>
     </html>
   );
