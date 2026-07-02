@@ -3,27 +3,34 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
+import { BASE_URL, SITE_CONFIG } from "@/lib/site-config";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
+// env overrides for the shared shell, falling back to the real brand values
+// (not the old scaffolding defaults) so non-homepage routes stay on-brand
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || SITE_CONFIG.name;
+const siteDescription = process.env.NEXT_PUBLIC_SITE_DESCRIPTION || SITE_CONFIG.description;
+
 export const metadata: Metadata = {
-  title: process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?",
-  description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || "Personal Blog and Portfolio",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  title: siteName,
+  description: siteDescription,
+  metadataBase: new URL(BASE_URL),
   openGraph: {
-    title: process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?",
-    description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || "Personal Blog and Portfolio",
-    url: process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-    siteName: process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?",
+    title: siteName,
+    description: siteDescription,
+    url: BASE_URL,
+    siteName,
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?",
-    description: process.env.NEXT_PUBLIC_SITE_DESCRIPTION || "Personal Blog and Portfolio",
-    creator: "@codeswhat",
+    title: siteName,
+    description: siteDescription,
+    site: SITE_CONFIG.twitterCreator,
+    creator: SITE_CONFIG.twitterCreator,
   },
   icons: {
     icon: [
@@ -67,10 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <meta
-          name="apple-mobile-web-app-title"
-          content={process.env.NEXT_PUBLIC_SITE_NAME || "CodesWhat?"}
-        />
+        <meta name="apple-mobile-web-app-title" content={siteName} />
         <script
           dangerouslySetInnerHTML={{
             __html: `
