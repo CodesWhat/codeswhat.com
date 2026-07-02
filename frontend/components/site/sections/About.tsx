@@ -10,13 +10,13 @@ export function About() {
     <section id="about" className="relative scroll-mt-20 px-4 py-20 sm:px-6">
       <div className="mx-auto max-w-3xl">
         <p className="mb-3 font-mono text-xs font-semibold tracking-[0.2em] text-lime-300 uppercase">
-          Who's behind it
+          The developer
         </p>
         <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-          A one-person studio, shipping in the open
+          One developer, a lot of agents
         </h2>
         <p className="mt-4 text-base leading-relaxed text-neutral-400">
-          {SITE_CONFIG.name} is built by{" "}
+          {SITE_CONFIG.name} is{" "}
           <a
             href={SITE_CONFIG.author.url}
             target="_blank"
@@ -25,9 +25,10 @@ export function About() {
           >
             {SITE_CONFIG.author.name}
             <ArrowUpRight className="h-3.5 w-3.5 opacity-60" />
-          </a>
-          . Everything here is open source, self-hostable, and made because the tool didn't exist
-          yet or didn't work the way it should. No telemetry, no lock-in, no roadmap theater.
+          </a>{" "}
+          — one developer finding out how far agentic coding can go. These tools are the result:
+          built fast, shipped in the open, and yours to self-host. No telemetry, no lock-in, no
+          roadmap theater.
         </p>
       </div>
     </section>

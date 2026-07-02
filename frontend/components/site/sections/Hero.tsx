@@ -21,8 +21,8 @@ export function Hero() {
         </h1>
 
         <p className="max-w-2xl text-lg text-neutral-400">
-          Open-source developer tools for containers, security, and automation. Small tools that do
-          one thing well.
+          Open-source tools for containers, security, and automation — small, sharp, and built in
+          the open.
         </p>
 
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
