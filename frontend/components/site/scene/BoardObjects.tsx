@@ -83,8 +83,19 @@ export function CodesWhatCoin({
     canvas.height = img.naturalHeight || img.height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return rawTexture;
-    ctx.filter = "invert(1)";
     ctx.drawImage(img, 0, 0);
+    // RGB-invert every pixel (alpha untouched) so the lime face → indigo, the
+    // same way the balloons invert. Done explicitly rather than via
+    // ctx.filter="invert(1)", which is a silent no-op in some browsers (Safari)
+    // and left the coin face green on the live site.
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const d = pixels.data;
+    for (let i = 0; i < d.length; i += 4) {
+      d[i] = 255 - d[i];
+      d[i + 1] = 255 - d[i + 1];
+      d[i + 2] = 255 - d[i + 2];
+    }
+    ctx.putImageData(pixels, 0, 0);
     const inverted = new THREE.CanvasTexture(canvas);
     inverted.colorSpace = THREE.SRGBColorSpace;
     inverted.anisotropy = 16;
