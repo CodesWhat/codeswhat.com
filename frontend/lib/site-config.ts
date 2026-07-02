@@ -71,7 +71,7 @@ export const PROJECTS: Project[] = [
       "A default-deny proxy for the Docker socket — you pick exactly which requests reach the daemon.",
     status: "Apache-2.0 · Go",
     accent: "#e8a11c",
-    href: "https://github.com/CodesWhat/sockguard",
+    href: "https://getsockguard.com",
     balloon: "/logos/sockguard-balloon.png",
   },
   {
