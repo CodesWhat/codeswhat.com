@@ -7,7 +7,7 @@ import { About } from "@/components/site/sections/About";
 import { Contact } from "@/components/site/sections/Contact";
 import { Hero } from "@/components/site/sections/Hero";
 import { Projects } from "@/components/site/sections/Projects";
-import { BASE_URL, GITHUB_URL, PROJECTS, SITE_CONFIG } from "@/lib/site-config";
+import { BASE_URL, GITHUB_URL, OG_IMAGE, PROJECTS, SITE_CONFIG } from "@/lib/site-config";
 
 const title = `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`;
 
@@ -21,6 +21,7 @@ export const metadata: Metadata = {
     url: BASE_URL,
     siteName: SITE_CONFIG.name,
     type: "website",
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
@@ -28,6 +29,7 @@ export const metadata: Metadata = {
     description: SITE_CONFIG.description,
     site: SITE_CONFIG.twitterCreator,
     creator: SITE_CONFIG.twitterCreator,
+    images: [OG_IMAGE],
   },
 };
 
