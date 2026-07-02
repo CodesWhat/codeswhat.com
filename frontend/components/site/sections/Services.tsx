@@ -41,7 +41,7 @@ export function Services() {
           {OFFERINGS.map((offering) => (
             <li
               key={offering.title}
-              className="flex h-full flex-col gap-2 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-white/5 dark:bg-neutral-900/50 dark:shadow-none"
+              className="flex h-full flex-col gap-2 rounded-2xl border border-neutral-200 bg-white/60 p-6 shadow-sm backdrop-blur-sm dark:border-white/5 dark:bg-neutral-900/50 dark:shadow-none"
             >
               <h3 className="text-lg font-semibold tracking-tight text-neutral-900 dark:text-white">
                 {offering.title}
@@ -58,7 +58,7 @@ export function Services() {
             href="mailto:hello@codeswhat.com"
             className="inline-flex items-center gap-2 rounded-full bg-lime-400 px-5 py-2.5 text-sm font-semibold text-neutral-950 transition-colors hover:bg-lime-500 dark:bg-lime-300 dark:hover:bg-lime-200"
           >
-            Tell me what you're building
+            Tell me what you need help with
             <ArrowRight className="h-4 w-4" />
           </a>
         </div>

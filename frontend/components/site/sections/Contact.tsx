@@ -7,7 +7,7 @@ import { EmailSignupForm } from "@/components/EmailSignupForm";
 export function Contact() {
   return (
     <section id="contact" className="relative scroll-mt-20 px-4 pt-20 pb-24 sm:px-6">
-      <div className="mx-auto max-w-2xl rounded-3xl border border-neutral-200 bg-white p-8 text-center shadow-sm backdrop-blur-sm dark:border-white/5 dark:bg-neutral-900/50 dark:shadow-none sm:p-12">
+      <div className="mx-auto max-w-2xl rounded-3xl border border-neutral-200 bg-white/60 p-8 text-center shadow-sm backdrop-blur-sm dark:border-white/5 dark:bg-neutral-900/50 dark:shadow-none sm:p-12">
         <p className="mb-3 font-mono text-xs font-semibold tracking-[0.2em] text-lime-700 uppercase dark:text-lime-300">
           Stay in the loop
         </p>

@@ -30,7 +30,7 @@ export function Projects() {
                 href={project.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative flex h-full flex-col gap-3 rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:border-white/5 dark:bg-neutral-900/50 dark:shadow-none dark:hover:border-white/10 dark:hover:bg-neutral-900/80"
+                className="group relative flex h-full flex-col gap-3 rounded-2xl border border-neutral-200 bg-white/60 p-6 shadow-sm backdrop-blur-sm transition-all hover:-translate-y-0.5 hover:border-neutral-300 hover:shadow-md dark:border-white/5 dark:bg-neutral-900/50 dark:shadow-none dark:hover:border-white/10 dark:hover:bg-neutral-900/80"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
