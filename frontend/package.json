@@ -17,7 +17,7 @@
     "check:all": "biome check . && npm run type-check",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "test:concepts": "node --test test/concepts.test.mjs",
+    "test:scene": "node --test test/scene.test.mjs",
     "og": "node scripts/generate-og.mjs",
     "vercel-build": "npm run build"
   },
