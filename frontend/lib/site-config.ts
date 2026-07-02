@@ -14,7 +14,7 @@ export const SITE_CONFIG = {
   tagline: "Where curiosity meets code",
   /** Default meta / OpenGraph / description. */
   description:
-    "CodesWhat is an independent studio building open-source developer tools for containers, security, and automation — Sockguard, Drydock, Portwing, and the Portkey Admin MCP server.",
+    "Open-source developer tools for containers, security, and automation — Sockguard, Drydock, Portwing, and Portkey Admin MCP.",
   /** Production domain (no protocol, no trailing slash). */
   domain: "codeswhat.com",
   /** GitHub org. */
@@ -59,7 +59,7 @@ export const PROJECTS: Project[] = [
     name: "Sockguard",
     tagline: "Default-deny Docker socket proxy",
     description:
-      "A default-deny proxy for the Docker socket. Control exactly which requests reach the daemon, so a compromised container can't take over the host.",
+      "A default-deny proxy for the Docker socket — you pick exactly which requests reach the daemon.",
     status: "Apache-2.0 · Go",
     accent: "#e8a11c",
     href: "https://github.com/CodesWhat/sockguard",
@@ -70,7 +70,7 @@ export const PROJECTS: Project[] = [
     name: "Drydock",
     tagline: "Container update monitoring",
     description:
-      "Self-hosted container update monitoring. Auto-discovers everything you're running, detects outdated or exposed images, and triggers notifications across 20+ services.",
+      "Self-hosted update monitoring. Finds what you're running, flags outdated or exposed images, and tells you.",
     status: "AGPL-3.0 · TypeScript",
     accent: "#1f9ed6",
     href: "https://getdrydock.com",
@@ -79,9 +79,8 @@ export const PROJECTS: Project[] = [
   {
     slug: "portwing",
     name: "Portwing",
-    tagline: "Security-first remote Docker agent",
-    description:
-      "A security-first remote Docker agent — control your containers from anywhere without exposing the daemon. Built for least-privilege access from day one.",
+    tagline: "Remote Docker agent",
+    description: "Control your Docker containers from anywhere, without exposing the daemon.",
     status: "v0.3 · Alpha",
     accent: "#a25bd6",
     href: "https://github.com/CodesWhat/portwing",
@@ -90,9 +89,9 @@ export const PROJECTS: Project[] = [
   {
     slug: "portkey-admin-mcp",
     name: "Portkey Admin MCP",
-    tagline: "Portkey gateway, from any MCP client",
+    tagline: "Portkey admin, from any MCP client",
     description:
-      "A Model Context Protocol server for the Portkey admin API — manage configs, virtual keys, guardrails, and analytics for your AI gateway from any MCP-aware client.",
+      "A Model Context Protocol (MCP) server for the Portkey admin API — manage configs, keys, guardrails, and analytics from any MCP client.",
     status: "MCP · TypeScript",
     accent: "#6b7bd6",
     href: "https://github.com/CodesWhat/portkey-admin-mcp",

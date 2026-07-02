@@ -1,5 +1,5 @@
 import { ArrowRight, Github } from "lucide-react";
-import { GITHUB_URL, SITE_CONFIG } from "@/lib/site-config";
+import { GITHUB_URL } from "@/lib/site-config";
 
 /**
  * Hero — concept-shell typography on black: lime uppercase eyebrow, oversized
@@ -21,8 +21,8 @@ export function Hero() {
         </h1>
 
         <p className="max-w-2xl text-lg text-neutral-400">
-          {SITE_CONFIG.name} is an independent studio building open-source developer tools for
-          containers, security, and automation. Small, sharp projects that do one thing well.
+          Open-source developer tools for containers, security, and automation. Small tools that do
+          one thing well.
         </p>
 
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">

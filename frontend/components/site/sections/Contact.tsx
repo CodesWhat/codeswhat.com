@@ -15,7 +15,7 @@ export function Contact() {
           Get notified when something ships
         </h2>
         <p className="mx-auto mt-3 max-w-md text-base text-neutral-400">
-          New tools, big releases, the occasional writeup. No spam — unsubscribe anytime.
+          A note when something new ships. No spam.
         </p>
         <div className="mx-auto mt-8 max-w-md">
           <EmailSignupForm />
