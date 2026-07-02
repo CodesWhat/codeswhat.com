@@ -1,4 +1,5 @@
 import { ArrowUpRight, Github } from "lucide-react";
+import type { CSSProperties } from "react";
 import { Wordmark } from "@/components/site/Wordmark";
 import { GITHUB_URL, PROJECTS, SITE_CONFIG } from "@/lib/site-config";
 
@@ -27,12 +28,15 @@ export function SiteFooter() {
 
           <nav className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-fg-muted">
             {PROJECTS.map((p) => (
+              // each project link lights up in its own accent on hover, echoing
+              // that project's card arrow; --proj-accent feeds the hover color
               <a
                 key={p.slug}
                 href={p.href}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-0.5 transition-colors hover:text-brand-hover"
+                style={{ "--proj-accent": p.accent } as CSSProperties}
+                className="inline-flex items-center gap-0.5 transition-colors hover:text-[var(--proj-accent)]"
               >
                 {p.name}
                 <ArrowUpRight className="h-3.5 w-3.5 opacity-60" />
