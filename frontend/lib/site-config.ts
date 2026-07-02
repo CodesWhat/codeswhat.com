@@ -43,6 +43,7 @@ export type Project = {
   name: string;
   tagline: string;
   description: string;
+  /** at-a-glance badges, kept uniform as "License · Language" across cards */
   status: string;
   /** hex accent used for the card rule + balloon tint reference */
   accent: string;
@@ -81,7 +82,7 @@ export const PROJECTS: Project[] = [
     name: "Portwing",
     tagline: "Remote Docker agent",
     description: "Control your Docker containers from anywhere, without exposing the daemon.",
-    status: "v0.3 · Alpha",
+    status: "AGPL-3.0 · Go",
     accent: "#a25bd6",
     href: "https://github.com/CodesWhat/portwing",
     balloon: "/logos/portwing-balloon.png",
@@ -92,7 +93,7 @@ export const PROJECTS: Project[] = [
     tagline: "Portkey admin, from any MCP client",
     description:
       "A Model Context Protocol (MCP) server for the Portkey admin API — manage configs, keys, guardrails, and analytics from any MCP client.",
-    status: "MCP · TypeScript",
+    status: "MIT · TypeScript",
     accent: "#6b7bd6",
     href: "https://github.com/CodesWhat/portkey-admin-mcp",
     balloon: "/logos/portkey-balloon.png",
