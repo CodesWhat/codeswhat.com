@@ -100,11 +100,11 @@ export function EmailSignupForm() {
 
   return (
     <div>
-      <h3 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold">
+      <h3 className="mb-2 flex items-center justify-center gap-2 text-lg font-semibold text-fg">
         <Bell className="h-5 w-5" />
         Get Notified
       </h3>
-      <p className="mb-4 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mb-4 text-sm text-fg-muted">
         Be the first to know when we launch our services!
       </p>
 
@@ -114,7 +114,7 @@ export function EmailSignupForm() {
           placeholder="your@email.com"
           value={email}
           onChange={handleEmailChange}
-          className="flex-1 rounded-md border border-neutral-200 bg-white px-4 py-2 text-sm focus:border-neutral-400 focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 focus:outline-none disabled:opacity-50 dark:border-neutral-800 dark:bg-neutral-950 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
+          className="flex-1 rounded-md border border-line bg-white px-4 py-2 text-sm focus:border-neutral-400 focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2 focus:outline-none disabled:opacity-50 dark:bg-neutral-950 dark:focus:border-neutral-600 dark:focus:ring-neutral-600"
           required
           disabled={status === "loading" || status === "success"}
           maxLength={254}

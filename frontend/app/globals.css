@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: `dark:` variants follow the `.dark` class on <html>
+   (toggled by ThemeToggle and set by the no-flash init script in layout.tsx),
+   NOT the OS prefers-color-scheme. Without this, Tailwind v4 defaults to the
+   media query and the theme toggle has no effect. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Define theme colors using CSS variables */
 @theme {
   --color-background: hsl(var(--background));
@@ -21,6 +27,23 @@
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
+
+  /* Brand tokens — one semantic scale that flips light/dark via the CSS vars in
+     :root / .dark below. Components use these (text-fg, text-brand, bg-surface…)
+     instead of literal colors + dark: variants. */
+  --color-fg: var(--brand-fg);
+  --color-fg-muted: var(--brand-fg-muted);
+  --color-fg-faint: var(--brand-fg-faint);
+  --color-brand: var(--brand-text);
+  --color-brand-hover: var(--brand-text-hover);
+  --color-brand-solid: var(--brand-solid);
+  --color-brand-solid-hover: var(--brand-solid-hover);
+  --color-on-brand: var(--brand-on);
+  --color-surface: var(--brand-surface);
+  --color-surface-hover: var(--brand-surface-hover);
+  --color-bar: var(--brand-bar);
+  --color-line: var(--brand-line);
+  --color-line-strong: var(--brand-line-strong);
 }
 
 /* CSS variables for light/dark mode */
@@ -45,6 +68,21 @@
   --input: 0 0% 89.8%;
   --ring: 0 0% 63.9%;
   --radius: 0.5rem;
+
+  /* brand palette — light */
+  --brand-fg: #171717; /* primary text (neutral-900) */
+  --brand-fg-muted: #525252; /* body / secondary (neutral-600) */
+  --brand-fg-faint: #737373; /* eyebrows, captions, copyright (neutral-500) */
+  --brand-text: #4d7c0f; /* accent text / links (lime-700) */
+  --brand-text-hover: #65a30d; /* accent hover (lime-600) */
+  --brand-solid: #a3e635; /* accent fill / buttons (lime-400) */
+  --brand-solid-hover: #84cc16; /* accent fill hover (lime-500) */
+  --brand-on: #0a0a0a; /* text on accent fills */
+  --brand-surface: rgba(255, 255, 255, 0.6); /* translucent cards */
+  --brand-surface-hover: rgba(255, 255, 255, 0.75);
+  --brand-bar: rgba(255, 255, 255, 0.8); /* sticky header / footer bar */
+  --brand-line: #e5e5e5; /* hairlines / card borders (neutral-200) */
+  --brand-line-strong: #d4d4d4; /* hover borders (neutral-300) */
 }
 
 .dark {
@@ -67,6 +105,24 @@
   --border: 0 0% 14.9%;
   --input: 0 0% 14.9%;
   --ring: 0 0% 83.1%;
+
+  /* brand palette — dark. Inverts the accent the same way the 3D layer inverts
+     the coin: lime → the coin's indigo/blue. Text/surfaces just lighten. Tuned
+     bright so the accent reads on black (a literal RGB-invert of lime is too
+     dark to see). Every brand utility flips here in one place. */
+  --brand-fg: #ffffff;
+  --brand-fg-muted: #a3a3a3; /* neutral-400 */
+  --brand-fg-faint: #737373; /* neutral-500 */
+  --brand-text: #7b83ff; /* accent text / links (indigo) */
+  --brand-text-hover: #aeb6ff;
+  --brand-solid: #7b83ff; /* accent fill / buttons */
+  --brand-solid-hover: #aeb6ff;
+  --brand-on: #0a0a0a;
+  --brand-surface: rgba(23, 23, 23, 0.5); /* neutral-900/50 */
+  --brand-surface-hover: rgba(23, 23, 23, 0.8);
+  --brand-bar: rgba(10, 10, 10, 0.78);
+  --brand-line: rgba(255, 255, 255, 0.06);
+  --brand-line-strong: rgba(255, 255, 255, 0.1);
 }
 
 /* Base styles */
