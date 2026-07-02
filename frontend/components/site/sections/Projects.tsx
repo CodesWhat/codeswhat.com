@@ -12,13 +12,14 @@ export function Projects() {
       <div className="mx-auto max-w-6xl">
         <div className="mb-12 max-w-2xl">
           <p className="mb-3 font-mono text-xs font-semibold tracking-[0.2em] text-lime-300 uppercase">
-            The roster
+            Built so far
           </p>
           <h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-            Four projects
+            Four tools, all open source
           </h2>
           <p className="mt-3 text-base text-neutral-400">
-            Small tools for containers, security, and automation.
+            Containers, security, automation. Each one built because I needed it, and open for
+            anyone to use.
           </p>
         </div>
 
