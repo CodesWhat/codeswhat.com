@@ -19,6 +19,8 @@
     "format:check": "biome format .",
     "test:scene": "node --test test/scene.test.mjs",
     "og": "node scripts/generate-og.mjs",
+    "coin": "node scripts/capture-assets.mjs --subject coin",
+    "balloon": "node scripts/capture-assets.mjs --subject balloon",
     "vercel-build": "npm run build"
   },
   "dependencies": {
@@ -46,6 +48,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.185.0",
     "lefthook": "^2.1.2",
+    "playwright-core": "^1.61.1",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3"
   }
