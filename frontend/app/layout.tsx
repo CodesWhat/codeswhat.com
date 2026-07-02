@@ -3,7 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
-import { BASE_URL, SITE_CONFIG } from "@/lib/site-config";
+import { BASE_URL, OG_IMAGE, SITE_CONFIG } from "@/lib/site-config";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -24,6 +24,7 @@ export const metadata: Metadata = {
     siteName,
     locale: "en_US",
     type: "website",
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
@@ -31,6 +32,7 @@ export const metadata: Metadata = {
     description: siteDescription,
     site: SITE_CONFIG.twitterCreator,
     creator: SITE_CONFIG.twitterCreator,
+    images: [OG_IMAGE],
   },
   icons: {
     icon: [
