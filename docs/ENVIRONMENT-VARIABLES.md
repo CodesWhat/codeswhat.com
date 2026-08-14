@@ -13,6 +13,14 @@ Your project requires the following environment variables:
 - `NEXT_PUBLIC_SITE_DESCRIPTION` - Site description
 - `NEXT_PUBLIC_SITE_URL` - Your production URL
 
+### PostHog (Production only)
+- `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` - Public token for the shared `CodesWhat Public Websites` project
+- `NEXT_PUBLIC_POSTHOG_HOST` - Exactly `https://e.codeswhat.com`
+- `NEXT_PUBLIC_POSTHOG_UI_HOST` - Exactly `https://us.posthog.com`
+
+Set all three only for Vercel Production. Missing or partial configuration is
+treated as disabled, so Preview and Development send no analytics.
+
 ## Setting Up Variables
 
 ### Option 1: Vercel Dashboard (Recommended) ✅
@@ -54,6 +62,7 @@ EMAILOCTOPUS_LIST_ID=your_actual_list_id
 NEXT_PUBLIC_SITE_NAME=CodesWhat?
 NEXT_PUBLIC_SITE_DESCRIPTION=Your description
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+# Leave the PostHog variables unset locally.
 ```
 
 **Note:** Never commit `.env.local` to git!
@@ -102,4 +111,4 @@ Vercel automatically provides:
 - `NODE_ENV` - Node environment
 - `VERCEL_REGION` - Deployment region
 
-You don't need to set these manually. 
+You don't need to set these manually.

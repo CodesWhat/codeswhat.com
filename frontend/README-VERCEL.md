@@ -33,10 +33,14 @@ Add these in your Vercel dashboard under Settings → Environment Variables:
 
 ### Optional Variables
 
-| Variable                          | Description         | Example          |
-| --------------------------------- | ------------------- | ---------------- |
-| `NEXT_PUBLIC_GA_ID`               | Google Analytics ID | `G-XXXXXXXXXX`   |
-| `NEXT_PUBLIC_VERCEL_ANALYTICS_ID` | Vercel Analytics    | `auto-generated` |
+PostHog is configured with three Production-only variables. Leave all three
+unset in Preview and Development so those deployments emit no analytics:
+
+| Variable | Value |
+| --- | --- |
+| `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | The public token for `CodesWhat Public Websites` |
+| `NEXT_PUBLIC_POSTHOG_HOST` | `https://e.codeswhat.com` |
+| `NEXT_PUBLIC_POSTHOG_UI_HOST` | `https://us.posthog.com` |
 
 ## Domain Configuration
 
@@ -63,9 +67,8 @@ The `vercel.json` file includes:
 
 ## Monitoring
 
-1. Enable Vercel Analytics (free tier available)
-2. Monitor Core Web Vitals
-3. Set up alerts for function errors
+1. Review the shared PostHog project for pageviews, approved GitHub CTA events, and web vitals.
+2. Set up alerts for function errors.
 
 ## Troubleshooting
 
