@@ -56,3 +56,9 @@ test("repo-owned CI runs the website contracts and production build", async () =
   assert.match(workflow, /npm run test:posthog/);
   assert.match(workflow, /npm run build/);
 });
+
+test("public documentation does not advertise the retired provider badge", async () => {
+  const roadmap = await read("../ROADMAP.md");
+  const retiredBadgeText = ["Go", "Report", "Card"].join("\\s+");
+  assert.doesNotMatch(roadmap, new RegExp(retiredBadgeText, "i"));
+});
