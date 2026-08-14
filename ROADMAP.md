@@ -37,3 +37,14 @@ icon/image story coherent off the back of it:
 - [ ] Decide where committed assets live and how they're named (currently `exports/<subject>/`, WebP + still PNG tracked, GIF/APNG gitignored)
 - [ ] Consider using the minted assets as the real project icons / OG images / repo avatars
 - [ ] Light + dark (inverted) variants where it makes sense
+
+## Telemetry and badge audit (2026-08-14)
+
+- The main website has no visible Go Report Card, shields.io, or other external
+  badge surface to migrate.
+- The homepage project status labels are product content, not telemetry or
+  provider badges.
+- Stale Vercel Analytics references were documentation-only and are removed as
+  part of the PostHog rollout.
+- Broader badge additions or removals remain a product/content decision and are
+  deferred rather than expanded into this telemetry change.
