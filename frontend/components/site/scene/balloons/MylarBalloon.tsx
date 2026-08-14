@@ -427,6 +427,7 @@ export function MylarBalloon({
   spin,
   showString = true,
   dark = false,
+  captureAngle,
 }: BalloonProps) {
   // Invert the baked foil in dark mode, but never the headshot (a negative face
   // reads as horror, not brand).
@@ -496,6 +497,19 @@ export function MylarBalloon({
   const [hovered, setHovered] = useState(false);
 
   useFrame((state) => {
+    // dev-only capture: hold the balloon dead still at a pinned yaw so it can be
+    // grabbed as an icon still or swept into a seamless spin. Skips all the idle
+    // motion, collision, and glance logic below.
+    if (captureAngle !== undefined) {
+      if (balloon.current) {
+        const yaw = typeof captureAngle === "function" ? captureAngle() : captureAngle;
+        balloon.current.position.set(anchor[0], baseY, anchor[2]);
+        balloon.current.rotation.set(0, yaw, 0);
+        balloon.current.scale.setScalar(1);
+      }
+      return;
+    }
+
     const t = state.clock.elapsedTime;
     const y = baseY + Math.sin(t * speed + phase) * float;
     const roll = Math.sin(t * 0.58 + phase) * 0.065;
