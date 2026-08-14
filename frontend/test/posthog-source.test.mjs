@@ -46,3 +46,13 @@ test("CSP allows only the exact PostHog proxy and hashes the theme script", asyn
   assert.doesNotMatch(config, /https:\/\/(app|us)\.posthog\.com/);
   assert.match(config, /sha256-/);
 });
+
+test("repo-owned CI runs the website contracts and production build", async () => {
+  const workflow = await read("../.github/workflows/website.yml");
+  assert.match(workflow, /npm ci/);
+  assert.match(workflow, /npm run lint/);
+  assert.match(workflow, /npm run type-check/);
+  assert.match(workflow, /npm run test:scene/);
+  assert.match(workflow, /npm run test:posthog/);
+  assert.match(workflow, /npm run build/);
+});
