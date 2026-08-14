@@ -1,6 +1,7 @@
 import { Github } from "lucide-react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/site/ThemeToggle";
+import { TrackedCtaLink } from "@/components/site/TrackedCtaLink";
 import { Wordmark } from "@/components/site/Wordmark";
 import { GITHUB_URL, SITE_CONFIG } from "@/lib/site-config";
 
@@ -28,15 +29,16 @@ export function SiteHeader() {
           <a href="#contact" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
             Contact
           </a>
-          <a
+          <TrackedCtaLink
             href={GITHUB_URL}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="CodesWhat on GitHub"
+            placement="header"
             className="rounded-full p-2 text-fg-muted transition-colors hover:bg-line hover:text-fg"
           >
             <Github className="h-5 w-5" />
-          </a>
+          </TrackedCtaLink>
           <ThemeToggle />
         </nav>
       </div>
