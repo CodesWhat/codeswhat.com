@@ -3,7 +3,9 @@ import { test } from "node:test";
 
 const baseUrl = process.env.POSTHOG_BROWSER_BASE_URL;
 
-test("production browser response keeps PostHog on the exact proxy", { skip: !baseUrl }, async () => {
+test("production browser response keeps PostHog on the exact proxy", {
+  skip: !baseUrl,
+}, async () => {
   const response = await fetch(`${baseUrl}/?query-secret=should-not-leave`);
   const body = await response.text();
   const csp = response.headers.get("content-security-policy") ?? "";

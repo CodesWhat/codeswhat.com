@@ -46,11 +46,15 @@ export function sanitizeRoute(input: unknown): string {
 type EventInput = {
   event?: unknown;
   properties?: unknown;
+  timestamp?: unknown;
+  uuid?: unknown;
 };
 
 type SanitizedEvent = {
   event: "$pageview" | "cta activated" | "$web_vitals";
-  properties: Record<string, string | number>;
+  properties: Record<string, boolean | number | string>;
+  timestamp?: Date;
+  uuid?: string;
 };
 
 function getRawPath(properties: Record<string, unknown>): unknown {
@@ -65,29 +69,66 @@ function getRawPath(properties: Record<string, unknown>): unknown {
 }
 
 function createCommonProperties(properties: Record<string, unknown>) {
+  const token = properties.token;
+  if (
+    typeof token !== "string" ||
+    !PROJECT_TOKEN_PATTERN.test(token) ||
+    properties.$cookieless_mode !== true ||
+    properties.$process_person_profile !== false
+  ) {
+    return null;
+  }
+
   const path = sanitizeRoute(getRawPath(properties));
-  return { schema_version: 1, site: "codeswhat", surface: "marketing", path } as Record<
-    string,
-    string | number
-  >;
+  const common: Record<string, boolean | number | string> = {
+    token,
+    $cookieless_mode: true,
+    $process_person_profile: false,
+    schema_version: 1,
+    site: "codeswhat",
+    surface: "marketing",
+    path,
+  };
+  if (properties.distinct_id === "$posthog_cookieless") {
+    common.distinct_id = "$posthog_cookieless";
+  }
+  return common;
+}
+
+function createSanitizedEvent(
+  input: EventInput,
+  event: SanitizedEvent["event"],
+  properties: SanitizedEvent["properties"],
+): SanitizedEvent {
+  const result: SanitizedEvent = { event, properties };
+  if (typeof input.uuid === "string") result.uuid = input.uuid;
+  if (input.timestamp instanceof Date && Number.isFinite(input.timestamp.getTime())) {
+    result.timestamp = input.timestamp;
+  }
+  return result;
 }
 
 export function sanitizeEvent(input: unknown): SanitizedEvent | null {
   if (!input || typeof input !== "object") return null;
-  const { event, properties } = input as EventInput;
+  const eventInput = input as EventInput;
+  const { event, properties } = eventInput;
   if (typeof event !== "string" || !properties || typeof properties !== "object") return null;
 
   const values = properties as Record<string, unknown>;
   const common = createCommonProperties(values);
+  if (common === null) return null;
   if (event === "$pageview") {
-    return { event, properties: { ...common, $current_url: `${PRODUCTION_ORIGIN}${common.path}` } };
+    return createSanitizedEvent(eventInput, event, {
+      ...common,
+      $current_url: `${PRODUCTION_ORIGIN}${common.path}`,
+    });
   }
 
   if (event === "cta activated") {
     const ctaId = typeof values.cta_id === "string" ? values.cta_id : "";
     const placement = typeof values.placement === "string" ? values.placement : "";
     return allowedCtaIds.has(ctaId) && allowedPlacements.has(placement)
-      ? { event, properties: { ...common, cta_id: ctaId, placement } }
+      ? createSanitizedEvent(eventInput, event, { ...common, cta_id: ctaId, placement })
       : null;
   }
 
@@ -99,15 +140,8 @@ export function sanitizeEvent(input: unknown): SanitizedEvent | null {
         vitalProperties[key] = value;
       }
     }
-    if (Object.keys(vitalProperties).length === 0) {
-      const metricName = typeof values.metric_name === "string" ? values.metric_name : "";
-      const value = typeof values.value === "number" ? values.value : Number.NaN;
-      if (Number.isFinite(value) && ["CLS", "FCP", "INP", "LCP"].includes(metricName)) {
-        vitalProperties[`$web_vitals_${metricName}_value`] = value;
-      }
-    }
     return Object.keys(vitalProperties).length > 0
-      ? { event, properties: { ...common, ...vitalProperties } }
+      ? createSanitizedEvent(eventInput, event, { ...common, ...vitalProperties })
       : null;
   }
 
