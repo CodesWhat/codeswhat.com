@@ -1,4 +1,5 @@
 import { ArrowRight, Github } from "lucide-react";
+import { TrackedCtaLink } from "@/components/site/TrackedCtaLink";
 import { GITHUB_URL } from "@/lib/site-config";
 
 /**
@@ -33,15 +34,16 @@ export function Hero() {
             See the projects
             <ArrowRight className="h-4 w-4" />
           </a>
-          <a
+          <TrackedCtaLink
             href={GITHUB_URL}
             target="_blank"
             rel="noopener noreferrer"
+            placement="hero"
             className="inline-flex items-center gap-2 rounded-full border border-line-strong px-5 py-2.5 text-sm font-semibold text-fg transition-colors hover:border-fg-muted"
           >
             <Github className="h-4 w-4" />
             GitHub
-          </a>
+          </TrackedCtaLink>
         </div>
       </div>
 

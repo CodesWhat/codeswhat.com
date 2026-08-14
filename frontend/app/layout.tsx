@@ -1,9 +1,8 @@
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemedToaster } from "@/components/site/ThemedToaster";
 import { BASE_URL, OG_IMAGE, SITE_CONFIG } from "@/lib/site-config";
+import { THEME_INIT_SCRIPT } from "@/lib/theme-init-script";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -77,26 +76,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="apple-mobile-web-app-title" content={siteName} />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                // Dark by default (the 3D layer is tuned for black); light is an
-                // explicit opt-in via the header toggle.
-                if (localStorage.theme === 'light') {
-                  document.documentElement.classList.remove('dark')
-                } else {
-                  document.documentElement.classList.add('dark')
-                }
-              } catch (_) {}
-            `,
-          }}
-        />
+        <script id="theme-init" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className={inter.className}>
         {children}
-        <Analytics />
-        <SpeedInsights />
         <ThemedToaster />
       </body>
     </html>
