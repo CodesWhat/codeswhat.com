@@ -91,46 +91,16 @@ const jsonLd = {
 | **Heatmaps** | No | No | No | Yes |
 | **Session Recording** | No | No | No | Yes |
 
-### Recommendation: Hybrid Approach
+### Decision: shared privacy-first PostHog project
 
-**For CodesWhat, I recommend:**
+The organization selected one US PostHog project, `CodesWhat Public Websites`,
+with the managed proxy `https://e.codeswhat.com`. The website initializes the
+pinned `posthog-js@1.417.0` SDK only from `instrumentation-client.ts` and sends
+only sanitized `$pageview`, `cta activated`, and `$web_vitals` events. Cookies,
+persistence, autocapture, session recording, and query/hash URL data stay off.
 
-1. **Primary: Plausible Analytics** ($9/month)
-   - Privacy-first, no cookie banners needed
-   - Simple, clean interface
-   - Lightweight script (< 1KB)
-   - Great for basic metrics
-
-2. **Secondary: PostHog** (Free tier)
-   - Product analytics for deeper insights
-   - User journey tracking
-   - Feature flags for A/B testing
-   - Session recordings for UX improvements
-
-### Implementation Example
-
-#### Plausible Setup:
-```typescript
-// app/layout.tsx
-<Script
-  defer
-  data-domain="codeswhat.com"
-  src="https://plausible.io/js/script.js"
-/>
-```
-
-#### PostHog Setup:
-```typescript
-// lib/posthog.ts
-import posthog from 'posthog-js'
-
-if (typeof window !== 'undefined') {
-  posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY!, {
-    api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-    capture_pageview: false, // Handle manually for better control
-  })
-}
-```
+Broader analytics options, feature flags, recordings, and consent changes remain
+roadmap decisions and are not enabled by this rollout.
 
 ### User Decision Points
 
@@ -218,13 +188,13 @@ export const metadata: Metadata = {
 ### Week 1
 - [ ] Implement robots.txt
 - [ ] Create dynamic sitemap
-- [ ] Set up Plausible Analytics
+- [x] Set up privacy-first PostHog analytics
 - [ ] Verify Google Search Console
 
 ### Week 2
 - [ ] Add structured data
 - [ ] Optimize existing metadata
-- [ ] Set up PostHog (if desired)
+- [x] Set up PostHog (shared US project and managed proxy)
 - [ ] Create SEO monitoring dashboard
 
 ### Week 3-4
@@ -291,7 +261,8 @@ export const metadata: Metadata = {
 - Cleaner interfaces
 - Lower learning curve
 
-For CodesWhat, starting with privacy-first analytics aligns better with modern web standards and user expectations.
+CodesWhat uses the shared privacy-first PostHog project documented above. No
+additional analytics provider is enabled.
 
 ## Next Steps
 
@@ -310,4 +281,4 @@ For CodesWhat, starting with privacy-first analytics aligns better with modern w
    - Implement chosen analytics
    - Begin tracking KPIs
 
-Remember: SEO is a marathon, not a sprint. Focus on creating valuable content and maintaining technical excellence. 
+Remember: SEO is a marathon, not a sprint. Focus on creating valuable content and maintaining technical excellence.

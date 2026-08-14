@@ -1,5 +1,6 @@
 import { ArrowUpRight, Github } from "lucide-react";
 import type { CSSProperties } from "react";
+import { TrackedCtaLink } from "@/components/site/TrackedCtaLink";
 import { Wordmark } from "@/components/site/Wordmark";
 import { GITHUB_URL, PROJECTS, SITE_CONFIG } from "@/lib/site-config";
 
@@ -42,15 +43,16 @@ export function SiteFooter() {
                 <ArrowUpRight className="h-3.5 w-3.5 opacity-60" />
               </a>
             ))}
-            <a
+            <TrackedCtaLink
               href={GITHUB_URL}
               target="_blank"
               rel="noreferrer"
+              placement="footer"
               className="inline-flex items-center gap-1 transition-colors hover:text-brand-hover"
             >
               <Github className="h-4 w-4" />
               GitHub
-            </a>
+            </TrackedCtaLink>
           </nav>
         </div>
 
