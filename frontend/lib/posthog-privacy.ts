@@ -70,11 +70,30 @@ function getRawPath(properties: Record<string, unknown>): unknown {
 
 function createCommonProperties(properties: Record<string, unknown>) {
   const token = properties.token;
+  // PostHog's cookieless server-hash ingestion step computes the anonymous
+  // distinct id from day + team + $ip + $host + $raw_user_agent. It reads
+  // $raw_user_agent/$host straight off event.properties (not headers) and
+  // silently drops the event with a cookieless_missing_user_agent /
+  // cookieless_missing_host ingestion warning if either is absent
+  // (PostHog/posthog nodejs/src/ingestion/common/cookieless/cookieless-manager.ts,
+  // getProperties()/doBatchInner()). posthog-js attaches both to every
+  // envelope by default (PostHog/posthog-js
+  // packages/browser-common/src/utils/event-utils.ts, getEventProperties()),
+  // so they must survive the allowlist rebuild below. $ip is deliberately
+  // NOT forwarded here: posthog-js never sends it, and PostHog's capture
+  // service fills it in from the request's own connection IP when absent — a
+  // client-supplied $ip would only be able to make that worse, never better.
+  const rawUserAgent = properties.$raw_user_agent;
+  const host = properties.$host;
   if (
     typeof token !== "string" ||
     !PROJECT_TOKEN_PATTERN.test(token) ||
     properties.$cookieless_mode !== true ||
-    properties.$process_person_profile !== false
+    properties.$process_person_profile !== false ||
+    typeof rawUserAgent !== "string" ||
+    rawUserAgent === "" ||
+    typeof host !== "string" ||
+    host === ""
   ) {
     return null;
   }
@@ -88,6 +107,8 @@ function createCommonProperties(properties: Record<string, unknown>) {
     site: "codeswhat",
     surface: "marketing",
     path,
+    $raw_user_agent: rawUserAgent,
+    $host: host,
   };
   if (properties.distinct_id === "$posthog_cookieless") {
     common.distinct_id = "$posthog_cookieless";
