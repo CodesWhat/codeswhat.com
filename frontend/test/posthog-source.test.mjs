@@ -62,3 +62,22 @@ test("public documentation does not advertise the retired provider badge", async
   const retiredBadgeText = ["Go", "Report", "Card"].join("\\s+");
   assert.doesNotMatch(roadmap, new RegExp(retiredBadgeText, "i"));
 });
+
+test("the cookieless envelope keeps the fields PostHog's server hash requires", async () => {
+  const privacy = await read("lib/posthog-privacy.ts");
+
+  // PostHog's cookieless server-hash ingestion step reads $raw_user_agent and
+  // $host straight off event.properties and drops the event — with a
+  // cookieless_missing_user_agent / cookieless_missing_host ingestion warning
+  // and zero rows ingested — if either is absent (PostHog/posthog
+  // nodejs/src/ingestion/common/cookieless/cookieless-manager.ts,
+  // getProperties()/doBatchInner()). posthog-js attaches both by default;
+  // createCommonProperties must allowlist them through, not silently strip
+  // them. Regression guard: if these keys ever disappear from the allowlist
+  // (or the comment explaining why they're there), every cookieless event on
+  // codeswhat.com drops with no PostHog-side error beyond the ingestion
+  // warning.
+  assert.match(privacy, /\$raw_user_agent/u);
+  assert.match(privacy, /\$host/u);
+  assert.match(privacy, /cookieless_missing_user_agent|cookieless server-hash/u);
+});
