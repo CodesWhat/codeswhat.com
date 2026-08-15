@@ -17,6 +17,19 @@ const { PostHog } = require("../node_modules/posthog-js/lib/src/posthog-core.js"
   };
 };
 
+// posthog-js attaches these to every envelope by default (PostHog/posthog-js
+// packages/browser-common/src/utils/event-utils.ts, getEventProperties()).
+// sanitizeEvent must forward them: PostHog's cookieless server-hash
+// ingestion step reads them straight off event.properties and drops the
+// event with a cookieless_missing_user_agent / cookieless_missing_host
+// ingestion warning if either is absent (PostHog/posthog
+// nodejs/src/ingestion/common/cookieless/cookieless-manager.ts,
+// getProperties() + doBatchInner()).
+const COOKIELESS_HASH_PROPERTIES = {
+  $raw_user_agent: "Mozilla/5.0 (Test Runner)",
+  $host: "codeswhat.com",
+};
+
 test("route sanitization only returns the finite public route manifest", () => {
   assert.deepEqual(ALLOWED_ROUTES, ["/"]);
   assert.equal(sanitizeRoute("/?utm_source=secret#private"), "/");
@@ -45,6 +58,7 @@ test("pageview events keep only the sanitized pathname", () => {
         distinct_id: "$posthog_cookieless",
         $cookieless_mode: true,
         $process_person_profile: false,
+        ...COOKIELESS_HASH_PROPERTIES,
       },
     }),
     {
@@ -59,6 +73,7 @@ test("pageview events keep only the sanitized pathname", () => {
         surface: "marketing",
         path: "/",
         $current_url: "https://codeswhat.com/",
+        ...COOKIELESS_HASH_PROPERTIES,
       },
     },
   );
@@ -76,6 +91,7 @@ test("CTA events are limited to the initial GitHub placements", () => {
         path: "/",
         cta_id: "github_org",
         placement: "hero",
+        ...COOKIELESS_HASH_PROPERTIES,
       },
     }),
     {
@@ -90,6 +106,7 @@ test("CTA events are limited to the initial GitHub placements", () => {
         path: "/",
         cta_id: "github_org",
         placement: "hero",
+        ...COOKIELESS_HASH_PROPERTIES,
       },
     },
   );
@@ -116,6 +133,7 @@ test("web vitals events keep only metric data", () => {
         $web_vitals_LCP_event: { attribution: "private" },
         rating: "good",
         $current_url: "https://codeswhat.com/?private=1",
+        ...COOKIELESS_HASH_PROPERTIES,
       },
     }),
     {
@@ -129,6 +147,7 @@ test("web vitals events keep only metric data", () => {
         surface: "marketing",
         path: "/",
         $web_vitals_LCP_value: 123.4,
+        ...COOKIELESS_HASH_PROPERTIES,
       },
     },
   );
@@ -166,6 +185,7 @@ test("the pinned PostHog before_send pipeline keeps the required cookieless enve
       path: "/?secret=1#fragment",
       $set: { email: "private@example.com" },
       $set_once: { referrer: "private" },
+      ...COOKIELESS_HASH_PROPERTIES,
     },
     $set: { email: "private@example.com" },
     $set_once: { referrer: "private" },
@@ -188,6 +208,38 @@ test("the pinned PostHog before_send pipeline keeps the required cookieless enve
       surface: "marketing",
       path: "/",
       $current_url: "https://codeswhat.com/",
+      ...COOKIELESS_HASH_PROPERTIES,
     },
   });
+});
+
+test("sanitizeEvent requires and forwards the cookieless server-hash fields", () => {
+  const validProperties = {
+    token: "phc_public-token_123",
+    distinct_id: "$posthog_cookieless",
+    $cookieless_mode: true,
+    $process_person_profile: false,
+    path: "/",
+    ...COOKIELESS_HASH_PROPERTIES,
+  };
+
+  const result = sanitizeEvent({ event: "$pageview", properties: validProperties });
+  assert.ok(result);
+  assert.equal(result.properties.$raw_user_agent, COOKIELESS_HASH_PROPERTIES.$raw_user_agent);
+  assert.equal(result.properties.$host, COOKIELESS_HASH_PROPERTIES.$host);
+  assert.equal(result.properties.$ip, undefined);
+
+  // Regression guard: if sanitizeEvent ever goes back to rebuilding
+  // properties from an allowlist that forgets these two keys, cookieless
+  // ingestion drops every event again with zero warning-free indication
+  // beyond cookieless_missing_user_agent / cookieless_missing_host.
+  for (const missingKey of Object.keys(COOKIELESS_HASH_PROPERTIES)) {
+    const withoutField = { ...validProperties };
+    delete withoutField[missingKey as keyof typeof withoutField];
+    assert.equal(
+      sanitizeEvent({ event: "$pageview", properties: withoutField }),
+      null,
+      `sanitizeEvent must drop events missing ${missingKey}`,
+    );
+  }
 });
