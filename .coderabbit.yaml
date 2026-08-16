@@ -67,7 +67,6 @@ knowledge_base:
     enabled: true
     file_patterns:
       - "**/CLAUDE.md"
-      - "**/.cursorrules"
 
   # Web search for additional context (library docs, etc.)
   web_search:

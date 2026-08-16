@@ -16,5 +16,4 @@ npm run dev        # Start development server
 ```
 
 ### Other Documentation
-- **Cursor Rules**: See `.cursorrules` in the project root
 - **Future Plans**: See `FUTURE_SECTIONS.md` in the project root 
