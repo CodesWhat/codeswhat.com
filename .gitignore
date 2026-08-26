@@ -1,5 +1,11 @@
 .DS_Store
 
+# vercel project link (root-level; frontend/ has its own)
+.vercel/
+
+# git history backups (e.g. pre-rewrite-backup-*.bundle)
+*.bundle
+
 # brand assets (scripts/capture-assets.mjs): commit the WebP + still PNGs as the
 # source-of-truth; the heavy GIF/APNG are regenerable, and frames are scratch.
 exports/**/*.gif
