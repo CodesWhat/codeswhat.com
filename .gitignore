@@ -11,3 +11,6 @@
 exports/**/*.gif
 exports/**/*.apng.png
 frontend/.capture-frames/
+
+# Agent worktrees and local agent state
+.claude/
