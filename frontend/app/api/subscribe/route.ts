@@ -213,10 +213,11 @@ export async function POST(request: Request) {
         );
       }
 
-      // Handle other errors
+      // Handle other errors. Log the upstream detail server-side only; never
+      // pass a third-party response field through to the client.
       console.error("EmailOctopus error:", data);
       return NextResponse.json(
-        { error: data.detail || "Failed to subscribe. Please try again." },
+        { error: "Failed to subscribe. Please try again." },
         { status: response.status },
       );
     }
