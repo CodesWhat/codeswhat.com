@@ -49,11 +49,17 @@ ships with the next promotion — the items below are what's left after that.
 - [ ] Verify post-deploy that `$pathname` shows on fresh pageviews and the
       Page/Entry/Exit tables populate (board: CodesWhat Sites Health,
       project 558033, dashboard 2044260)
-- [ ] `$pageleave` delivery rate: drydock lands only ~17.6% of pageview volume
-      (sendBeacon unload envelopes can miss `$raw_user_agent`/`$host`; relaxing
-      the sanitizer guard just moves the drop to cookieless ingestion's silent
-      `cookieless_missing_user_agent` discard). Their lane is measuring the
-      real fix — copy their answer, don't relax the guard here.
+- [ ] `$pageleave` volume note (resolved 2026-08-28, standard `19a0af1`): a
+      pageleave-to-pageview ratio well under 100% is structural, not a bug —
+      `$pageview` fires per client-side route change, `$pageleave` once per
+      document lifetime. drydock measured the envelope: the sanitizer guard
+      eats nothing. Don't "fix" the ratio here.
+- [ ] Post-deploy canary caveat: posthog-js bot detection (`isLikelyBot`
+      checks `navigator.webdriver` and `userAgentData.brands`) may silently
+      drop Playwright-driven visits before `before_send` runs; contested
+      (portwing's landed), so a Playwright canary's silence proves nothing
+      either way. Verify with a real browser or by reading the deployed chunk
+      for the property names.
 - [ ] Acquisition data: decided org-wide in `CodesWhat/ops`
       `standards/analytics.md` ("Acquisition data and consent", as of
       `c161ebc`) — that file is the authority. Shape: `save_campaign_params:
