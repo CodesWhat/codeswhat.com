@@ -4,7 +4,7 @@ pre-commit:
     - name: biome
       root: frontend/
       glob: "*.{js,ts,jsx,tsx,json,css}"
-      run: npx @biomejs/biome check --write {staged_files}
+      run: npx @biomejs/biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
     - name: typecheck

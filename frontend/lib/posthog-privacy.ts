@@ -51,7 +51,7 @@ type EventInput = {
 };
 
 type SanitizedEvent = {
-  event: "$pageview" | "cta activated" | "$web_vitals";
+  event: "$pageview" | "$pageleave" | "cta activated" | "$web_vitals";
   properties: Record<string, boolean | number | string>;
   timestamp?: Date;
   uuid?: string;
@@ -138,10 +138,20 @@ export function sanitizeEvent(input: unknown): SanitizedEvent | null {
   const values = properties as Record<string, unknown>;
   const common = createCommonProperties(values);
   if (common === null) return null;
-  if (event === "$pageview") {
+  // posthog-js emits $pageleave itself once capture_pageleave is true;
+  // nothing in this codebase calls it directly. It has to be rebuilt here
+  // like every other envelope — before this branch existed, $pageleave fell
+  // through to the `return null` below and was dropped silently, which is
+  // why flipping capture_pageleave on the init options alone fixes nothing.
+  // $pathname is set to the already-sanitized `path` rather than the raw
+  // pathname so PostHog's Web analytics Page / Entry page / Exit page
+  // tables — which key off $pathname — resolve without leaking any route
+  // outside ALLOWED_ROUTES.
+  if (event === "$pageview" || event === "$pageleave") {
     return createSanitizedEvent(eventInput, event, {
       ...common,
       $current_url: `${PRODUCTION_ORIGIN}${common.path}`,
+      $pathname: common.path,
     });
   }
 

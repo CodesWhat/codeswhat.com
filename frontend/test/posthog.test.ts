@@ -73,10 +73,105 @@ test("pageview events keep only the sanitized pathname", () => {
         surface: "marketing",
         path: "/",
         $current_url: "https://codeswhat.com/",
+        $pathname: "/",
         ...COOKIELESS_HASH_PROPERTIES,
       },
     },
   );
+});
+
+test("pageleave events mirror the pageview contract", () => {
+  // posthog-js emits $pageleave itself once capture_pageleave is true, so it
+  // reaches sanitizeEvent carrying PostHog's own automatic properties
+  // ($pathname among them) rather than the hand-built "path" property that
+  // capturePageview() passes for $pageview. sanitizeEvent has to rebuild it
+  // from the same allowlist; before that branch existed it fell through to
+  // the closing `return null` and every $pageleave was dropped silently,
+  // which is why flipping capture_pageleave on its own fixes nothing.
+  assert.deepEqual(
+    sanitizeEvent({
+      event: "$pageleave",
+      properties: {
+        $pathname: "/?secret=1#fragment",
+        $current_url: "https://codeswhat.com/?secret=1#fragment",
+        token: "phc_public-token_123",
+        distinct_id: "$posthog_cookieless",
+        $cookieless_mode: true,
+        $process_person_profile: false,
+        ...COOKIELESS_HASH_PROPERTIES,
+      },
+    }),
+    {
+      event: "$pageleave",
+      properties: {
+        token: "phc_public-token_123",
+        distinct_id: "$posthog_cookieless",
+        $cookieless_mode: true,
+        $process_person_profile: false,
+        schema_version: 1,
+        site: "codeswhat",
+        surface: "marketing",
+        path: "/",
+        $current_url: "https://codeswhat.com/",
+        $pathname: "/",
+        ...COOKIELESS_HASH_PROPERTIES,
+      },
+    },
+  );
+});
+
+test("$pageleave requires and forwards the cookieless server-hash fields, same as $pageview", () => {
+  const validProperties = {
+    $pathname: "/",
+    token: "phc_public-token_123",
+    $cookieless_mode: true,
+    $process_person_profile: false,
+    ...COOKIELESS_HASH_PROPERTIES,
+  };
+
+  const result = sanitizeEvent({ event: "$pageleave", properties: validProperties });
+  assert.ok(result);
+  assert.equal(result.properties.$raw_user_agent, COOKIELESS_HASH_PROPERTIES.$raw_user_agent);
+  assert.equal(result.properties.$host, COOKIELESS_HASH_PROPERTIES.$host);
+
+  for (const missingKey of Object.keys(COOKIELESS_HASH_PROPERTIES)) {
+    const withoutField = { ...validProperties };
+    delete withoutField[missingKey as keyof typeof withoutField];
+    assert.equal(
+      sanitizeEvent({ event: "$pageleave", properties: withoutField }),
+      null,
+      `sanitizeEvent must drop $pageleave events missing ${missingKey}`,
+    );
+  }
+});
+
+test("$pathname never diverges from the allowlisted path", () => {
+  // $pathname exists so PostHog's Web analytics Page / Entry page / Exit
+  // page tables resolve at all; those tables read $pathname and nothing
+  // else. It must stay bound to the sanitized `path`: if it ever carried the
+  // raw pathname instead, every unlisted route would leak into the
+  // analytics project past ALLOWED_ROUTES.
+  for (const rawPath of ["/", "/about", "/pricing?secret=1#fragment", "//evil.example/"]) {
+    for (const event of ["$pageview", "$pageleave"] as const) {
+      const result = sanitizeEvent({
+        event,
+        properties: {
+          path: rawPath,
+          token: "phc_public-token_123",
+          $cookieless_mode: true,
+          $process_person_profile: false,
+          ...COOKIELESS_HASH_PROPERTIES,
+        },
+      });
+      assert.ok(result, `sanitizeEvent should accept ${event} for ${rawPath}`);
+      assert.equal(result.properties.$pathname, result.properties.path);
+      assert.equal(
+        String(result.properties.$pathname).includes("secret"),
+        false,
+        `unlisted route leaked into $pathname for ${rawPath}`,
+      );
+    }
+  }
 });
 
 test("CTA events are limited to the initial GitHub placements", () => {
@@ -208,6 +303,7 @@ test("the pinned PostHog before_send pipeline keeps the required cookieless enve
       surface: "marketing",
       path: "/",
       $current_url: "https://codeswhat.com/",
+      $pathname: "/",
       ...COOKIELESS_HASH_PROPERTIES,
     },
   });

@@ -16,7 +16,15 @@ if (typeof window !== "undefined" && posthogConfig) {
     api_host: posthogConfig.apiHost,
     ui_host: posthogConfig.uiHost,
     capture_pageview: false,
-    capture_pageleave: false,
+    // posthog-js only emits $pageleave when capture_pageleave === true, or
+    // when it's "if_capture_pageview" AND capture_pageview is enabled
+    // (posthog-js posthog-core.ts, _shouldCapturePageleave). capture_pageview
+    // is false here because pageviews are captured by hand above, so this has
+    // to be an explicit true rather than the default. sanitizeEvent in
+    // lib/posthog-privacy.ts rebuilds $pageleave the same way it rebuilds
+    // $pageview; without that branch flipping this alone would drop every
+    // $pageleave silently.
+    capture_pageleave: true,
     autocapture: false,
     rageclick: false,
     disable_session_recording: true,

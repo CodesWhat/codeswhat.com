@@ -38,6 +38,38 @@ icon/image story coherent off the back of it:
 - [ ] Consider using the minted assets as the real project icons / OG images / repo avatars
 - [ ] Light + dark (inverted) variants where it makes sense
 
+## Web-analytics table coverage (2026-08-28, ops X37)
+
+Production events carry no `$pathname` and no `$pageleave`, so PostHog's Page /
+Entry / Exit tables render empty and every session counts as a zero-duration
+bounce. The wiring for both landed on dev as PR #60 (sanitizer allowlists
+`$pageleave` and stamps `$pathname` from the already-sanitized `path`) and
+ships with the next promotion — the items below are what's left after that.
+
+- [ ] Verify post-deploy that `$pathname` shows on fresh pageviews and the
+      Page/Entry/Exit tables populate (board: CodesWhat Sites Health,
+      project 558033, dashboard 2044260)
+- [ ] `$pageleave` volume note (resolved 2026-08-28, standard `19a0af1`): a
+      pageleave-to-pageview ratio well under 100% is structural, not a bug —
+      `$pageview` fires per client-side route change, `$pageleave` once per
+      document lifetime. drydock measured the envelope: the sanitizer guard
+      eats nothing. Don't "fix" the ratio here.
+- [ ] Post-deploy canary caveat: posthog-js bot detection (`isLikelyBot`
+      checks `navigator.webdriver` and `userAgentData.brands`) may silently
+      drop Playwright-driven visits before `before_send` runs; contested
+      (portwing's landed), so a Playwright canary's silence proves nothing
+      either way. Verify with a real browser or by reading the deployed chunk
+      for the property names.
+- [ ] Acquisition data: decided org-wide in `CodesWhat/ops`
+      `standards/analytics.md` ("Acquisition data and consent", as of
+      `c161ebc`) — that file is the authority. Shape: `save_campaign_params:
+      true` with `gclid`/`fbclid`/`msclkid` excluded; `save_referrer: true`
+      with the sanitizer forwarding `$referring_domain` only (drop it unless
+      it's a bare hostname, never copy `$referrer`); geo stays off (cookieless
+      strips the IP upstream, PostHog #48660). No banner needed. Implement
+      AFTER the `$pathname`/`$pageleave` promotion is verified in production,
+      so the two changes are separately attributable.
+
 ## Telemetry and badge audit (2026-08-14)
 
 - The main website has no visible external provider badge surface to migrate.

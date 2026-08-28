@@ -6,6 +6,24 @@ const posthogProxy = "https://e.codeswhat.com";
 const themeScriptHash = `sha256-${createHash("sha256").update(THEME_INIT_SCRIPT).digest("base64")}`;
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      // The stable production *.vercel.app aliases serve the full site; send
+      // them to the canonical domain. Hash-suffixed preview URLs don't match.
+      {
+        source: "/:path*",
+        has: [
+          {
+            type: "host",
+            value:
+              "(codeswhat-website|codeswhat-website-codeswhat|codeswhat-website-git-main-codeswhat)\\.vercel\\.app",
+          },
+        ],
+        destination: "https://codeswhat.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
