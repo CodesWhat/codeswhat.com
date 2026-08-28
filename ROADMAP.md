@@ -54,10 +54,15 @@ ships with the next promotion — the items below are what's left after that.
       the sanitizer guard just moves the drop to cookieless ingestion's silent
       `cookieless_missing_user_agent` discard). Their lane is measuring the
       real fix — copy their answer, don't relax the guard here.
-- [ ] Acquisition data (UTM params, referrer, geo) is an open policy question
-      for Scott to answer directly in this lane; a relayed approval was
-      retracted 2026-08-28. No `save_campaign_params`, no referrer work until
-      then.
+- [ ] Acquisition data: decided org-wide in `CodesWhat/ops`
+      `standards/analytics.md` ("Acquisition data and consent", as of
+      `c161ebc`) — that file is the authority. Shape: `save_campaign_params:
+      true` with `gclid`/`fbclid`/`msclkid` excluded; `save_referrer: true`
+      with the sanitizer forwarding `$referring_domain` only (drop it unless
+      it's a bare hostname, never copy `$referrer`); geo stays off (cookieless
+      strips the IP upstream, PostHog #48660). No banner needed. Implement
+      AFTER the `$pathname`/`$pageleave` promotion is verified in production,
+      so the two changes are separately attributable.
 
 ## Telemetry and badge audit (2026-08-14)
 
