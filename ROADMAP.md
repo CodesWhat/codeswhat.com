@@ -38,6 +38,27 @@ icon/image story coherent off the back of it:
 - [ ] Consider using the minted assets as the real project icons / OG images / repo avatars
 - [ ] Light + dark (inverted) variants where it makes sense
 
+## Web-analytics table coverage (2026-08-28, ops X37)
+
+Production events carry no `$pathname` and no `$pageleave`, so PostHog's Page /
+Entry / Exit tables render empty and every session counts as a zero-duration
+bounce. The wiring for both landed on dev as PR #60 (sanitizer allowlists
+`$pageleave` and stamps `$pathname` from the already-sanitized `path`) and
+ships with the next promotion — the items below are what's left after that.
+
+- [ ] Verify post-deploy that `$pathname` shows on fresh pageviews and the
+      Page/Entry/Exit tables populate (board: CodesWhat Sites Health,
+      project 558033, dashboard 2044260)
+- [ ] `$pageleave` delivery rate: drydock lands only ~17.6% of pageview volume
+      (sendBeacon unload envelopes can miss `$raw_user_agent`/`$host`; relaxing
+      the sanitizer guard just moves the drop to cookieless ingestion's silent
+      `cookieless_missing_user_agent` discard). Their lane is measuring the
+      real fix — copy their answer, don't relax the guard here.
+- [ ] Acquisition data (UTM params, referrer, geo) is an open policy question
+      for Scott to answer directly in this lane; a relayed approval was
+      retracted 2026-08-28. No `save_campaign_params`, no referrer work until
+      then.
+
 ## Telemetry and badge audit (2026-08-14)
 
 - The main website has no visible external provider badge surface to migrate.
