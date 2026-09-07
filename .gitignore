@@ -14,3 +14,6 @@ frontend/.capture-frames/
 
 # Agent worktrees and local agent state
 .claude/
+
+# Internal planning, never tracked (standards/planning.md in CodesWhat/ops)
+.planning/
