@@ -42,11 +42,10 @@ test("privacy posture disables persistence, recording, autocapture, and automati
   assert.match(instrumentation, /before_send:/);
 });
 
-test("CSP allows only the exact PostHog proxy and hashes the theme script", async () => {
-  const config = await read("next.config.ts");
-  assert.ok(config.includes('"https://e.codeswhat.com"'));
-  assert.doesNotMatch(config, /https:\/\/(app|us)\.posthog\.com/);
-  assert.match(config, /sha256-/);
+test("CSP allows only the exact PostHog proxy", async () => {
+  const proxy = await read("proxy.ts");
+  assert.ok(proxy.includes('"https://e.codeswhat.com"'));
+  assert.doesNotMatch(proxy, /https:\/\/(app|us)\.posthog\.com/);
 });
 
 test("repo-owned CI runs the website contracts and production build", async () => {

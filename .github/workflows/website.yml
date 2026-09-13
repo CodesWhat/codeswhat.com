@@ -17,6 +17,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -41,3 +42,7 @@ jobs:
         run: npm run test:posthog
       - name: Build production app
         run: npm run build
+      - name: Install browser for production checks
+        run: node node_modules/playwright-core/cli.js install --with-deps chromium
+      - name: Verify production page and API boundaries
+        run: npm run test:browser
