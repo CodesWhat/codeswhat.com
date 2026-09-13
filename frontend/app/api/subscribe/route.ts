@@ -44,14 +44,18 @@ export async function POST(request: Request) {
     }
 
     // Parse request body
-    let body: { email?: string };
+    let body: unknown;
     try {
       body = await request.json();
     } catch {
       return NextResponse.json({ error: "Invalid request format" }, { status: 400 });
     }
 
-    const { email } = body;
+    if (body === null || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "Invalid request format" }, { status: 400 });
+    }
+
+    const email = "email" in body ? body.email : undefined;
 
     // Input validation
     if (!email || typeof email !== "string") {

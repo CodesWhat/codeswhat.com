@@ -1,27 +1,40 @@
 # Vercel Deployment Guide
 
-## Quick Deploy
+## Production deployment
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/codeswhat/website)
+The existing Vercel project deploys `CodesWhat/codeswhat.com` from `main`, with
+`frontend/` as its root directory and Node.js 24. Feature changes merge into
+`dev`, then a reviewed promotion advances `main`. Git integration is working;
+a local CLI deployment is not the routine production path.
 
-## Manual Deployment
+After promotion, confirm the production deployment references the intended
+commit. Open the canonical domain and verify the theme toggle changes theme
+and the client scene mounts. Build success and analytics events alone do not
+establish that client initialization worked.
 
-1. Install Vercel CLI (optional):
+## Rendering and security headers
 
-   ```bash
-   npm i -g vercel
-   ```
+The Next proxy sets a fresh script nonce on both the forwarded request policy
+and the response policy. Next uses that nonce for generated inline scripts;
+the root layout applies it to the theme-init script. HTML renders per request
+so nonce values are not reused through static prerendering. Static JS/assets
+retain the caching rules in `vercel.json`.
 
-2. Deploy:
-   ```bash
-   vercel
-   ```
+Keep the CSP's allowed third-party origins narrow. A fixed hash for only the
+theme script does not permit Next's inline Flight scripts and breaks hydration.
+The production browser regression verifies actual interaction and blocked
+unapproved scripts. The remaining response headers and API cache rules live
+in `vercel.json`.
 
 ## Environment Variables
 
 Add these in your Vercel dashboard under Settings → Environment Variables:
 
-### Required Variables
+### Site and newsletter configuration
+
+The site metadata variables are optional overrides for the defaults in
+`lib/site-config.ts`. EmailOctopus credentials are required for newsletter
+delivery and stay server-side.
 
 | Variable                       | Description              | Example                          |
 | ------------------------------ | ------------------------ | -------------------------------- |
@@ -53,17 +66,17 @@ unset in Preview and Development so those deployments emit no analytics:
 
 The `vercel.json` file includes:
 
-- ✅ Security headers
-- ✅ API route configuration
-- ✅ Function timeouts
-- ✅ Caching rules
+- Additional security headers
+- API route configuration
+- Function timeouts
+- Static-asset caching rules
 
 ## Features Configured
 
 - **Security Headers**: XSS protection, frame options, content type sniffing prevention
 - **API Caching**: Disabled for `/api/*` routes
 - **Function Duration**: 10 seconds max for email signup
-- **Sitemap**: Rewrite rule ready for dynamic sitemap
+- **Sitemap**: Next's sitemap route supplies the public page list
 
 ## Monitoring
 
@@ -81,7 +94,7 @@ The `vercel.json` file includes:
 ### Build Failures
 
 - Check build logs in Vercel dashboard
-- Ensure Node.js version matches locally (20.9.0+)
+- Ensure Node.js version matches locally (24.x)
 - Verify all dependencies are in package.json
 
 ### Email Signup Not Working
