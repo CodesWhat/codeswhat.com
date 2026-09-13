@@ -34,6 +34,7 @@ test("privacy posture disables persistence, recording, autocapture, and automati
     'cookieless_mode: "always"',
     "advanced_disable_flags: true",
     "disable_persistence: true",
+    "save_referrer: true",
     "capture_performance:",
   ]) {
     assert.match(instrumentation, new RegExp(option.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")));
