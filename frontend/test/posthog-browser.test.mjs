@@ -15,5 +15,5 @@ test("production browser response keeps PostHog on the exact proxy", {
   assert.match(csp, /connect-src[^;]*https:\/\/e\.codeswhat\.com/);
   assert.doesNotMatch(csp, /\*\.posthog\.com|https:\/\/(app|us)\.posthog\.com/);
   assert.doesNotMatch(body, /query-secret=should-not-leave/);
-  assert.match(body, /<script id="theme-init">/);
+  assert.match(body, /<script\b[^>]*\bid="theme-init"/);
 });
