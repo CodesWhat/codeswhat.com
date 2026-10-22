@@ -590,3 +590,86 @@ test("classifyClientErrorName only returns allowlisted constructor names", () =>
     assert.equal(classifyClientErrorName(value), "other");
   }
 });
+
+test("UTM labels pass only through the bounded vocabulary", () => {
+  const forward = (utm: Record<string, unknown>, event = "$pageview") => {
+    const result = sanitizeEvent({
+      event,
+      properties: { ...ENVELOPE, $web_vitals_LCP_value: 1, ...utm },
+    });
+    assert.ok(result);
+    return result.properties;
+  };
+
+  for (const event of ["$pageview", "$pageleave", "$web_vitals"]) {
+    const props = forward(
+      { utm_source: "GitHub", utm_medium: "social", utm_campaign: "launch-2026" },
+      event,
+    );
+    assert.equal(props.utm_source, "github");
+    assert.equal(props.utm_medium, "social");
+    assert.equal(props.utm_campaign, "launch-2026");
+  }
+  for (const source of [
+    "github",
+    "x",
+    "bluesky",
+    "linkedin",
+    "reddit",
+    "hackernews",
+    "newsletter",
+    "producthunt",
+  ]) {
+    assert.equal(forward({ utm_source: source }).utm_source, source);
+  }
+  for (const medium of ["social", "email", "referral", "community"]) {
+    assert.equal(forward({ utm_medium: medium }).utm_medium, medium);
+  }
+
+  for (const bad of [
+    "me@example.com",
+    "user-12345",
+    "github.com",
+    "twitter",
+    "",
+    "<masked>",
+    42,
+    null,
+  ]) {
+    assert.equal("utm_source" in forward({ utm_source: bad }), false, String(bad));
+    assert.equal("utm_medium" in forward({ utm_medium: bad }), false, String(bad));
+  }
+  for (const bad of [
+    "me@example.com",
+    "Has Space",
+    "a".repeat(41),
+    "under_score",
+    "",
+    7,
+    "<masked>",
+  ]) {
+    assert.equal("utm_campaign" in forward({ utm_campaign: bad }), false, String(bad));
+  }
+  assert.equal(forward({ utm_campaign: "a".repeat(40) }).utm_campaign, "a".repeat(40));
+
+  const props = forward({
+    utm_content: "x",
+    utm_term: "y",
+    gclid: "abc",
+    fbclid: "abc",
+    msclkid: "abc",
+    gad_source: "1",
+    mc_cid: "abc",
+  });
+  for (const dropped of [
+    "utm_content",
+    "utm_term",
+    "gclid",
+    "fbclid",
+    "msclkid",
+    "gad_source",
+    "mc_cid",
+  ]) {
+    assert.equal(dropped in props, false, dropped);
+  }
+});

@@ -35,6 +35,8 @@ test("privacy posture disables persistence, recording, autocapture, and automati
     "advanced_disable_flags: true",
     "disable_persistence: true",
     "save_referrer: true",
+    "save_campaign_params: true",
+    "mask_personal_data_properties: true",
     "capture_exceptions: false",
     "capture_performance:",
   ]) {

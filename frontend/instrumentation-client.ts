@@ -62,7 +62,11 @@ if (typeof window !== "undefined" && posthogConfig) {
     disable_persistence: true,
     respect_dnt: true,
     save_referrer: true,
-    save_campaign_params: false,
+    // Campaign labels only: the sanitizer forwards utm_source/medium/campaign
+    // through a bounded vocabulary, and masking drops the per-click ids
+    // (gclid, fbclid, msclkid and the rest of PERSONAL_DATA_CAMPAIGN_PARAMS).
+    save_campaign_params: true,
+    mask_personal_data_properties: true,
     disable_capture_url_hashes: true,
     disable_scroll_properties: true,
     mask_all_element_attributes: true,

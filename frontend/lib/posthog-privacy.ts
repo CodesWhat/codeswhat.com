@@ -25,6 +25,19 @@ export const CLIENT_ERROR_NAMES = [
   "Error",
   "other",
 ] as const;
+// Incoming UTM values are untrusted, so only this bounded vocabulary (plus a
+// strict slug shape for utm_campaign) is forwarded. Everything else is dropped.
+export const UTM_SOURCES = [
+  "github",
+  "x",
+  "bluesky",
+  "linkedin",
+  "reddit",
+  "hackernews",
+  "newsletter",
+  "producthunt",
+] as const;
+export const UTM_MEDIUMS = ["social", "email", "referral", "community"] as const;
 
 const OTHER_PATH = "/_other";
 const PROJECT_TOKEN_PATTERN = /^phc_[A-Za-z0-9_-]+$/u;
@@ -34,6 +47,9 @@ const projectCtaPrefix = "project_";
 const allowedNewsletterErrorClasses = new Set<string>(NEWSLETTER_ERROR_CLASSES);
 const allowedClientErrorKinds = new Set<string>(CLIENT_ERROR_KINDS);
 const allowedClientErrorNames = new Set<string>(CLIENT_ERROR_NAMES);
+const allowedUtmSources = new Set<string>(UTM_SOURCES);
+const allowedUtmMediums = new Set<string>(UTM_MEDIUMS);
+const UTM_CAMPAIGN_PATTERN = /^[a-z0-9-]{1,40}$/u;
 const allowedVitalKeys = new Set([
   "$web_vitals_CLS_value",
   "$web_vitals_FCP_value",
@@ -112,6 +128,18 @@ function sanitizeReferringDomain(value: unknown): string | undefined {
   return value.toLowerCase();
 }
 
+function sanitizeUtmValue(value: unknown, allowed: Set<string>): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.toLowerCase();
+  return allowed.has(normalized) ? normalized : undefined;
+}
+
+function sanitizeUtmCampaign(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.toLowerCase();
+  return UTM_CAMPAIGN_PATTERN.test(normalized) ? normalized : undefined;
+}
+
 export function classifyClientErrorName(value: unknown): string {
   const name = value instanceof Error ? value.name : undefined;
   return typeof name === "string" && allowedClientErrorNames.has(name) ? name : "other";
@@ -171,6 +199,12 @@ function createCommonProperties(properties: Record<string, unknown>) {
   }
   const referringDomain = sanitizeReferringDomain(properties.$referring_domain);
   if (referringDomain !== undefined) common.$referring_domain = referringDomain;
+  const utmSource = sanitizeUtmValue(properties.utm_source, allowedUtmSources);
+  if (utmSource !== undefined) common.utm_source = utmSource;
+  const utmMedium = sanitizeUtmValue(properties.utm_medium, allowedUtmMediums);
+  if (utmMedium !== undefined) common.utm_medium = utmMedium;
+  const utmCampaign = sanitizeUtmCampaign(properties.utm_campaign);
+  if (utmCampaign !== undefined) common.utm_campaign = utmCampaign;
   return common;
 }
 
