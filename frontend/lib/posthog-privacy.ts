@@ -1,9 +1,14 @@
+import { supportCtaId, TIERS } from "./support.ts";
+
 export const POSTHOG_API_HOST = "https://e.codeswhat.com";
 export const POSTHOG_UI_HOST = "https://us.posthog.com";
 export const PRODUCTION_ORIGIN = "https://codeswhat.com";
-export const ALLOWED_ROUTES = ["/"] as const;
+export const ALLOWED_ROUTES = ["/", "/support"] as const;
 export const ALLOWED_CTA_IDS = [
   "github_org",
+  "sponsors_github",
+  "support_systema",
+  ...TIERS.map((tier) => supportCtaId(tier)),
   "project_sockguard",
   "project_drydock",
   "project_portwing",
@@ -44,6 +49,7 @@ const PROJECT_TOKEN_PATTERN = /^phc_[A-Za-z0-9_-]+$/u;
 const allowedRoutes = new Set<string>(ALLOWED_ROUTES);
 const allowedCtaIds = new Set<string>(ALLOWED_CTA_IDS);
 const projectCtaPrefix = "project_";
+const supportCtaPrefix = "support_";
 const allowedNewsletterErrorClasses = new Set<string>(NEWSLETTER_ERROR_CLASSES);
 const allowedClientErrorKinds = new Set<string>(CLIENT_ERROR_KINDS);
 const allowedClientErrorNames = new Set<string>(CLIENT_ERROR_NAMES);
@@ -148,6 +154,9 @@ export function classifyClientErrorName(value: unknown): string {
 function isAllowedCtaPlacement(ctaId: string, placement: string): boolean {
   if (ctaId === "github_org") {
     return placement === "header" || placement === "hero" || placement === "footer";
+  }
+  if (ctaId === "sponsors_github" || ctaId.startsWith(supportCtaPrefix)) {
+    return placement === "support";
   }
   return ctaId.startsWith(projectCtaPrefix) && placement === "projects";
 }

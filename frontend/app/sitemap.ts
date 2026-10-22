@@ -10,13 +10,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly" as const,
       priority: 1,
     },
-    // Example of additional pages (uncomment and modify as needed):
-    // {
-    //   url: `${BASE_URL}/about`,
-    //   lastModified: new Date(),
-    //   changeFrequency: 'monthly' as const,
-    //   priority: 0.8,
-    // },
+    {
+      url: `${BASE_URL}/support`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.5,
+    },
   ];
 
   return routes;

@@ -20,15 +20,18 @@ export function SiteHeader() {
           <Wordmark />
         </Link>
         <nav className="flex items-center gap-1 sm:gap-4">
-          <a href="#projects" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
+          <a href="/#projects" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
             Projects
           </a>
-          <a href="#services" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
+          <a href="/#services" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
             Services
           </a>
-          <a href="#contact" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
+          <a href="/#contact" className={`hidden px-2 py-2 sm:inline-block ${navLinkCn}`}>
             Contact
           </a>
+          <Link href="/support" className={`px-2 py-2 ${navLinkCn}`}>
+            Support
+          </Link>
           <TrackedCtaLink
             href={GITHUB_URL}
             target="_blank"

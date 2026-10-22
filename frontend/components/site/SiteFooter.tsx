@@ -1,5 +1,7 @@
 import { ArrowUpRight, Github } from "lucide-react";
+import Link from "next/link";
 import type { CSSProperties } from "react";
+import { SponsorsStrip } from "@/components/site/SponsorsStrip";
 import { TrackedCtaLink } from "@/components/site/TrackedCtaLink";
 import { Wordmark } from "@/components/site/Wordmark";
 import { GITHUB_URL, PROJECTS, SITE_CONFIG } from "@/lib/site-config";
@@ -43,6 +45,9 @@ export function SiteFooter() {
                 <ArrowUpRight className="h-3.5 w-3.5 opacity-60" />
               </a>
             ))}
+            <Link href="/support" className="transition-colors hover:text-brand-hover">
+              Support
+            </Link>
             <TrackedCtaLink
               href={GITHUB_URL}
               target="_blank"
@@ -55,6 +60,8 @@ export function SiteFooter() {
             </TrackedCtaLink>
           </nav>
         </div>
+
+        <SponsorsStrip />
 
         <p className="text-xs text-fg-faint">
           © {year} {SITE_CONFIG.name}. All rights reserved.
