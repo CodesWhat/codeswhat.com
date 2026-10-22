@@ -9,8 +9,12 @@ a local CLI deployment is not the routine production path.
 
 After promotion, confirm the production deployment references the intended
 commit. Open the canonical domain and verify the theme toggle changes theme
-and the client scene mounts. Build success and analytics events alone do not
-establish that client initialization worked.
+and persists after reload, the specimen plates render, and `/support` shows its
+buy links. Build success and analytics events alone do not establish that client
+initialization worked.
+
+`npm run og` regenerates the share cards in `public/og*` with playwright-core
+and the locally installed Google Chrome; it isn't part of the build.
 
 ## Rendering and security headers
 
@@ -54,6 +58,23 @@ unset in Preview and Development so those deployments emit no analytics:
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | The public token for `CodesWhat Public Websites` |
 | `NEXT_PUBLIC_POSTHOG_HOST` | `https://e.codeswhat.com` |
 | `NEXT_PUBLIC_POSTHOG_UI_HOST` | `https://us.posthog.com` |
+
+### Support page
+
+`/support` reads `CODESWHAT_SUPPORT_LINKS`, a server-side JSON object mapping tier
+id to a Stripe Payment Link. The six ids are `monthly-5`, `monthly-10`,
+`monthly-25`, `monthly-100`, `once-10` and `once-50`:
+
+```
+CODESWHAT_SUPPORT_LINKS={"monthly-5":"https://buy.stripe.com/...","monthly-10":"https://buy.stripe.com/...","monthly-25":"https://buy.stripe.com/...","monthly-100":"https://buy.stripe.com/...","once-10":"https://buy.stripe.com/...","once-50":"https://buy.stripe.com/..."}
+```
+
+Only `https://buy.stripe.com/...` and `https://donate.stripe.com/...` links with a
+path and no credentials are accepted. Unknown ids and invalid links are dropped
+with a server warning, and any tier without a link renders as "Opening soon".
+The page is rendered per request, so changing the variable needs a redeploy but
+no rebuild of page code. Costs marked PLACEHOLDER in `lib/support.ts` are for the
+maintainer to fill in.
 
 ## Domain Configuration
 

@@ -35,6 +35,9 @@ test("privacy posture disables persistence, recording, autocapture, and automati
     "advanced_disable_flags: true",
     "disable_persistence: true",
     "save_referrer: true",
+    "save_campaign_params: true",
+    "mask_personal_data_properties: true",
+    "capture_exceptions: false",
     "capture_performance:",
   ]) {
     assert.match(instrumentation, new RegExp(option.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")));
@@ -81,4 +84,45 @@ test("the cookieless envelope keeps the fields PostHog's server hash requires", 
   assert.match(privacy, /\$raw_user_agent/u);
   assert.match(privacy, /\$host/u);
   assert.match(privacy, /cookieless_missing_user_agent|cookieless server-hash/u);
+});
+
+test("every project has an allowlisted project_<slug> CTA id and a tracked link", async () => {
+  const { PROJECT_SLUGS } = await import("../lib/project-slugs.ts");
+  const { PROJECTS } = await import("../lib/site-config.ts");
+  const { SPECIMENS } = await import("../lib/specimens.ts");
+  const { ALLOWED_CTA_IDS, ALLOWED_ROUTES } = await import("../lib/posthog-privacy.ts");
+  assert.deepEqual(
+    SPECIMENS.map((specimen) => specimen.slug),
+    [...PROJECT_SLUGS],
+    "specimens and the analytics slug list must stay in step",
+  );
+  for (const project of PROJECTS) {
+    assert.ok(PROJECT_SLUGS.includes(project.slug), `${project.slug} is not in PROJECT_SLUGS`);
+  }
+  for (const slug of PROJECT_SLUGS) {
+    assert.ok(ALLOWED_CTA_IDS.includes(`project_${slug}`), `project_${slug} is not allowlisted`);
+    assert.ok(ALLOWED_ROUTES.includes(`/projects/${slug}`), `/projects/${slug} is not a route`);
+  }
+  for (const file of ["app/(site)/page.tsx", "app/(site)/projects/[slug]/page.tsx"]) {
+    const source = await read(file);
+    assert.match(source, /<TrackedCtaLink[^>]*ctaId=\{`project_\$\{[\w.]+\}`\}/u, file);
+    assert.match(source, /placement="projects"/u, file);
+  }
+});
+
+test("client error reporting sends no message, stack, filename or URL", async () => {
+  const instrumentation = await read("instrumentation-client.ts");
+  assert.match(instrumentation, /addEventListener\("error"/u);
+  assert.match(instrumentation, /addEventListener\("unhandledrejection"/u);
+  const call = instrumentation.match(/posthog\.capture\("client error", \{[^}]*\}\)/u)?.[0] ?? "";
+  assert.match(call, /error_kind/u);
+  assert.match(call, /error_name/u);
+  assert.doesNotMatch(call, /message|stack|filename|href|url/iu);
+});
+
+test("newsletter submissions report a fixed result and error class only", async () => {
+  const form = await read("components/catalogue/EmailSignupForm.tsx");
+  const calls = [...form.matchAll(/posthog\.capture\("newsletter submitted", \{[^}]*\}\)/gu)];
+  assert.equal(calls.length, 3);
+  for (const [call] of calls) assert.doesNotMatch(call, /email|message|data\./iu);
 });

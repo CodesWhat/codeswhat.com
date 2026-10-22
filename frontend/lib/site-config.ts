@@ -11,10 +11,10 @@ export const SITE_CONFIG = {
   /** Brand name in the header/footer/metadata. */
   name: "CodesWhat",
   /** Short tagline used in titles and OG metadata. */
-  tagline: "Where curiosity meets code",
+  tagline: "Small, sharp tools from one developer and a lot of agents",
   /** Default meta / OpenGraph / description. */
   description:
-    "Open-source developer tools for containers, security, and automation — Sockguard, Drydock, Portwing, and Portkey Admin MCP.",
+    "Open-source developer tools and apps, from Docker and MCP servers to macOS utilities and a job-search workspace: Sockguard, Drydock, Portwing, Portkey Admin MCP, Mouthtype, Idlescreen, and CareerRat.",
   /** Production domain (no protocol, no trailing slash). */
   domain: "codeswhat.com",
   /** GitHub org. */
@@ -46,22 +46,27 @@ export const OG_IMAGE = {
   url: "/og.png",
   width: 1200,
   height: 630,
-  alt: "CodesWhat — open-source developer tools for containers, security, and automation",
+  alt: "CodesWhat: open-source developer tools and apps",
 } as const;
+
+export type ProjectCategory = "server-tool" | "macos-app" | "web-app";
+
+export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
+  "server-tool": "Server tool",
+  "macos-app": "macOS app",
+  "web-app": "Web app",
+};
 
 export type Project = {
   slug: string;
   name: string;
   tagline: string;
   description: string;
+  category: ProjectCategory;
   /** at-a-glance badges, kept uniform as "License · Language" across cards */
   status: string;
-  /** hex accent used for the card rule + balloon tint reference */
-  accent: string;
   /** primary link out (repo or product site) */
   href: string;
-  /** mascot balloon art in /public/logos */
-  balloon: string;
 };
 
 /** The project roster — real, crawlable content and the SEO/AEO backbone. */
@@ -69,44 +74,68 @@ export const PROJECTS: Project[] = [
   {
     slug: "sockguard",
     name: "Sockguard",
+    category: "server-tool",
     tagline: "Default-deny Docker socket proxy",
     description:
-      "A default-deny proxy for the Docker socket — you pick exactly which requests reach the daemon.",
+      "A default-deny proxy for the Docker socket. You pick exactly which requests reach the daemon.",
     status: "Apache-2.0 · Go",
-    accent: "#e8a11c",
     href: "https://getsockguard.com",
-    balloon: "/logos/sockguard-balloon.png",
   },
   {
     slug: "drydock",
     name: "Drydock",
+    category: "server-tool",
     tagline: "Container update monitoring",
     description:
       "Self-hosted update monitoring. Finds what you're running, flags outdated or exposed images, and tells you.",
     status: "AGPL-3.0 · TypeScript",
-    accent: "#1f9ed6",
     href: "https://getdrydock.com",
-    balloon: "/logos/drydock-balloon.png",
   },
   {
     slug: "portwing",
     name: "Portwing",
+    category: "server-tool",
     tagline: "Remote Docker agent",
     description: "Control your Docker containers from anywhere, without exposing the daemon.",
-    status: "AGPL-3.0 · Go",
-    accent: "#a25bd6",
-    href: "https://github.com/CodesWhat/portwing",
-    balloon: "/logos/portwing-balloon.png",
+    status: "MIT · Go",
+    href: "https://portwing.codeswhat.com",
   },
   {
     slug: "portkey-admin-mcp",
     name: "Portkey Admin MCP",
+    category: "server-tool",
     tagline: "Portkey admin, from any MCP client",
     description:
-      "A Model Context Protocol (MCP) server for the Portkey admin API — manage configs, keys, guardrails, and analytics from any MCP client.",
+      "A Model Context Protocol (MCP) server for the Portkey admin API. Manage configs, keys, guardrails, and analytics from any MCP client.",
     status: "MIT · TypeScript",
-    accent: "#6b7bd6",
     href: "https://github.com/CodesWhat/portkey-admin-mcp",
-    balloon: "/logos/portkey-balloon.png",
+  },
+  {
+    slug: "mouthtype",
+    name: "Mouthtype",
+    category: "macos-app",
+    tagline: "Push-to-talk dictation",
+    description: "Local push-to-talk dictation for macOS. Mouth in, text back.",
+    status: "GPL-3.0 · Swift",
+    href: "https://mouthtype.app",
+  },
+  {
+    slug: "idlescreen",
+    name: "Idlescreen",
+    category: "macos-app",
+    tagline: "ASCII art screen saver",
+    description: "ASCII art screen saver for macOS, rendered in Metal with 19 procedural patterns.",
+    status: "MIT · Swift",
+    href: "https://github.com/CodesWhat/idlescreen",
+  },
+  {
+    slug: "careerrat",
+    name: "CareerRat",
+    category: "web-app",
+    tagline: "Agentic job-search workspace",
+    description:
+      "Chat-first agentic job-search workspace: find, vet, tailor, track, and prep for roles with your own AI CLI.",
+    status: "MIT · JavaScript",
+    href: "https://careerrat.com",
   },
 ];
