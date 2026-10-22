@@ -55,6 +55,7 @@ const CSS = `
 * { box-sizing: border-box; }
 body { margin: 0; width: 1200px; height: 630px; background: #fff; color: #111827; position: relative; overflow: hidden; }
 .brand { position: absolute; top: 48px; left: 64px; display: flex; align-items: center; gap: 14px; font: 40px Serif; letter-spacing: -1px; }
+.brand .q { font-style: normal; background: #d3e58b; padding: 0 4px; margin-left: 1px; }
 .label { position: absolute; top: 132px; left: 66px; font: 500 14px Mono; letter-spacing: 2px; text-transform: uppercase; }
 h1 { position: absolute; left: 62px; top: 168px; margin: 0; width: 640px; height: 268px; overflow: hidden; font: 400 84px/1.02 Serif; letter-spacing: -2px; }
 h1.narrow { width: 560px; }
@@ -80,7 +81,7 @@ function page(body) {
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><style>${CSS}</style></head><body>${body.replaceAll("{{COIN}}", coin)}</body></html>`;
 }
 
-const brand = `<div class="brand">${sprite("coin", 1).replace('width="32" height="32"', 'width="40" height="40"')}codeswhat</div>`;
+const brand = `<div class="brand">${sprite("coin", 1).replace('width="32" height="32"', 'width="40" height="40"')}<span>CodesWhat<em class="q">?</em></span></div>`;
 const footer = (left) =>
   `<footer><span class="l">${left}</span><span>codeswhat.com</span></footer>`;
 
