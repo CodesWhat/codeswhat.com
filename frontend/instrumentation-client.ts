@@ -1,5 +1,10 @@
 import posthog from "posthog-js";
-import { getPostHogConfig, sanitizeEvent, sanitizeRoute } from "./lib/posthog-privacy";
+import {
+  classifyClientErrorName,
+  getPostHogConfig,
+  sanitizeEvent,
+  sanitizeRoute,
+} from "./lib/posthog-privacy";
 
 const posthogConfig = getPostHogConfig({
   NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN,
@@ -9,6 +14,21 @@ const posthogConfig = getPostHogConfig({
 
 function capturePageview(url: string) {
   posthog.capture("$pageview", { path: sanitizeRoute(url) });
+}
+
+const MAX_CLIENT_ERRORS_PER_PAGE_LOAD = 5;
+let clientErrorCount = 0;
+
+// Only a bounded kind, an allowlisted constructor name and the sanitized route
+// leave the page. No message, stack, filename or URL is ever read.
+function captureClientError(errorKind: "error" | "unhandled_rejection", cause: unknown) {
+  if (clientErrorCount >= MAX_CLIENT_ERRORS_PER_PAGE_LOAD) return;
+  clientErrorCount += 1;
+  posthog.capture("client error", {
+    error_kind: errorKind,
+    error_name: classifyClientErrorName(cause),
+    path: sanitizeRoute(window.location.pathname),
+  });
 }
 
 if (typeof window !== "undefined" && posthogConfig) {
@@ -42,7 +62,11 @@ if (typeof window !== "undefined" && posthogConfig) {
     disable_persistence: true,
     respect_dnt: true,
     save_referrer: true,
-    save_campaign_params: false,
+    // Campaign labels only: the sanitizer forwards utm_source/medium/campaign
+    // through a bounded vocabulary, and masking drops the per-click ids
+    // (gclid, fbclid, msclkid and the rest of PERSONAL_DATA_CAMPAIGN_PARAMS).
+    save_campaign_params: true,
+    mask_personal_data_properties: true,
     disable_capture_url_hashes: true,
     disable_scroll_properties: true,
     mask_all_element_attributes: true,
@@ -55,6 +79,11 @@ if (typeof window !== "undefined" && posthogConfig) {
     },
     before_send: (event) => sanitizeEvent(event) as typeof event | null,
   });
+
+  window.addEventListener("error", (event) => captureClientError("error", event.error));
+  window.addEventListener("unhandledrejection", (event) =>
+    captureClientError("unhandled_rejection", event.reason),
+  );
 
   capturePageview(window.location.pathname);
 }

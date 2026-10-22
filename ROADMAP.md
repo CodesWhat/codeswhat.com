@@ -60,15 +60,28 @@ ships with the next promotion — the items below are what's left after that.
       (portwing's landed), so a Playwright canary's silence proves nothing
       either way. Verify with a real browser or by reading the deployed chunk
       for the property names.
-- [ ] Acquisition data: decided org-wide in `CodesWhat/ops`
+- [x] Acquisition data: decided org-wide in `CodesWhat/ops`
       `standards/analytics.md` ("Acquisition data and consent", as of
-      `c161ebc`) — that file is the authority. Shape: `save_campaign_params:
-      true` with `gclid`/`fbclid`/`msclkid` excluded; `save_referrer: true`
-      with the sanitizer forwarding `$referring_domain` only (drop it unless
-      it's a bare hostname, never copy `$referrer`); geo stays off (cookieless
-      strips the IP upstream, PostHog #48660). No banner needed. Implement
-      AFTER the `$pathname`/`$pageleave` promotion is verified in production,
-      so the two changes are separately attributable.
+      `c161ebc`) — that file is the authority. Landed: `save_campaign_params:
+      true` with `mask_personal_data_properties: true` (masks
+      `gclid`/`fbclid`/`msclkid` and the rest of the SDK's per-click ids);
+      `save_referrer: true` with the sanitizer forwarding `$referring_domain`
+      only (bare hostname, never `$referrer`). The sanitizer forwards only
+      `utm_source` (github, x, bluesky, linkedin, reddit, hackernews,
+      newsletter, producthunt), `utm_medium` (social, email, referral,
+      community) and `utm_campaign` (`/^[a-z0-9-]{1,40}$/`); everything else is
+      dropped. The vocabulary is pending Scott's approval. Geo stays off
+      (cookieless strips the IP upstream, PostHog #48660). No banner needed.
+- [x] `$web_vitals` carries `$pathname` from the sanitized path
+- [x] `cta activated` for the project cards: `project_<slug>` ids, placement
+      `projects`. `cta activated` had zero rows in 120 days on codeswhat.com;
+      reproduced in a browser and the capture, sanitizer and send path all work,
+      so it was low traffic (76 pageviews) rather than a bug. Check it fires after
+      deploy.
+- [x] `newsletter submitted` (`result`, plus `error_class` from
+      invalid_email / rate_limited / unavailable / network on error)
+- [x] `client error` (`error_kind`, allowlisted `error_name`, sanitized path;
+      max 5 per page load; `capture_exceptions` stays off)
 
 ## Telemetry and badge audit (2026-08-14)
 

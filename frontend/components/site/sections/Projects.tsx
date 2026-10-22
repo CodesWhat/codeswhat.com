@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "lucide-react";
+import { TrackedCtaLink } from "@/components/site/TrackedCtaLink";
 import { PROJECTS } from "@/lib/site-config";
 
 /**
@@ -26,7 +27,9 @@ export function Projects() {
         <ul className="grid gap-5 sm:grid-cols-2">
           {PROJECTS.map((project) => (
             <li key={project.slug}>
-              <a
+              <TrackedCtaLink
+                ctaId={`project_${project.slug}`}
+                placement="projects"
                 href={project.href}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -46,7 +49,7 @@ export function Projects() {
                 <span className="mt-auto pt-2 font-mono text-xs tracking-wide text-fg-faint uppercase">
                   {project.status}
                 </span>
-              </a>
+              </TrackedCtaLink>
             </li>
           ))}
         </ul>

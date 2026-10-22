@@ -52,6 +52,7 @@ import { test } from "node:test";
 import {
   ALLOWED_CTA_IDS,
   ALLOWED_ROUTES,
+  classifyClientErrorName,
   getPostHogConfig,
   sanitizeEvent,
   sanitizeRoute,
@@ -223,7 +224,13 @@ test("$pathname never diverges from the allowlisted path", () => {
 });
 
 test("CTA events are limited to the initial GitHub placements", () => {
-  assert.deepEqual(ALLOWED_CTA_IDS, ["github_org"]);
+  assert.deepEqual(ALLOWED_CTA_IDS, [
+    "github_org",
+    "project_sockguard",
+    "project_drydock",
+    "project_portwing",
+    "project_portkey-admin-mcp",
+  ]);
   assert.deepEqual(
     sanitizeEvent({
       event: "cta activated",
@@ -289,6 +296,7 @@ test("web vitals events keep only metric data", () => {
         site: "codeswhat",
         surface: "marketing",
         path: "/",
+        $pathname: "/",
         $web_vitals_LCP_value: 123.4,
         ...COOKIELESS_HASH_PROPERTIES,
       },
@@ -385,5 +393,283 @@ test("sanitizeEvent requires and forwards the cookieless server-hash fields", ()
       null,
       `sanitizeEvent must drop events missing ${missingKey}`,
     );
+  }
+});
+
+const ENVELOPE = {
+  token: "phc_public-token_123",
+  $cookieless_mode: true,
+  $process_person_profile: false,
+  path: "/",
+  ...COOKIELESS_HASH_PROPERTIES,
+};
+
+test("web vitals carry a $pathname taken from the sanitized path", () => {
+  const base = {
+    token: "phc_public-token_123",
+    $cookieless_mode: true,
+    $process_person_profile: false,
+    ...COOKIELESS_HASH_PROPERTIES,
+  };
+  const other = sanitizeEvent({
+    event: "$web_vitals",
+    properties: { ...base, path: "/private/page?secret=1", $web_vitals_LCP_value: 120 },
+  });
+  assert.ok(other);
+  assert.equal(other.properties.path, "/_other");
+  assert.equal(other.properties.$pathname, "/_other");
+
+  const home = sanitizeEvent({
+    event: "$web_vitals",
+    properties: { ...base, path: "/", $pathname: "/ignored", $web_vitals_CLS_value: 0.1 },
+  });
+  assert.ok(home);
+  assert.equal(home.properties.$pathname, "/");
+});
+
+test("a CTA event shaped like the browser sends it (no path property) survives the pinned pipeline", () => {
+  // posthog-js never sets `path` on a cta capture; the route has to come from
+  // $pathname / $current_url, which carry the real query string.
+  const client = new PostHog();
+  client.config.before_send = sanitizeEvent;
+  for (const [ctaId, placement] of [
+    ["github_org", "header"],
+    ["project_drydock", "projects"],
+  ]) {
+    const result = client._runBeforeSend({
+      event: "cta activated",
+      properties: {
+        token: "phc_public-token_123",
+        $cookieless_mode: true,
+        $process_person_profile: false,
+        $current_url: "https://codeswhat.com/?utm_source=github#projects",
+        $pathname: "/",
+        cta_id: ctaId,
+        placement,
+        ...COOKIELESS_HASH_PROPERTIES,
+      },
+    }) as { event: string; properties: Record<string, unknown> } | null;
+    assert.ok(result, `${ctaId} was dropped`);
+    assert.equal(result.event, "cta activated");
+    assert.equal(result.properties.cta_id, ctaId);
+    assert.equal(result.properties.placement, placement);
+    assert.equal(result.properties.path, "/");
+  }
+});
+
+test("project CTAs need a project_ id with the projects placement", () => {
+  const accepted = ALLOWED_CTA_IDS.filter((id) => id.startsWith("project_"));
+  assert.equal(accepted.length, 4);
+  for (const ctaId of accepted) {
+    assert.ok(
+      sanitizeEvent({
+        event: "cta activated",
+        properties: { ...ENVELOPE, cta_id: ctaId, placement: "projects" },
+      }),
+    );
+    for (const placement of ["header", "hero", "footer", "elsewhere", ""]) {
+      assert.equal(
+        sanitizeEvent({
+          event: "cta activated",
+          properties: { ...ENVELOPE, cta_id: ctaId, placement },
+        }),
+        null,
+      );
+    }
+  }
+  assert.equal(
+    sanitizeEvent({
+      event: "cta activated",
+      properties: { ...ENVELOPE, cta_id: "github_org", placement: "projects" },
+    }),
+    null,
+  );
+  for (const ctaId of ["project_unknown", "project_", "project_drydock?x=1", 7, undefined]) {
+    assert.equal(
+      sanitizeEvent({
+        event: "cta activated",
+        properties: { ...ENVELOPE, cta_id: ctaId, placement: "projects" },
+      }),
+      null,
+    );
+  }
+});
+
+test("newsletter submitted keeps only a result and a fixed error class", () => {
+  const success = sanitizeEvent({
+    event: "newsletter submitted",
+    properties: { ...ENVELOPE, result: "success", email: "me@example.com", error_class: "network" },
+  });
+  assert.ok(success);
+  assert.equal(success.properties.result, "success");
+  assert.equal("error_class" in success.properties, false);
+  assert.equal("email" in success.properties, false);
+
+  for (const errorClass of ["invalid_email", "rate_limited", "unavailable", "network"]) {
+    const result = sanitizeEvent({
+      event: "newsletter submitted",
+      properties: {
+        ...ENVELOPE,
+        result: "error",
+        error_class: errorClass,
+        email: "me@example.com",
+      },
+    });
+    assert.ok(result, errorClass);
+    assert.equal(result.properties.error_class, errorClass);
+    assert.equal("email" in result.properties, false);
+  }
+
+  for (const bad of [
+    { result: "error" },
+    { result: "error", error_class: "me@example.com" },
+    { result: "error", error_class: "Failed to subscribe" },
+    { result: "pending" },
+    { result: "SUCCESS" },
+    {},
+  ]) {
+    assert.equal(
+      sanitizeEvent({ event: "newsletter submitted", properties: { ...ENVELOPE, ...bad } }),
+      null,
+      JSON.stringify(bad),
+    );
+  }
+});
+
+test("client error keeps only a bounded kind, an allowlisted name, and the route", () => {
+  for (const kind of ["error", "unhandled_rejection"]) {
+    const result = sanitizeEvent({
+      event: "client error",
+      properties: {
+        ...ENVELOPE,
+        error_kind: kind,
+        error_name: "TypeError",
+        message: "Cannot read properties of undefined",
+        stack: "at https://codeswhat.com/_next/x.js:1:1",
+        filename: "https://codeswhat.com/_next/x.js",
+      },
+    });
+    assert.ok(result, kind);
+    assert.equal(result.properties.error_kind, kind);
+    assert.equal(result.properties.error_name, "TypeError");
+    assert.equal(result.properties.path, "/");
+    for (const leaked of ["message", "stack", "filename"]) {
+      assert.equal(leaked in result.properties, false, leaked);
+    }
+  }
+  for (const bad of [
+    { error_kind: "exception", error_name: "TypeError" },
+    { error_kind: "error", error_name: "CustomSecretError" },
+    { error_kind: "error", error_name: "Cannot read properties of undefined" },
+    { error_kind: "error" },
+    { error_name: "Error" },
+  ]) {
+    assert.equal(
+      sanitizeEvent({ event: "client error", properties: { ...ENVELOPE, ...bad } }),
+      null,
+      JSON.stringify(bad),
+    );
+  }
+});
+
+test("classifyClientErrorName only returns allowlisted constructor names", () => {
+  class ChunkLoadError extends Error {
+    name = "ChunkLoadError";
+  }
+  assert.equal(classifyClientErrorName(new TypeError("x")), "TypeError");
+  assert.equal(classifyClientErrorName(new ReferenceError("x")), "ReferenceError");
+  assert.equal(classifyClientErrorName(new SyntaxError("x")), "SyntaxError");
+  assert.equal(classifyClientErrorName(new RangeError("x")), "RangeError");
+  assert.equal(classifyClientErrorName(new ChunkLoadError("x")), "ChunkLoadError");
+  assert.equal(classifyClientErrorName(new Error("x")), "Error");
+  assert.equal(classifyClientErrorName(new URIError("x")), "other");
+  const custom = new Error("x");
+  custom.name = "me@example.com";
+  assert.equal(classifyClientErrorName(custom), "other");
+  for (const value of [null, undefined, "boom", 42, { name: "TypeError" }]) {
+    assert.equal(classifyClientErrorName(value), "other");
+  }
+});
+
+test("UTM labels pass only through the bounded vocabulary", () => {
+  const forward = (utm: Record<string, unknown>, event = "$pageview") => {
+    const result = sanitizeEvent({
+      event,
+      properties: { ...ENVELOPE, $web_vitals_LCP_value: 1, ...utm },
+    });
+    assert.ok(result);
+    return result.properties;
+  };
+
+  for (const event of ["$pageview", "$pageleave", "$web_vitals"]) {
+    const props = forward(
+      { utm_source: "GitHub", utm_medium: "social", utm_campaign: "launch-2026" },
+      event,
+    );
+    assert.equal(props.utm_source, "github");
+    assert.equal(props.utm_medium, "social");
+    assert.equal(props.utm_campaign, "launch-2026");
+  }
+  for (const source of [
+    "github",
+    "x",
+    "bluesky",
+    "linkedin",
+    "reddit",
+    "hackernews",
+    "newsletter",
+    "producthunt",
+  ]) {
+    assert.equal(forward({ utm_source: source }).utm_source, source);
+  }
+  for (const medium of ["social", "email", "referral", "community"]) {
+    assert.equal(forward({ utm_medium: medium }).utm_medium, medium);
+  }
+
+  for (const bad of [
+    "me@example.com",
+    "user-12345",
+    "github.com",
+    "twitter",
+    "",
+    "<masked>",
+    42,
+    null,
+  ]) {
+    assert.equal("utm_source" in forward({ utm_source: bad }), false, String(bad));
+    assert.equal("utm_medium" in forward({ utm_medium: bad }), false, String(bad));
+  }
+  for (const bad of [
+    "me@example.com",
+    "Has Space",
+    "a".repeat(41),
+    "under_score",
+    "",
+    7,
+    "<masked>",
+  ]) {
+    assert.equal("utm_campaign" in forward({ utm_campaign: bad }), false, String(bad));
+  }
+  assert.equal(forward({ utm_campaign: "a".repeat(40) }).utm_campaign, "a".repeat(40));
+
+  const props = forward({
+    utm_content: "x",
+    utm_term: "y",
+    gclid: "abc",
+    fbclid: "abc",
+    msclkid: "abc",
+    gad_source: "1",
+    mc_cid: "abc",
+  });
+  for (const dropped of [
+    "utm_content",
+    "utm_term",
+    "gclid",
+    "fbclid",
+    "msclkid",
+    "gad_source",
+    "mc_cid",
+  ]) {
+    assert.equal(dropped in props, false, dropped);
   }
 });

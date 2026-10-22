@@ -35,6 +35,9 @@ test("privacy posture disables persistence, recording, autocapture, and automati
     "advanced_disable_flags: true",
     "disable_persistence: true",
     "save_referrer: true",
+    "save_campaign_params: true",
+    "mask_personal_data_properties: true",
+    "capture_exceptions: false",
     "capture_performance:",
   ]) {
     assert.match(instrumentation, new RegExp(option.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")));
@@ -81,4 +84,34 @@ test("the cookieless envelope keeps the fields PostHog's server hash requires", 
   assert.match(privacy, /\$raw_user_agent/u);
   assert.match(privacy, /\$host/u);
   assert.match(privacy, /cookieless_missing_user_agent|cookieless server-hash/u);
+});
+
+test("every project card has an allowlisted project_<slug> CTA id", async () => {
+  const config = await read("lib/site-config.ts");
+  const privacy = await read("lib/posthog-privacy.ts");
+  const projects = await read("components/site/sections/Projects.tsx");
+  const slugs = [...config.matchAll(/^\s+slug: "([^"]+)",$/gmu)].map((match) => match[1]);
+  assert.ok(slugs.length > 0);
+  for (const slug of slugs) {
+    assert.ok(privacy.includes(`"project_${slug}"`), `project_${slug} is not in ALLOWED_CTA_IDS`);
+  }
+  assert.match(projects, /<TrackedCtaLink[^>]*ctaId=\{`project_\$\{project\.slug\}`\}/u);
+  assert.match(projects, /placement="projects"/u);
+});
+
+test("client error reporting sends no message, stack, filename or URL", async () => {
+  const instrumentation = await read("instrumentation-client.ts");
+  assert.match(instrumentation, /addEventListener\("error"/u);
+  assert.match(instrumentation, /addEventListener\("unhandledrejection"/u);
+  const call = instrumentation.match(/posthog\.capture\("client error", \{[^}]*\}\)/u)?.[0] ?? "";
+  assert.match(call, /error_kind/u);
+  assert.match(call, /error_name/u);
+  assert.doesNotMatch(call, /message|stack|filename|href|url/iu);
+});
+
+test("newsletter submissions report a fixed result and error class only", async () => {
+  const form = await read("components/EmailSignupForm.tsx");
+  const calls = [...form.matchAll(/posthog\.capture\("newsletter submitted", \{[^}]*\}\)/gu)];
+  assert.equal(calls.length, 3);
+  for (const [call] of calls) assert.doesNotMatch(call, /email|message|data\./iu);
 });
