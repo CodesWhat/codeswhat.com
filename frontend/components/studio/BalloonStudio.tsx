@@ -3,8 +3,8 @@
 import { Environment, Lightformer } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Suspense } from "react";
-import { MylarBalloon } from "@/components/site/scene/balloons/MylarBalloon";
-import { CaptureBridge, captureControl } from "@/components/site/scene/captureRig";
+import { MylarBalloon } from "@/components/studio/balloons/MylarBalloon";
+import { CaptureBridge, captureControl } from "@/components/studio/captureRig";
 
 /**
  * Dev-only capture stage for a mascot Mylar balloon — same lighting as the

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { BalloonStudio } from "@/components/site/scene/BalloonStudio";
+import { BalloonStudio } from "@/components/studio/BalloonStudio";
 
 /**
  * Dev-only capture harness for minting a mascot balloon as a transparent icon /

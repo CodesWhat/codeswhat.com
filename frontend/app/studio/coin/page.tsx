@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { CoinStudio } from "@/components/site/scene/CoinStudio";
+import { CoinStudio } from "@/components/studio/CoinStudio";
 
 /**
  * Dev-only capture harness for minting the spinning coin as a transparent

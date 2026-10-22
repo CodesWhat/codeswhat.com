@@ -1,18 +1,22 @@
+import { PROJECT_SLUGS } from "./project-slugs.ts";
 import { supportCtaId, TIERS } from "./support.ts";
 
 export const POSTHOG_API_HOST = "https://e.codeswhat.com";
 export const POSTHOG_UI_HOST = "https://us.posthog.com";
 export const PRODUCTION_ORIGIN = "https://codeswhat.com";
-export const ALLOWED_ROUTES = ["/", "/support"] as const;
+// Only the fixed routes plus /projects/<slug> for slugs in PROJECT_SLUGS. Any other
+// /projects/... path falls through to /_other, so the route set stays bounded.
+export const ALLOWED_ROUTES = [
+  "/",
+  "/support",
+  ...PROJECT_SLUGS.map((slug) => `/projects/${slug}` as const),
+] as const;
 export const ALLOWED_CTA_IDS = [
   "github_org",
   "sponsors_github",
   "support_systema",
   ...TIERS.map((tier) => supportCtaId(tier)),
-  "project_sockguard",
-  "project_drydock",
-  "project_portwing",
-  "project_portkey-admin-mcp",
+  ...PROJECT_SLUGS.map((slug) => `project_${slug}` as const),
 ] as const;
 export const NEWSLETTER_ERROR_CLASSES = [
   "invalid_email",

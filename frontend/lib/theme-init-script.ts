@@ -1,9 +1,13 @@
+// Runs before first paint (nonce'd in the root layout) so the page never flashes the wrong
+// paper. An explicit choice saved by the header toggle wins; otherwise follow the OS, and
+// fall back to light. data-theme on <html> is what the Catalogue tokens key off.
 export const THEME_INIT_SCRIPT = `try {
-  // Dark by default (the 3D layer is tuned for black); light is an
-  // explicit opt-in via the header toggle.
-  if (localStorage.theme === 'light') {
-    document.documentElement.classList.remove('dark')
-  } else {
-    document.documentElement.classList.add('dark')
-  }
-} catch (_) {}`;
+  var saved = localStorage.getItem('theme')
+  var theme = saved === 'light' || saved === 'dark'
+    ? saved
+    : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+  document.documentElement.dataset.theme = theme
+  document.documentElement.style.colorScheme = theme
+} catch (_) {
+  document.documentElement.dataset.theme = 'light'
+}`;

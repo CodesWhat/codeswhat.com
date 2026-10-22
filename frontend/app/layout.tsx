@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import { headers } from "next/headers";
-import { ThemedToaster } from "@/components/site/ThemedToaster";
 import { BASE_URL, OG_IMAGE, SITE_CONFIG } from "@/lib/site-config";
 import { THEME_INIT_SCRIPT } from "@/lib/theme-init-script";
+import { fontVars } from "./fonts";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
 
 // env overrides for the shared shell, falling back to the real brand values
 // (not the old scaffolding defaults) so non-homepage routes stay on-brand
@@ -84,10 +81,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
         />
       </head>
-      <body className={inter.className}>
-        {children}
-        <ThemedToaster />
-      </body>
+      <body className={fontVars}>{children}</body>
     </html>
   );
 }

@@ -1,269 +1,54 @@
-@import "tailwindcss";
-
-/* Class-based dark mode: `dark:` variants follow the `.dark` class on <html>
-   (toggled by ThemeToggle and set by the no-flash init script in layout.tsx),
-   NOT the OS prefers-color-scheme. Without this, Tailwind v4 defaults to the
-   media query and the theme toggle has no effect. */
-@custom-variant dark (&:where(.dark, .dark *));
-
-/* Define theme colors using CSS variables */
-@theme {
-  --color-background: hsl(var(--background));
-  --color-foreground: hsl(var(--foreground));
-  --color-card: hsl(var(--card));
-  --color-card-foreground: hsl(var(--card-foreground));
-  --color-popover: hsl(var(--popover));
-  --color-popover-foreground: hsl(var(--popover-foreground));
-  --color-primary: hsl(var(--primary));
-  --color-primary-foreground: hsl(var(--primary-foreground));
-  --color-secondary: hsl(var(--secondary));
-  --color-secondary-foreground: hsl(var(--secondary-foreground));
-  --color-muted: hsl(var(--muted));
-  --color-muted-foreground: hsl(var(--muted-foreground));
-  --color-accent: hsl(var(--accent));
-  --color-accent-foreground: hsl(var(--accent-foreground));
-  --color-destructive: hsl(var(--destructive));
-  --color-destructive-foreground: hsl(var(--destructive-foreground));
-  --color-border: hsl(var(--border));
-  --color-input: hsl(var(--input));
-  --color-ring: hsl(var(--ring));
-
-  /* Brand tokens — one semantic scale that flips light/dark via the CSS vars in
-     :root / .dark below. Components use these (text-fg, text-brand, bg-surface…)
-     instead of literal colors + dark: variants. */
-  --color-fg: var(--brand-fg);
-  --color-fg-muted: var(--brand-fg-muted);
-  --color-fg-faint: var(--brand-fg-faint);
-  --color-brand: var(--brand-text);
-  --color-brand-hover: var(--brand-text-hover);
-  --color-brand-solid: var(--brand-solid);
-  --color-brand-solid-hover: var(--brand-solid-hover);
-  --color-on-brand: var(--brand-on);
-  --color-surface: var(--brand-surface);
-  --color-surface-hover: var(--brand-surface-hover);
-  --color-bar: var(--brand-bar);
-  --color-line: var(--brand-line);
-  --color-line-strong: var(--brand-line-strong);
-}
-
-/* CSS variables for light/dark mode */
+/* Catalogue tokens. data-theme on <html> is set before paint by the nonce'd theme-init
+   script (lib/theme-init-script.ts); the media query is the no-JS fallback. */
 :root {
-  --background: 0 0% 100%;
-  --foreground: 0 0% 3.9%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 3.9%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 3.9%;
-  --primary: 0 0% 9%;
-  --primary-foreground: 0 0% 98%;
-  --secondary: 0 0% 96.1%;
-  --secondary-foreground: 0 0% 9%;
-  --muted: 0 0% 96.1%;
-  --muted-foreground: 0 0% 45.1%;
-  --accent: 0 0% 96.1%;
-  --accent-foreground: 0 0% 9%;
-  --destructive: 0 84.2% 60.2%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 89.8%;
-  --input: 0 0% 89.8%;
-  --ring: 0 0% 63.9%;
-  --radius: 0.5rem;
-
-  /* brand palette — light */
-  --brand-fg: #171717; /* primary text (neutral-900) */
-  --brand-fg-muted: #525252; /* body / secondary (neutral-600) */
-  --brand-fg-faint: #737373; /* eyebrows, captions, copyright (neutral-500) */
-  --brand-text: #4d7c0f; /* accent text / links (lime-700) */
-  --brand-text-hover: #65a30d; /* accent hover (lime-600) */
-  --brand-solid: #a3e635; /* accent fill / buttons (lime-400) */
-  --brand-solid-hover: #84cc16; /* accent fill hover (lime-500) */
-  --brand-on: #0a0a0a; /* text on accent fills */
-  --brand-surface: rgba(255, 255, 255, 0.6); /* translucent cards */
-  --brand-surface-hover: rgba(255, 255, 255, 0.75);
-  --brand-bar: rgba(255, 255, 255, 0.8); /* sticky header / footer bar */
-  --brand-line: #e5e5e5; /* hairlines / card borders (neutral-200) */
-  --brand-line-strong: #d4d4d4; /* hover borders (neutral-300) */
+  --paper: #fff;
+  --ink: #111827;
+  --panel: #f1f3f6;
+  --muted: #4a5361;
+  --hl: linear-gradient(transparent 58%, var(--lime) 58%, var(--lime) 92%, transparent 92%);
+  --hl-ink: inherit;
+  --line: #d9dee5;
+  --lime: #d3e58b;
+  --orange: #ef8b43;
+  --pine: #315b54;
+  --dot: rgba(17, 24, 39, 0.16);
+  color-scheme: light;
 }
 
-.dark {
-  --background: 0 0% 3.9%;
-  --foreground: 0 0% 98%;
-  --card: 0 0% 3.9%;
-  --card-foreground: 0 0% 98%;
-  --popover: 0 0% 3.9%;
-  --popover-foreground: 0 0% 98%;
-  --primary: 0 0% 98%;
-  --primary-foreground: 0 0% 9%;
-  --secondary: 0 0% 14.9%;
-  --secondary-foreground: 0 0% 98%;
-  --muted: 0 0% 14.9%;
-  --muted-foreground: 0 0% 63.9%;
-  --accent: 0 0% 14.9%;
-  --accent-foreground: 0 0% 98%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
-  --border: 0 0% 14.9%;
-  --input: 0 0% 14.9%;
-  --ring: 0 0% 83.1%;
-
-  /* brand palette — dark. Inverts the accent the same way the 3D layer inverts
-     the coin: lime → the coin's indigo/blue. Text/surfaces just lighten. Tuned
-     bright so the accent reads on black (a literal RGB-invert of lime is too
-     dark to see). Every brand utility flips here in one place. */
-  --brand-fg: #ffffff;
-  --brand-fg-muted: #a3a3a3; /* neutral-400 */
-  --brand-fg-faint: #737373; /* neutral-500 */
-  --brand-text: #7b83ff; /* accent text / links (indigo) */
-  --brand-text-hover: #aeb6ff;
-  --brand-solid: #7b83ff; /* accent fill / buttons */
-  --brand-solid-hover: #aeb6ff;
-  --brand-on: #0a0a0a;
-  --brand-surface: rgba(23, 23, 23, 0.5); /* neutral-900/50 */
-  --brand-surface-hover: rgba(23, 23, 23, 0.8);
-  --brand-bar: rgba(10, 10, 10, 0.78);
-  --brand-line: rgba(255, 255, 255, 0.06);
-  --brand-line-strong: rgba(255, 255, 255, 0.1);
+:root[data-theme="dark"] {
+  --paper: #0b0f19;
+  --ink: #f3f4f6;
+  --panel: #161c2a;
+  --muted: #9aa3b2;
+  --line: #2a3244;
+  --pine: #8fc2b6;
+  --dot: rgba(243, 244, 246, 0.16);
+  --hl: linear-gradient(transparent 14%, var(--lime) 14%, var(--lime) 90%, transparent 90%);
+  --hl-ink: #111827;
+  color-scheme: dark;
 }
 
-/* Base styles */
-@layer base {
-  * {
-    border-color: theme(colors.border);
-  }
-
-  html {
-    min-height: 100%;
-  }
-
-  body {
-    min-height: 100%;
-    background-color: theme(colors.background);
-    color: theme(colors.foreground);
-    font-feature-settings:
-      "rlig" 1,
-      "calt" 1;
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --paper: #0b0f19;
+    --ink: #f3f4f6;
+    --panel: #161c2a;
+    --muted: #9aa3b2;
+    --line: #2a3244;
+    --pine: #8fc2b6;
+    --dot: rgba(243, 244, 246, 0.16);
+    --hl: linear-gradient(transparent 14%, var(--lime) 14%, var(--lime) 90%, transparent 90%);
+    --hl-ink: #111827;
+    color-scheme: dark;
   }
 }
 
-/* Animations */
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
+html {
+  background: var(--paper);
 }
 
-@keyframes gradient {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
-/* Custom utilities */
-@layer utilities {
-  .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  .animate-gradient {
-    background-size: 200% 200%;
-    animation: gradient 15s ease infinite;
-  }
-
-  /* Background Grid Pattern */
-  .bg-grid-neutral-200\/50 {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(229 229 229 / 0.5)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
-  }
-
-  .dark\:bg-grid-neutral-800\/50 {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' width='32' height='32' fill='none' stroke='rgb(38 38 38 / 0.5)'%3e%3cpath d='M0 .5H31.5V32'/%3e%3c/svg%3e");
-  }
-}
-
-/* Sonner Toast Enhancements */
-[data-sonner-toaster] {
-  z-index: 9999 !important;
-}
-
-[data-sonner-toast] {
-  background-color: hsl(var(--background)) !important;
-  border-color: hsl(var(--border)) !important;
-  color: hsl(var(--foreground)) !important;
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.1),
-    0 4px 6px -4px rgb(0 0 0 / 0.1) !important;
-}
-
-/* Ensure solid backgrounds in dark mode */
-.dark [data-sonner-toast] {
-  background-color: hsl(0 0% 9%) !important;
-  border-color: hsl(0 0% 20%) !important;
-  color: hsl(0 0% 98%) !important;
-  box-shadow:
-    0 10px 15px -3px rgb(0 0 0 / 0.3),
-    0 4px 6px -4px rgb(0 0 0 / 0.2) !important;
-}
-
-/* Success toast colors */
-[data-sonner-toast][data-type="success"] {
-  background-color: hsl(142 76% 36%) !important;
-  border-color: hsl(142 76% 28%) !important;
-  color: white !important;
-}
-
-/* Error toast colors */
-[data-sonner-toast][data-type="error"] {
-  background-color: hsl(0 84% 60%) !important;
-  border-color: hsl(0 84% 50%) !important;
-  color: white !important;
-}
-
-/* Close button hover effect */
-[data-sonner-toast] [data-close-button] {
-  opacity: 0;
-  transition: opacity 200ms ease-in-out;
-}
-
-[data-sonner-toast]:hover [data-close-button] {
-  opacity: 1;
-}
-
-/* Progress bar for auto-dismiss visualization */
-[data-sonner-toast] {
-  position: relative;
-  overflow: hidden;
-}
-
-[data-sonner-toast]::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 3px;
-  width: 100%;
-  background-color: currentColor;
-  opacity: 0.2;
-  transform-origin: left;
-  animation: toast-progress 5s linear;
-}
-
-@keyframes toast-progress {
-  from {
-    transform: scaleX(1);
-  }
-  to {
-    transform: scaleX(0);
-  }
-}
-
-/* Pause progress on hover */
-[data-sonner-toast]:hover::after {
-  animation-play-state: paused;
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
 }

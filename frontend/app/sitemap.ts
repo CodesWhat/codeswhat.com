@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
+import { PROJECT_SLUGS } from "@/lib/project-slugs";
 import { BASE_URL } from "@/lib/site-config";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  // Add your routes here as you create new pages
   const routes = [
     {
       url: BASE_URL,
@@ -16,6 +16,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "monthly" as const,
       priority: 0.5,
     },
+    ...PROJECT_SLUGS.map((slug) => ({
+      url: `${BASE_URL}/projects/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
   ];
 
   return routes;

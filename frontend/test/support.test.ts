@@ -110,7 +110,7 @@ test("every project has a running-cost entry and Systema stays separate", () => 
   for (const project of PROJECTS) {
     assert.ok(PROJECT_COSTS[project.slug as SupportProjectId], project.slug);
   }
-  assert.equal(Object.keys(PROJECT_COSTS).length, PROJECTS.length + 3);
+  assert.equal(Object.keys(PROJECT_COSTS).length, PROJECTS.length);
   assert.equal(SYSTEMA.supportUrl, "https://systemamachinae.com/support");
   assert.equal(SYSTEMA.cost, "$30/month all-in");
 });

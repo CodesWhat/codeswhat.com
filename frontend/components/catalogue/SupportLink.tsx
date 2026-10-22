@@ -1,7 +1,7 @@
 "use client";
 
 import type { AnchorHTMLAttributes } from "react";
-import { TrackedCtaLink } from "@/components/site/TrackedCtaLink";
+import { TrackedCtaLink } from "@/components/catalogue/TrackedCtaLink";
 
 type SupportLinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
   href: string;

@@ -1,7 +1,7 @@
 /**
- * Prop contract for the Mylar mascot balloon used in the homepage's floating
- * 3D scene (see components/site/FloatingSceneCanvas). Kept as its own type so
- * the scene and the balloon component share one signature.
+ * Prop contract for the Mylar mascot balloon used by the dev-only 3D
+ * asset-capture studio. Kept as its own type so the studio and the balloon
+ * component share one signature.
  */
 export type BalloonProps = {
   /** mascot PNG (transparent) used as the logo texture */

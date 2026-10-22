@@ -80,7 +80,18 @@ const COOKIELESS_HASH_PROPERTIES = {
 };
 
 test("route sanitization only returns the finite public route manifest", () => {
-  assert.deepEqual(ALLOWED_ROUTES, ["/", "/support"]);
+  assert.deepEqual(ALLOWED_ROUTES, [
+    "/",
+    "/support",
+    "/projects/sockguard",
+    "/projects/drydock",
+    "/projects/portwing",
+    "/projects/portkey-admin-mcp",
+    "/projects/mouthtype",
+    "/projects/idlescreen",
+    "/projects/careerrat",
+    "/projects/systema-machinae",
+  ]);
   assert.equal(sanitizeRoute("/?utm_source=secret#private"), "/");
   assert.equal(sanitizeRoute("/"), "/");
   assert.equal(sanitizeRoute("/not-a-route?token=secret"), "/_other");
@@ -223,6 +234,40 @@ test("$pathname never diverges from the allowlisted path", () => {
   }
 });
 
+test("project detail routes are bounded to known slugs", () => {
+  assert.equal(sanitizeRoute("/projects/drydock"), "/projects/drydock");
+  assert.equal(sanitizeRoute("/projects/drydock?utm_source=x#top"), "/projects/drydock");
+  assert.equal(sanitizeRoute("/projects/systema-machinae"), "/projects/systema-machinae");
+  for (const rawPath of [
+    "/projects",
+    "/projects/",
+    "/projects/unknown",
+    "/projects/drydock/",
+    "/projects/drydock/extra",
+    "/projects/DRYDOCK",
+    "/projects/drydock%2Fx",
+    "/projects/../support-secret",
+    "https://codeswhat.com/projects/drydock",
+    "//evil.example/projects/drydock",
+  ]) {
+    assert.equal(sanitizeRoute(rawPath), "/_other", rawPath);
+  }
+  const pageview = sanitizeEvent({
+    event: "$pageview",
+    properties: { ...ENVELOPE, path: "/projects/careerrat?secret=1" },
+  });
+  assert.ok(pageview);
+  assert.equal(pageview.properties.path, "/projects/careerrat");
+  assert.equal(pageview.properties.$pathname, "/projects/careerrat");
+  assert.equal(pageview.properties.$current_url, "https://codeswhat.com/projects/careerrat");
+  const unknown = sanitizeEvent({
+    event: "$pageview",
+    properties: { ...ENVELOPE, path: "/projects/not-a-project" },
+  });
+  assert.ok(unknown);
+  assert.equal(unknown.properties.path, "/_other");
+});
+
 test("CTA events are limited to the fixed vocabulary", () => {
   assert.deepEqual(ALLOWED_CTA_IDS, [
     "github_org",
@@ -238,6 +283,10 @@ test("CTA events are limited to the fixed vocabulary", () => {
     "project_drydock",
     "project_portwing",
     "project_portkey-admin-mcp",
+    "project_mouthtype",
+    "project_idlescreen",
+    "project_careerrat",
+    "project_systema-machinae",
   ]);
   assert.deepEqual(
     sanitizeEvent({
@@ -467,7 +516,7 @@ test("a CTA event shaped like the browser sends it (no path property) survives t
 
 test("project CTAs need a project_ id with the projects placement", () => {
   const accepted = ALLOWED_CTA_IDS.filter((id) => id.startsWith("project_"));
-  assert.equal(accepted.length, 4);
+  assert.equal(accepted.length, 8);
   for (const ctaId of accepted) {
     assert.ok(
       sanitizeEvent({

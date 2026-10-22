@@ -4,8 +4,8 @@ import { Environment, Lightformer } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { type ReactNode, Suspense, useRef } from "react";
 import type * as THREE from "three";
-import { CodesWhatCoin } from "@/components/site/scene/BoardObjects";
-import { CaptureBridge, captureControl } from "@/components/site/scene/captureRig";
+import { CodesWhatCoin } from "@/components/studio/BoardObjects";
+import { CaptureBridge, captureControl } from "@/components/studio/captureRig";
 
 /**
  * Dev-only capture stage for the CodesWhat coin. Mounts ONLY the spinning coin
