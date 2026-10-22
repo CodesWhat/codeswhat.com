@@ -263,18 +263,7 @@ export default function SupportPage() {
         </table>
       </section>
 
-      <section className={styles.section} aria-labelledby="notice-title">
-        <article className={styles.notice}>
-          <p className={styles.noticeKicker}>The policy</p>
-          <h2 id="notice-title" className={styles.noticeTitle}>
-            Fund it or wind it down
-          </h2>
-          {/* wording pending Scott's approval */}
-          <p className={styles.noticeText}>
-            A project that can't cover its running costs gets wound down. It goes read-only or
-            archived, the last release stays published, and the repo stays public.
-          </p>
-        </article>
+      <section className={styles.section}>
         <p className={styles.fine}>
           Stripe handles card payments on its own pages. This site loads nothing from Stripe, and a
           link only opens when you click it. Supporting a project buys no say in its roadmap.

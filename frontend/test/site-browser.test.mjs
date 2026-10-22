@@ -196,7 +196,6 @@ test("support renders GitHub Sponsors first and the six tiers with validated lin
   ]);
   // the insecure link is dropped and unset tiers say so
   assert.equal(await page.getByText("Opening soon", { exact: true }).count(), 4);
-  assert.equal(await page.getByRole("heading", { name: /Fund it or wind it down/ }).count(), 1);
   assert.equal(await page.locator("a[href^='http://']").count(), 0);
   assert.deepEqual(errors, []);
 });
