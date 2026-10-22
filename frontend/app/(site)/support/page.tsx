@@ -16,7 +16,7 @@ import {
 } from "@/lib/support";
 
 const description =
-  "Back CodesWhat through GitHub Sponsors or a Stripe payment link, see what each project costs to run, and what happens to a project that can't cover its costs.";
+  "Back CodesWhat through GitHub Sponsors or a Stripe payment link, and see what each project costs to run.";
 
 const SUPPORT_OG = {
   url: "/og/support.png",
