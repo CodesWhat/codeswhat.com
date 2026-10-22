@@ -187,7 +187,13 @@ export function sanitizeEvent(input: unknown): SanitizedEvent | null {
       }
     }
     return Object.keys(vitalProperties).length > 0
-      ? createSanitizedEvent(eventInput, event, { ...common, ...vitalProperties })
+      ? createSanitizedEvent(eventInput, event, {
+          ...common,
+          // Same already-sanitized path the pageview branch uses, so Web
+          // analytics reports that key off $pathname resolve vitals too.
+          $pathname: common.path,
+          ...vitalProperties,
+        })
       : null;
   }
 

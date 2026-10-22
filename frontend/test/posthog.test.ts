@@ -289,6 +289,7 @@ test("web vitals events keep only metric data", () => {
         site: "codeswhat",
         surface: "marketing",
         path: "/",
+        $pathname: "/",
         $web_vitals_LCP_value: 123.4,
         ...COOKIELESS_HASH_PROPERTIES,
       },
@@ -386,4 +387,27 @@ test("sanitizeEvent requires and forwards the cookieless server-hash fields", ()
       `sanitizeEvent must drop events missing ${missingKey}`,
     );
   }
+});
+
+test("web vitals carry a $pathname taken from the sanitized path", () => {
+  const base = {
+    token: "phc_public-token_123",
+    $cookieless_mode: true,
+    $process_person_profile: false,
+    ...COOKIELESS_HASH_PROPERTIES,
+  };
+  const other = sanitizeEvent({
+    event: "$web_vitals",
+    properties: { ...base, path: "/private/page?secret=1", $web_vitals_LCP_value: 120 },
+  });
+  assert.ok(other);
+  assert.equal(other.properties.path, "/_other");
+  assert.equal(other.properties.$pathname, "/_other");
+
+  const home = sanitizeEvent({
+    event: "$web_vitals",
+    properties: { ...base, path: "/", $pathname: "/ignored", $web_vitals_CLS_value: 0.1 },
+  });
+  assert.ok(home);
+  assert.equal(home.properties.$pathname, "/");
 });
