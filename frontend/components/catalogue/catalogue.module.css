@@ -528,12 +528,6 @@
   font-family: var(--font-cat-mono), monospace;
   font-size: 12px;
 }
-.noticeSign {
-  margin: 28px 0 0;
-  font-family: var(--font-cat-serif), serif;
-  font-style: italic;
-  font-size: 22px;
-}
 
 /* footer */
 .footer {
