@@ -227,14 +227,14 @@ export default function Home() {
             <div>
               <p className={styles.eyebrow}>Section III</p>
               <h2 id="upkeep-title" className={`${styles.h2} ${styles.h2Small}`}>
-                The projects cost money to run. <em>Worth saying out loud.</em>
+                Want to support the work? <em>Here's how.</em>
               </h2>
             </div>
             <div>
               <p className={styles.fundText}>
-                Hosting, domains and CI add up, and today it all comes out of my pocket. If the
-                tools are useful to you and you'd like to help keep them going, there's a shared
-                pool for it. No perks, no gated features.
+                If these tools save you time and you'd like to chip in, you can sponsor me on GitHub
+                or give by card. Either way it goes toward hosting, domains and CI for every
+                project, monthly or one-time, whatever works for you.
               </p>
               <div className={styles.actions}>
                 <SupportLink
@@ -244,11 +244,11 @@ export default function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  GitHub Sponsors
+                  Sponsor on GitHub
                   <span className={styles.srOnly}> (opens in a new tab)</span>
                 </SupportLink>
                 <Link className={styles.btnLine} href="/support">
-                  How it works
+                  Other ways to give
                 </Link>
               </div>
             </div>
