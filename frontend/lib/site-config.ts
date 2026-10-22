@@ -11,7 +11,7 @@ export const SITE_CONFIG = {
   /** Brand name in the header/footer/metadata. */
   name: "CodesWhat",
   /** Short tagline used in titles and OG metadata. */
-  tagline: "Where curiosity meets code",
+  tagline: "Small, sharp tools from one developer and a lot of agents",
   /** Default meta / OpenGraph / description. */
   description:
     "Open-source developer tools and apps, from Docker and MCP servers to macOS utilities and a job-search workspace: Sockguard, Drydock, Portwing, Portkey Admin MCP, Mouthtype, Idlescreen, and CareerRat.",
@@ -46,7 +46,7 @@ export const OG_IMAGE = {
   url: "/og.png",
   width: 1200,
   height: 630,
-  alt: "CodesWhat — open-source developer tools and apps",
+  alt: "CodesWhat: open-source developer tools and apps",
 } as const;
 
 export type ProjectCategory = "server-tool" | "macos-app" | "web-app";
@@ -77,7 +77,7 @@ export const PROJECTS: Project[] = [
     category: "server-tool",
     tagline: "Default-deny Docker socket proxy",
     description:
-      "A default-deny proxy for the Docker socket — you pick exactly which requests reach the daemon.",
+      "A default-deny proxy for the Docker socket. You pick exactly which requests reach the daemon.",
     status: "Apache-2.0 · Go",
     href: "https://getsockguard.com",
   },
@@ -106,7 +106,7 @@ export const PROJECTS: Project[] = [
     category: "server-tool",
     tagline: "Portkey admin, from any MCP client",
     description:
-      "A Model Context Protocol (MCP) server for the Portkey admin API — manage configs, keys, guardrails, and analytics from any MCP client.",
+      "A Model Context Protocol (MCP) server for the Portkey admin API. Manage configs, keys, guardrails, and analytics from any MCP client.",
     status: "MIT · TypeScript",
     href: "https://github.com/CodesWhat/portkey-admin-mcp",
   },

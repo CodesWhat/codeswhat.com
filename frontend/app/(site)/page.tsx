@@ -8,7 +8,7 @@ import { BASE_URL, GITHUB_URL, OG_IMAGE, PROJECTS, SITE_CONFIG } from "@/lib/sit
 import { SERVICES, SPECIMENS } from "@/lib/specimens";
 import { GITHUB_SPONSORS_URL } from "@/lib/support";
 
-const title = `${SITE_CONFIG.name} — ${SITE_CONFIG.tagline}`;
+const title = `${SITE_CONFIG.name}: ${SITE_CONFIG.tagline}`;
 
 export const metadata: Metadata = {
   title,
