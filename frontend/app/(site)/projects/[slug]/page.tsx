@@ -5,7 +5,7 @@ import styles from "@/components/catalogue/catalogue.module.css";
 import { Sprite } from "@/components/catalogue/Sprite";
 import { SupportLink } from "@/components/catalogue/SupportLink";
 import { TrackedCtaLink } from "@/components/catalogue/TrackedCtaLink";
-import { BASE_URL, OG_IMAGE, SITE_CONFIG } from "@/lib/site-config";
+import { BASE_URL, SITE_CONFIG } from "@/lib/site-config";
 import { bySlug, SPECIMENS } from "@/lib/specimens";
 import { SYSTEMA } from "@/lib/support";
 
@@ -24,6 +24,12 @@ export async function generateMetadata({
   if (!s) return {};
   const title = `${s.name}, ${s.latin} | ${SITE_CONFIG.name}`;
   const description = `${s.tagline}. Field notes, links and upkeep for ${s.name}.`;
+  const image = {
+    url: `/og/${s.slug}.png`,
+    width: 1200,
+    height: 630,
+    alt: `${s.name}, ${s.latin}: ${s.tagline}`,
+  };
   return {
     title,
     description,
@@ -34,9 +40,9 @@ export async function generateMetadata({
       url: `${BASE_URL}/projects/${s.slug}`,
       siteName: SITE_CONFIG.name,
       type: "website",
-      images: [OG_IMAGE],
+      images: [image],
     },
-    twitter: { card: "summary_large_image", title, description, images: [OG_IMAGE] },
+    twitter: { card: "summary_large_image", title, description, images: [image] },
   };
 }
 

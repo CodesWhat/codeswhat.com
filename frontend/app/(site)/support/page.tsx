@@ -18,6 +18,13 @@ import {
 const description =
   "Back CodesWhat through GitHub Sponsors or a Stripe payment link, see what each project costs to run, and what happens to a project that can't cover its costs.";
 
+const SUPPORT_OG = {
+  url: "/og/support.png",
+  width: 1200,
+  height: 630,
+  alt: "Support CodesWhat: what the projects cost to run, and how to help",
+};
+
 export const metadata: Metadata = {
   title: `Support ${SITE_CONFIG.name}`,
   description,
@@ -28,6 +35,13 @@ export const metadata: Metadata = {
     url: `${BASE_URL}/support`,
     siteName: SITE_CONFIG.name,
     type: "website",
+    images: [SUPPORT_OG],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Support ${SITE_CONFIG.name}`,
+    description,
+    images: [SUPPORT_OG],
   },
 };
 
