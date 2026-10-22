@@ -2,13 +2,38 @@ export const POSTHOG_API_HOST = "https://e.codeswhat.com";
 export const POSTHOG_UI_HOST = "https://us.posthog.com";
 export const PRODUCTION_ORIGIN = "https://codeswhat.com";
 export const ALLOWED_ROUTES = ["/"] as const;
-export const ALLOWED_CTA_IDS = ["github_org"] as const;
+export const ALLOWED_CTA_IDS = [
+  "github_org",
+  "project_sockguard",
+  "project_drydock",
+  "project_portwing",
+  "project_portkey-admin-mcp",
+] as const;
+export const NEWSLETTER_ERROR_CLASSES = [
+  "invalid_email",
+  "rate_limited",
+  "unavailable",
+  "network",
+] as const;
+export const CLIENT_ERROR_KINDS = ["error", "unhandled_rejection"] as const;
+export const CLIENT_ERROR_NAMES = [
+  "TypeError",
+  "ReferenceError",
+  "SyntaxError",
+  "RangeError",
+  "ChunkLoadError",
+  "Error",
+  "other",
+] as const;
 
 const OTHER_PATH = "/_other";
 const PROJECT_TOKEN_PATTERN = /^phc_[A-Za-z0-9_-]+$/u;
 const allowedRoutes = new Set<string>(ALLOWED_ROUTES);
 const allowedCtaIds = new Set<string>(ALLOWED_CTA_IDS);
-const allowedPlacements = new Set(["header", "hero", "footer"]);
+const projectCtaPrefix = "project_";
+const allowedNewsletterErrorClasses = new Set<string>(NEWSLETTER_ERROR_CLASSES);
+const allowedClientErrorKinds = new Set<string>(CLIENT_ERROR_KINDS);
+const allowedClientErrorNames = new Set<string>(CLIENT_ERROR_NAMES);
 const allowedVitalKeys = new Set([
   "$web_vitals_CLS_value",
   "$web_vitals_FCP_value",
@@ -51,7 +76,13 @@ type EventInput = {
 };
 
 type SanitizedEvent = {
-  event: "$pageview" | "$pageleave" | "cta activated" | "$web_vitals";
+  event:
+    | "$pageview"
+    | "$pageleave"
+    | "cta activated"
+    | "$web_vitals"
+    | "newsletter submitted"
+    | "client error";
   properties: Record<string, boolean | number | string>;
   timestamp?: Date;
   uuid?: string;
@@ -79,6 +110,18 @@ function sanitizeReferringDomain(value: unknown): string | undefined {
     return undefined;
   }
   return value.toLowerCase();
+}
+
+export function classifyClientErrorName(value: unknown): string {
+  const name = value instanceof Error ? value.name : undefined;
+  return typeof name === "string" && allowedClientErrorNames.has(name) ? name : "other";
+}
+
+function isAllowedCtaPlacement(ctaId: string, placement: string): boolean {
+  if (ctaId === "github_org") {
+    return placement === "header" || placement === "hero" || placement === "footer";
+  }
+  return ctaId.startsWith(projectCtaPrefix) && placement === "projects";
 }
 
 function createCommonProperties(properties: Record<string, unknown>) {
@@ -173,7 +216,7 @@ export function sanitizeEvent(input: unknown): SanitizedEvent | null {
   if (event === "cta activated") {
     const ctaId = typeof values.cta_id === "string" ? values.cta_id : "";
     const placement = typeof values.placement === "string" ? values.placement : "";
-    return allowedCtaIds.has(ctaId) && allowedPlacements.has(placement)
+    return allowedCtaIds.has(ctaId) && isAllowedCtaPlacement(ctaId, placement)
       ? createSanitizedEvent(eventInput, event, { ...common, cta_id: ctaId, placement })
       : null;
   }
@@ -193,6 +236,29 @@ export function sanitizeEvent(input: unknown): SanitizedEvent | null {
           // analytics reports that key off $pathname resolve vitals too.
           $pathname: common.path,
           ...vitalProperties,
+        })
+      : null;
+  }
+
+  if (event === "newsletter submitted") {
+    const result = values.result;
+    if (result === "success") {
+      return createSanitizedEvent(eventInput, event, { ...common, result });
+    }
+    const errorClass = typeof values.error_class === "string" ? values.error_class : "";
+    return result === "error" && allowedNewsletterErrorClasses.has(errorClass)
+      ? createSanitizedEvent(eventInput, event, { ...common, result, error_class: errorClass })
+      : null;
+  }
+
+  if (event === "client error") {
+    const errorKind = typeof values.error_kind === "string" ? values.error_kind : "";
+    const errorName = typeof values.error_name === "string" ? values.error_name : "";
+    return allowedClientErrorKinds.has(errorKind) && allowedClientErrorNames.has(errorName)
+      ? createSanitizedEvent(eventInput, event, {
+          ...common,
+          error_kind: errorKind,
+          error_name: errorName,
         })
       : null;
   }

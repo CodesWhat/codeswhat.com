@@ -1,9 +1,18 @@
 "use client";
 
 import { Bell, Loader2 } from "lucide-react";
+import posthog from "posthog-js";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+
+// Maps the /api/subscribe status to a fixed error_class. Never the email or the
+// response text; the sanitizer drops anything outside this list.
+function classifyNewsletterError(status: number) {
+  if (status === 429) return "rate_limited";
+  if (status === 400) return "invalid_email";
+  return "unavailable";
+}
 
 export function EmailSignupForm() {
   const [email, setEmail] = useState("");
@@ -52,9 +61,10 @@ export function EmailSignupForm() {
         body: JSON.stringify({ email: trimmedEmail }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (response.ok) {
+        posthog.capture("newsletter submitted", { result: "success" });
         setStatus("success");
         toast.success("What's next? Check your inbox to find out 👀", {
           icon: "🎯",
@@ -67,6 +77,10 @@ export function EmailSignupForm() {
           setStatus("idle");
         }, 10000);
       } else {
+        posthog.capture("newsletter submitted", {
+          result: "error",
+          error_class: classifyNewsletterError(response.status),
+        });
         setStatus("error");
         toast.error(data.error || "❌ Something went wrong", {
           duration: 5000,
@@ -78,6 +92,7 @@ export function EmailSignupForm() {
         }, 5000);
       }
     } catch {
+      posthog.capture("newsletter submitted", { result: "error", error_class: "network" });
       setStatus("error");
       toast.error("🌐 Network error. Please check your connection and try again.", {
         duration: 5000,
