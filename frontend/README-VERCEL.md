@@ -55,6 +55,23 @@ unset in Preview and Development so those deployments emit no analytics:
 | `NEXT_PUBLIC_POSTHOG_HOST` | `https://e.codeswhat.com` |
 | `NEXT_PUBLIC_POSTHOG_UI_HOST` | `https://us.posthog.com` |
 
+### Support page
+
+`/support` reads `CODESWHAT_SUPPORT_LINKS`, a server-side JSON object mapping tier
+id to a Stripe Payment Link. The six ids are `monthly-5`, `monthly-10`,
+`monthly-25`, `monthly-100`, `once-10` and `once-50`:
+
+```
+CODESWHAT_SUPPORT_LINKS={"monthly-5":"https://buy.stripe.com/...","monthly-10":"https://buy.stripe.com/...","monthly-25":"https://buy.stripe.com/...","monthly-100":"https://buy.stripe.com/...","once-10":"https://buy.stripe.com/...","once-50":"https://buy.stripe.com/..."}
+```
+
+Only `https://buy.stripe.com/...` and `https://donate.stripe.com/...` links with a
+path and no credentials are accepted. Unknown ids and invalid links are dropped
+with a server warning, and any tier without a link renders as "Opening soon".
+The page is rendered per request, so changing the variable needs a redeploy but
+no rebuild of page code. Costs marked PLACEHOLDER in `lib/support.ts` are for the
+maintainer to fill in.
+
 ## Domain Configuration
 
 1. Go to your Vercel project settings
