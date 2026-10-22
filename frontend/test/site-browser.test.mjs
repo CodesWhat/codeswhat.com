@@ -163,6 +163,23 @@ test("light is the default paper when the system has no dark preference", {
   assert.equal(await darkPage.locator("html").getAttribute("data-theme"), "dark");
 });
 
+test("a dark system preference still wins when storage is blocked", {
+  timeout: 15_000,
+}, async (t) => {
+  const context = await browser.newContext({ colorScheme: "dark" });
+  t.after(() => context.close());
+  await context.addInitScript(() => {
+    Object.defineProperty(window, "localStorage", {
+      get() {
+        throw new DOMException("blocked", "SecurityError");
+      },
+    });
+  });
+  const page = await context.newPage();
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  assert.equal(await page.locator("html").getAttribute("data-theme"), "dark");
+});
+
 test("a project page renders its specimen and unknown slugs 404", {
   timeout: 20_000,
 }, async (t) => {

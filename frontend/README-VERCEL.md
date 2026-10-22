@@ -9,8 +9,12 @@ a local CLI deployment is not the routine production path.
 
 After promotion, confirm the production deployment references the intended
 commit. Open the canonical domain and verify the theme toggle changes theme
-and the client scene mounts. Build success and analytics events alone do not
-establish that client initialization worked.
+and persists after reload, the specimen plates render, and `/support` shows its
+buy links. Build success and analytics events alone do not establish that client
+initialization worked.
+
+`npm run og` regenerates the share cards in `public/og*` with playwright-core
+and the locally installed Google Chrome; it isn't part of the build.
 
 ## Rendering and security headers
 
