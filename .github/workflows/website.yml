@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - dev
-      - "feature/**"
   pull_request:
     branches:
       - main
@@ -14,8 +13,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: website-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   verify:
+    # The dev push run already reports verify on the promotion PR's head commit.
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -40,6 +45,8 @@ jobs:
         run: npm run test:scene
       - name: Run PostHog contracts
         run: npm run test:posthog
+      - name: Run support contracts
+        run: npm run test:support
       - name: Build production app
         run: npm run build
       - name: Install browser for production checks
