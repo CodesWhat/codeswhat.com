@@ -19,8 +19,8 @@ concurrency:
 
 jobs:
   verify:
-    # The dev push run already reports verify on the promotion PR's head commit.
-    if: github.event_name != 'pull_request' || github.head_ref != 'dev'
+    # Only this repository's dev-to-main promotion has a matching dev push run.
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev' || github.base_ref != 'main' || github.event.pull_request.head.repo.id != github.event.repository.id
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -43,6 +43,8 @@ jobs:
         run: npm run lint
       - name: Type-check
         run: npm run type-check
+      - name: Verify workflow event boundaries
+        run: node --test test/workflow.test.mjs
       - name: Run scene tests
         run: npm run test:scene
       - name: Run PostHog contracts
