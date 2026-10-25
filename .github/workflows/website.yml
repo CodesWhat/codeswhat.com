@@ -5,7 +5,6 @@ on:
     branches:
       - main
       - dev
-      - "feature/**"
   pull_request:
     branches:
       - main
@@ -14,8 +13,17 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  # PR runs share a group per PR so a superseded head is cancelled. Push runs get
+  # a unique group so a queued dev/main run is never replaced by a newer push;
+  # the promotion skip relies on every dev SHA keeping its own verify run.
+  group: website-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   verify:
+    # Only this repository's dev-to-main promotion has a matching dev push run.
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev' || github.base_ref != 'main' || github.event.pull_request.head.repo.id != github.event.repository.id
     runs-on: ubuntu-latest
     timeout-minutes: 15
     defaults:
@@ -23,9 +31,11 @@ jobs:
         working-directory: frontend
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24.x
           cache: npm
@@ -36,10 +46,14 @@ jobs:
         run: npm run lint
       - name: Type-check
         run: npm run type-check
+      - name: Verify workflow event boundaries
+        run: node --test test/workflow.test.mjs
       - name: Run scene tests
         run: npm run test:scene
       - name: Run PostHog contracts
         run: npm run test:posthog
+      - name: Run support contracts
+        run: npm run test:support
       - name: Build production app
         run: npm run build
       - name: Install browser for production checks
