@@ -3,35 +3,57 @@
 Loose, personal roadmap for the CodesWhat homepage. Not a ticket tracker (that's
 work). Just the ideas worth not forgetting.
 
+## Where things stand (2026-10-25)
+
+The Catalogue redesign, the `/support` page and the analytics events shipped on
+2026-10-22 (#69, #70, #71). Production is `main@68520ee`. Two things are in
+flight:
+
+- [ ] Dependency security patch (Next 16.4.3, dompurify, sharp): PR #72 is green
+      on CI and preview and waiting on a delivered review before it lands in `dev`,
+      then a promotion to `main`.
+- [ ] CI hardening (support tests in `verify`, no duplicate promotion runs,
+      fork-safe skip, no persisted checkout credential, actions pinned to
+      commits): finished and tested locally, queued behind #72.
+- [ ] Remove the stray `visual-schedule-manager-portfolio/` app and root
+      `start.sh`; nothing references either.
+- [ ] Clean up `test/posthog.test.ts`, which imports a posthog-js internal path,
+      then bump `posthog-js` and add `test:posthog:browser` to CI.
+- [ ] Close #58 (`.claude/` is already ignored on `main`). #57 is partly done;
+      the remaining items are tracked privately.
+
 ## Progressive-enhancement fallback for the 3D layer
 
-The homepage renders its coin, mascot balloons, and the `@` marble live in WebGL
-(three.js + react-three-fiber). That buys real interactivity: the balloons track
-scroll and dodge the cursor, the marble orbits and flees. The cost isn't mainly
-bandwidth (the three/fiber/drei bundle is ~300KB gzipped, loaded once and cached,
-and the texture PNGs load either way). The cost is compute: WebGL burns CPU/GPU
-and battery and adds parse + hydration time, which hurts on cheap phones.
+**Superseded 2026-10-22.** The Catalogue redesign replaced the WebGL homepage
+with CSS and pixel-sprite specimen plates (`components/catalogue/sprites.ts`).
+three.js, react-three-fiber, drei and rapier are now only imported under
+`components/studio/`, which backs the dev-only `/studio/*` capture routes. There
+is no 3D layer on the shipped homepage to gate or fall back from, so the original
+checklist below is moot and kept for the reasoning only.
 
-Baked assets (the WebP loops in `exports/`) are the opposite: nearly free to
-render, but dumb. They can't track scroll or react to the pointer.
+The original idea: the homepage rendered its coin, mascot balloons and the `@`
+marble live in WebGL. That bought real interactivity (balloons tracking scroll and
+dodging the cursor, the marble orbiting and fleeing) at the cost of compute,
+battery and hydration time on cheap phones. Baked WebP loops were nearly free to
+render but couldn't react to anything. The plan was to serve flat assets by
+default and upgrade to WebGL behind `prefers-reduced-motion` and a capability
+check, lazy-loading the 3D bundle only on the upgrade path, and to measure First
+Load JS and TTI for both paths rather than guess.
 
-So the move for a lighter homepage isn't ripping WebGL out. It's a fallback:
-serve flat assets by default and upgrade to WebGL when the device can handle it,
-or when `prefers-reduced-motion` is off. That's more code, not less, but it gives
-weak devices and reduced-motion users a cheap, static homepage while everyone
-else still gets the interactive scene.
-
-- [ ] Static fallback layer (coin WebP + balloon stills positioned to match the scene)
-- [ ] Gate WebGL behind `prefers-reduced-motion` + a capability/perf check
-- [ ] Lazy-load the 3D bundle only when the upgrade path is taken
-- [ ] Measure: real First Load JS + TTI for both paths (build, don't guess)
+- [ ] Decide whether the three/fiber/drei/rapier dependencies stay for the
+      `/studio` capture rig or go. They're dev-only but still in `package.json`
+      and the lockfile, so they show up in audits (`fflate` moderate via drei).
 
 ## Coherent 3D brand-asset / icon set
 
-`scripts/capture-assets.mjs` mints transparent assets straight from the live scene
-(dev-only `/studio/*` routes → headless Chrome → ffmpeg/img2webp). It already does
-the coin (spin) and any mascot balloon (square avatar still + spin). Make the whole
-icon/image story coherent off the back of it:
+**Parked 2026-10-25.** The Catalogue uses hand-drawn pixel sprites for all eight
+projects plus the coin, matched to the real project logos, so the 3D-minted
+icon set isn't on the critical path any more. `scripts/capture-assets.mjs` and
+the `/studio/*` routes still work and still mint the coin spin and any mascot
+balloon (square avatar still + spin). What exists today: `exports/coin/`
+(light and dark spin WebP) and `exports/portkey/` (avatar PNG + spin WebP), plus
+static balloon PNGs for drydock, portkey, portwing, sockguard and scott in
+`frontend/public/logos/`.
 
 - [ ] Avatar + spin for every mascot (Sockguard, Drydock, Portwing, Portkey), not just Portkey
 - [ ] Decide where committed assets live and how they're named (currently `exports/<subject>/`, WebP + still PNG tracked, GIF/APNG gitignored)
@@ -40,26 +62,25 @@ icon/image story coherent off the back of it:
 
 ## Web-analytics table coverage (2026-08-28, ops X37)
 
-Production events carry no `$pathname` and no `$pageleave`, so PostHog's Page /
-Entry / Exit tables render empty and every session counts as a zero-duration
-bounce. The wiring for both landed on dev as PR #60 (sanitizer allowlists
-`$pageleave` and stamps `$pathname` from the already-sanitized `path`) and
-ships with the next promotion — the items below are what's left after that.
+Production events carried no `$pathname` and no `$pageleave`, so PostHog's Page /
+Entry / Exit tables rendered empty and every session counted as a zero-duration
+bounce. The wiring for both landed as PR #60 and has been in production since the
+September promotions.
 
-- [ ] Verify post-deploy that `$pathname` shows on fresh pageviews and the
-      Page/Entry/Exit tables populate (board: CodesWhat Sites Health,
-      project 558033, dashboard 2044260)
-- [ ] `$pageleave` volume note (resolved 2026-08-28, standard `19a0af1`): a
+- [x] Verified 2026-10-25 against PostHog project 558033 (host `codeswhat.com`,
+      last 30 days): 30 `$pageview`, all 30 carrying `$pathname`; 9 `$pageleave`;
+      22 `$web_vitals`. The Page/Entry/Exit tables have data to render.
+- [x] `$pageleave` volume note (resolved 2026-08-28, standard `19a0af1`): a
       pageleave-to-pageview ratio well under 100% is structural, not a bug —
       `$pageview` fires per client-side route change, `$pageleave` once per
       document lifetime. drydock measured the envelope: the sanitizer guard
       eats nothing. Don't "fix" the ratio here.
-- [ ] Post-deploy canary caveat: posthog-js bot detection (`isLikelyBot`
-      checks `navigator.webdriver` and `userAgentData.brands`) may silently
-      drop Playwright-driven visits before `before_send` runs; contested
-      (portwing's landed), so a Playwright canary's silence proves nothing
-      either way. Verify with a real browser or by reading the deployed chunk
-      for the property names.
+- [x] Post-deploy canary caveat: moot now that real traffic confirms the
+      properties. For the record, posthog-js bot detection (`isLikelyBot` on
+      `navigator.webdriver` and `userAgentData.brands`) may silently drop
+      Playwright-driven visits before `before_send` runs, so a Playwright canary's
+      silence proves nothing either way. Verify with a real browser or by reading
+      the deployed chunk.
 - [x] Acquisition data: decided org-wide in `CodesWhat/ops`
       `standards/analytics.md` ("Acquisition data and consent", as of
       `c161ebc`) — that file is the authority. Landed: `save_campaign_params:
@@ -74,10 +95,13 @@ ships with the next promotion — the items below are what's left after that.
       (cookieless strips the IP upstream, PostHog #48660). No banner needed.
 - [x] `$web_vitals` carries `$pathname` from the sanitized path
 - [x] `cta activated` for the project cards: `project_<slug>` ids, placement
-      `projects`. `cta activated` had zero rows in 120 days on codeswhat.com;
-      reproduced in a browser and the capture, sanitizer and send path all work,
-      so it was low traffic (76 pageviews) rather than a bug. Check it fires after
-      deploy.
+      `projects`. Shipped 2026-10-22 (#68/#70). Capture, sanitizer and send path
+      were reproduced in a browser before shipping.
+- [ ] Production fire check for `cta activated`, `newsletter submitted` and
+      `client error`: none of the three has a row for host `codeswhat.com` in the
+      30 days to 2026-10-25. With 30 pageviews in that window that's low traffic,
+      not evidence of a bug, so leave this open until one lands or a real-browser
+      click on production is checked in PostHog.
 - [x] `newsletter submitted` (`result`, plus `error_class` from
       invalid_email / rate_limited / unavailable / network on error)
 - [x] `client error` (`error_kind`, allowlisted `error_name`, sanitized path;
