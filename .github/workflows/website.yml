@@ -14,7 +14,10 @@ permissions:
   contents: read
 
 concurrency:
-  group: website-${{ github.event.pull_request.number || github.ref }}
+  # PR runs share a group per PR so a superseded head is cancelled. Push runs get
+  # a unique group so a queued dev/main run is never replaced by a newer push;
+  # the promotion skip relies on every dev SHA keeping its own verify run.
+  group: website-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
