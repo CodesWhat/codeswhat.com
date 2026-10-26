@@ -20,9 +20,19 @@ test("production browser response keeps PostHog on the exact proxy", {
     "HTML reflects request data (Next.js flight payload), which is only safe if the page isn't shared-cached",
   );
   // Next.js inlines router state, including the request's own query, in
-  // self.__next_f scripts. Everything else must not reflect the query.
-  const withoutFlightData = body.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/g, (block, inner) =>
-    inner.includes("self.__next_f") ? "" : block,
+  // self.__next_f.push(...) scripts. Only scripts whose body starts with that
+  // call are excluded; everything else must not reflect the query.
+  const flightCall =
+    /^\(self\.__next_f\s*=\s*self\.__next_f\s*\|\|\s*\[\]\)\.push\(|^self\.__next_f\.push\(/;
+  let flightScripts = 0;
+  const withoutFlightData = body.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/g, (block, inner) => {
+    if (!flightCall.test(inner.trim())) return block;
+    flightScripts += 1;
+    return "";
+  });
+  assert.ok(
+    flightScripts > 0,
+    "expected Next.js Flight scripts in the HTML; the reflection exclusion is only valid when they exist",
   );
   assert.doesNotMatch(withoutFlightData, /query-secret/);
   assert.match(body, /<script\b[^>]*\bid="theme-init"/);
