@@ -325,7 +325,13 @@ test("subscription rejects cross-site and non-JSON requests without calling a pr
   const sameOrigin = new URL(baseUrl).origin;
   const cases = [
     { name: "text/plain", headers: { "content-type": "text/plain" }, body: validBody, status: 415 },
-    { name: "no content-type", headers: {}, body: validBody, status: 415 },
+    // A Uint8Array body keeps fetch from adding its default text/plain header.
+    {
+      name: "no content-type",
+      headers: {},
+      body: new TextEncoder().encode(validBody),
+      status: 415,
+    },
     {
       name: "json with charset",
       headers: { "content-type": "application/json; charset=utf-8" },
