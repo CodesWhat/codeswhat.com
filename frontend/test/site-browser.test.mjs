@@ -316,3 +316,53 @@ test("subscription rejects nonobject and malformed bodies without calling a prov
     assert.equal(typeof (await response.json()).error, "string");
   }
 });
+
+test("subscription rejects cross-site and non-JSON requests without calling a provider", {
+  timeout: 15_000,
+}, async () => {
+  const validBody = '{"email":"someone@example.com"}';
+  const invalidBody = '{"email":"not-an-email"}';
+  const sameOrigin = new URL(baseUrl).origin;
+  const cases = [
+    { name: "text/plain", headers: { "content-type": "text/plain" }, body: validBody, status: 415 },
+    { name: "no content-type", headers: {}, body: validBody, status: 415 },
+    {
+      name: "json with charset",
+      headers: { "content-type": "application/json; charset=utf-8" },
+      body: invalidBody,
+      status: 400,
+    },
+    {
+      name: "foreign origin",
+      headers: { "content-type": "application/json", origin: "https://evil.example" },
+      body: validBody,
+      status: 403,
+    },
+    {
+      name: "sec-fetch-site cross-site",
+      headers: { "content-type": "application/json", "sec-fetch-site": "cross-site" },
+      body: validBody,
+      status: 403,
+    },
+    {
+      name: "same-origin browser",
+      headers: {
+        "content-type": "application/json",
+        origin: sameOrigin,
+        "sec-fetch-site": "same-origin",
+      },
+      body: invalidBody,
+      status: 400,
+    },
+  ];
+  for (const [index, { name, headers, body, status }] of cases.entries()) {
+    const response = await fetch(`${baseUrl}/api/subscribe`, {
+      signal: AbortSignal.timeout(5_000),
+      method: "POST",
+      headers: { ...headers, "x-forwarded-for": `198.51.100.${index + 1}` },
+      body,
+    });
+    assert.equal(response.status, status, name);
+    assert.equal(typeof (await response.json()).error, "string", name);
+  }
+});

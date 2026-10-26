@@ -126,6 +126,11 @@ The `vercel.json` file includes:
 
 ### Email Signup Not Working
 
+- New contacts are created as `pending` (double opt-in). Double opt-in must be
+  enabled on the EmailOctopus list so the confirmation email goes out;
+  otherwise signups sit in Pending.
+- `/api/subscribe` only accepts same-origin `application/json` requests (403
+  cross-site, 415 otherwise). The in-memory rate limit is per instance only.
 - Verify EmailOctopus credentials
 - Check function logs in Vercel dashboard
 - Ensure API routes are correctly configured
