@@ -13,6 +13,12 @@ and persists after reload, the specimen plates render, and `/support` shows its
 buy links. Build success and analytics events alone do not establish that client
 initialization worked.
 
+Then run the PostHog response contract against the canonical domain:
+
+```sh
+POSTHOG_BROWSER_BASE_URL=https://codeswhat.com npm run test:posthog:browser
+```
+
 `npm run og` regenerates the share cards in `public/og*` with playwright-core
 and the locally installed Google Chrome; it isn't part of the build.
 

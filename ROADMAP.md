@@ -3,24 +3,23 @@
 Loose, personal roadmap for the CodesWhat homepage. Not a ticket tracker (that's
 work). Just the ideas worth not forgetting.
 
-## Where things stand (2026-10-25)
+## Where things stand (2026-10-25, evening)
 
 The Catalogue redesign, the `/support` page and the analytics events shipped on
-2026-10-22 (#69, #70, #71). Production is `main@68520ee`. Two things are in
-flight:
+2026-10-22 (#69, #70, #71). On 2026-10-25 the dependency security patch (#72:
+Next 16.4.3, dompurify 3.4.17, sharp 0.35.5, which cleared every open Dependabot
+alert) and the CI hardening batch (#73: support tests in `verify`, no duplicate
+promotion runs, fork-safe skip, no persisted checkout credential, actions pinned
+to commits, stray `visual-schedule-manager-portfolio/` and `start.sh` removed)
+were promoted together in #74. Production is `main@722af11`, checked in a
+browser after the deploy.
 
-- [ ] Dependency security patch (Next 16.4.3, dompurify, sharp): PR #72 is green
-      on CI and preview and waiting on a delivered review before it lands in `dev`,
-      then a promotion to `main`.
-- [ ] CI hardening (support tests in `verify`, no duplicate promotion runs,
-      fork-safe skip, no persisted checkout credential, actions pinned to
-      commits): finished and tested locally, queued behind #72.
-- [ ] Remove the stray `visual-schedule-manager-portfolio/` app and root
-      `start.sh`; nothing references either.
+Still open:
+
 - [ ] Clean up `test/posthog.test.ts`, which imports a posthog-js internal path,
       then bump `posthog-js` and add `test:posthog:browser` to CI.
-- [ ] Close #58 (`.claude/` is already ignored on `main`). #57 is partly done;
-      the remaining items are tracked privately.
+- [ ] #57 is partly done (pins, credentials, CSP and input tests); the remaining
+      items are tracked privately.
 
 ## Progressive-enhancement fallback for the 3D layer
 

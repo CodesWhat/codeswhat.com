@@ -59,12 +59,20 @@ import {
 } from "../lib/posthog-privacy.ts";
 
 const require = createRequire(import.meta.url);
-const { PostHog } = require("../node_modules/posthog-js/lib/src/posthog-core.js") as {
+// Deep import on purpose: the published main bundle minifies `_runBeforeSend`
+// away, while lib/* is a published file in posthog-js's package.json `files`
+// with no exports map.
+const { PostHog } = require("posthog-js/lib/src/posthog-core.js") as {
   PostHog: new () => {
     config: { before_send?: (input: unknown) => unknown };
     _runBeforeSend: (input: unknown) => unknown;
   };
 };
+assert.equal(
+  typeof new PostHog()._runBeforeSend,
+  "function",
+  "posthog-js/lib/src/posthog-core.js no longer exposes PostHog#_runBeforeSend; the before_send pipeline contracts below need updating for this posthog-js version",
+);
 
 // posthog-js attaches these to every envelope by default (PostHog/posthog-js
 // packages/browser-common/src/utils/event-utils.ts, getEventProperties()).
