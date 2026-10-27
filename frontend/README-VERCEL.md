@@ -10,8 +10,9 @@ a local CLI deployment is not the routine production path.
 `vercel.json` turns off Git deployments for `dev` (`git.deploymentEnabled`). The
 team's Hobby plan allows 100 deployments a day across every CodesWhat site, and
 dev previews were about a third of this project's builds with nobody using them:
-a promotion's tree matches a PR head whose preview already built. Pull request
-branches still get previews, and `main` still deploys production. Don't swap
+a promotion's tree matches a PR head whose preview already built. Feature and fix
+PR branches still get previews. The `dev` to `main` promotion PR no longer gets a
+Vercel preview check, because `dev` doesn't deploy; `main` still deploys production. Don't swap
 this for an Ignored Build Step, because Vercel counts canceled builds against the
 same daily limit.
 
