@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-// Simple in-memory rate limiting (consider Redis for production)
+// Best-effort, per-instance in-memory limit; not effective across serverless instances, a real limit needs an edge rule.
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 function getRateLimitKey(request: Request): string {
@@ -32,8 +32,38 @@ function checkRateLimit(key: string, limit = 5, windowMs = 60000): boolean {
   return true;
 }
 
+function isCrossSite(request: Request): boolean {
+  if (request.headers.get("sec-fetch-site") === "cross-site") {
+    return true;
+  }
+  const origin = request.headers.get("origin");
+  if (origin === null) {
+    return false;
+  }
+  try {
+    // Host header first: request.url can carry a rewritten hostname behind the server.
+    const host = request.headers.get("host") ?? new URL(request.url).host;
+    return new URL(origin).host !== host;
+  } catch {
+    return true;
+  }
+}
+
 export async function POST(request: Request) {
   try {
+    // Same-origin JSON only, checked before the rate limit so rejected
+    // cross-site traffic doesn't use up a visitor's allowance.
+    if (isCrossSite(request)) {
+      return NextResponse.json({ error: "Cross-site requests are not allowed" }, { status: 403 });
+    }
+    const mediaType = (request.headers.get("content-type") ?? "")
+      .split(";")[0]
+      .trim()
+      .toLowerCase();
+    if (mediaType !== "application/json") {
+      return NextResponse.json({ error: "Content-Type must be application/json" }, { status: 415 });
+    }
+
     // Rate limiting check
     const rateLimitKey = getRateLimitKey(request);
     if (!checkRateLimit(rateLimitKey)) {
@@ -200,7 +230,9 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           email_address: normalizedEmail,
-          status: "subscribed",
+          // Double opt-in: EmailOctopus holds the contact as pending until the
+          // confirmation link is clicked, so nobody can subscribe someone else.
+          status: "pending",
         }),
       },
     );
