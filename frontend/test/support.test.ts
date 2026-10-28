@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { PROJECT_SLUGS } from "../lib/project-slugs.ts";
 import { PROJECTS } from "../lib/site-config.ts";
+import { SPECIMENS } from "../lib/specimens.ts";
 import {
   PROJECT_COSTS,
   type SupportProjectId,
@@ -107,10 +109,11 @@ test("all six ids accept a valid link from the env value", () => {
 });
 
 test("every project has a running-cost entry and Systema stays separate", () => {
-  for (const project of PROJECTS) {
+  const costed = PROJECTS.filter((project) => project.slug !== "systema-machinae");
+  for (const project of costed) {
     assert.ok(PROJECT_COSTS[project.slug as SupportProjectId], project.slug);
   }
-  assert.equal(Object.keys(PROJECT_COSTS).length, PROJECTS.length);
+  assert.equal(Object.keys(PROJECT_COSTS).length, costed.length);
   assert.equal(SYSTEMA.supportUrl, "https://systemamachinae.com/support");
   assert.equal(SYSTEMA.cost, "$30/month all-in");
 });
@@ -124,4 +127,13 @@ test("supportCtaId derives from the tier id", () => {
     "support_once-10",
     "support_once-50",
   ]);
+});
+
+test("PROJECTS, SPECIMENS and PROJECT_SLUGS list the same slugs in the same order", () => {
+  const projects = PROJECTS.map((p) => p.slug);
+  assert.deepEqual(
+    SPECIMENS.map((s) => s.slug),
+    projects,
+  );
+  assert.deepEqual([...PROJECT_SLUGS], projects);
 });

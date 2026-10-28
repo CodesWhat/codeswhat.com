@@ -128,8 +128,12 @@ const TBD_UPKEEP =
   "Running costs aren't measured yet, so there's no number here. It draws on the shared pool.";
 const SYSTEMA_UPKEEP = "$30 a month all-in. It also takes support on its own page.";
 
-const fromConfig: Specimen[] = PROJECTS.map((p, i) => {
-  const f = FIELD[p.slug];
+/** Per-slug values that differ from the defaults every other specimen gets. */
+const OVERRIDES: Record<string, Partial<Pick<Specimen, "monthly" | "upkeep">>> = {
+  "systema-machinae": { monthly: 30, upkeep: SYSTEMA_UPKEEP },
+};
+
+export const SPECIMENS: Specimen[] = PROJECTS.map((p, i) => {
   const [license, language] = p.status.split(" · ");
   return {
     slug: p.slug,
@@ -143,28 +147,10 @@ const fromConfig: Specimen[] = PROJECTS.map((p, i) => {
     site: p.href,
     monthly: null,
     upkeep: TBD_UPKEEP,
-    ...f,
+    ...FIELD[p.slug],
+    ...OVERRIDES[p.slug],
   };
 });
-
-export const SPECIMENS: Specimen[] = [
-  ...fromConfig,
-  {
-    slug: "systema-machinae",
-    no: String(fromConfig.length + 1).padStart(2, "0"),
-    name: "Systema Machinae",
-    kind: "Web app",
-    license: "MIT",
-    language: "TypeScript",
-    tagline: "A live bot census, set as a field guide",
-    about:
-      "A live census of the bots that visit a website, set as a field guide. A lab project, and the one that's live today.",
-    site: "https://systemamachinae.com",
-    monthly: 30,
-    upkeep: SYSTEMA_UPKEEP,
-    ...FIELD["systema-machinae"],
-  },
-];
 
 export const bySlug = (slug: string) => SPECIMENS.find((s) => s.slug === slug);
 
