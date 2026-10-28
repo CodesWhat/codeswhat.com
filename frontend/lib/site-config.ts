@@ -14,7 +14,7 @@ export const SITE_CONFIG = {
   tagline: "Small, sharp tools from one developer and a lot of agents",
   /** Default meta / OpenGraph / description. */
   description:
-    "Open-source developer tools and apps, from Docker and MCP servers to macOS utilities and a job-search workspace: Sockguard, Drydock, Portwing, Portkey Admin MCP, Mouthtype, Idlescreen, and CareerRat.",
+    "Open-source developer tools and apps from one developer and a lot of agents: Docker and MCP servers, macOS utilities, a job-search workspace and a live bot census.",
   /** Production domain (no protocol, no trailing slash). */
   domain: "codeswhat.com",
   /** GitHub org. */
@@ -137,5 +137,15 @@ export const PROJECTS: Project[] = [
       "Chat-first agentic job-search workspace: find, vet, tailor, track, and prep for roles with your own AI CLI.",
     status: "MIT · JavaScript",
     href: "https://careerrat.com",
+  },
+  {
+    slug: "systema-machinae",
+    name: "Systema Machinae",
+    category: "web-app",
+    tagline: "A live bot census, set as a field guide",
+    description:
+      "A live census of the bots that visit a website, set as a field guide. A lab project, and the one that's live today.",
+    status: "MIT · TypeScript",
+    href: "https://systemamachinae.com",
   },
 ];
