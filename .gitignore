@@ -17,3 +17,6 @@ frontend/.capture-frames/
 
 # Internal planning, never tracked (standards/planning.md in CodesWhat/ops)
 .planning/
+
+# Marketing-skill context files, local only
+.agents/
