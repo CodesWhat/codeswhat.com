@@ -199,7 +199,7 @@ export default function SupportPage() {
             </tr>
           </thead>
           <tbody>
-            {PROJECTS.map((project) => {
+            {PROJECTS.filter((project) => project.slug !== "systema-machinae").map((project) => {
               const cost = PROJECT_COSTS[project.slug as SupportProjectId];
               return (
                 <tr
