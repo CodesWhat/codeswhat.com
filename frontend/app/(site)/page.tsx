@@ -42,11 +42,34 @@ export default function Home() {
       />
       <main id="main" className={styles.main}>
         <section className={styles.hero} aria-labelledby="hero-title">
-          <div>
-            <p className={styles.eyebrow}>Open-source tools, and a developer for hire</p>
-            <h1 id="hero-title" className={styles.display}>
-              One developer. A lot of agents. <em>Small, sharp</em> tools.
-            </h1>
+          <p className={styles.eyebrow}>Open-source tools, and a developer for hire</p>
+          <h1 id="hero-title" className={styles.display}>
+            One developer. A lot of agents. <em>Small, sharp</em> tools.
+          </h1>
+
+          <figure className={styles.figure} aria-label="The collection">
+            <div className={styles.figureGrid}>
+              {SPECIMENS.map((s) => (
+                <a
+                  key={s.slug}
+                  className={styles.figureLink}
+                  href={`#plate-${s.slug}`}
+                  aria-label={s.name}
+                >
+                  <Sprite slug={s.slug} scale={2} label={s.alt} decorative />
+                  <span className={styles.figureName} aria-hidden="true">
+                    {s.name}
+                  </span>
+                </a>
+              ))}
+            </div>
+            <figcaption className={styles.figureCap}>
+              <b>Fig. 1</b>
+              The collection, as of this morning. None have escaped.
+            </figcaption>
+          </figure>
+
+          <div className={styles.heroCopy}>
             <p className={styles.lede}>
               CodesWhat is Scott Benson, building open-source tools with a crowd of coding agents.
               Each one does a single job, in the open, with nothing phoning home. They're filed
@@ -61,18 +84,6 @@ export default function Home() {
               </a>
             </div>
           </div>
-
-          <figure className={styles.figure} aria-label="The collection">
-            <div className={styles.figureGrid}>
-              {SPECIMENS.map((s) => (
-                <Sprite key={s.slug} slug={s.slug} scale={2} label={s.alt} />
-              ))}
-            </div>
-            <figcaption className={styles.figureCap}>
-              <b>Fig. 1</b>
-              The collection, as of this morning. None have escaped.
-            </figcaption>
-          </figure>
         </section>
 
         <section id="specimens" className={styles.section} aria-labelledby="specimens-title">
