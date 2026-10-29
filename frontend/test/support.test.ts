@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { buildLlmsTxt } from "../lib/llms.ts";
 import {
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
@@ -8,7 +9,8 @@ import {
   TITLE_MAX,
 } from "../lib/project-meta.ts";
 import { PROJECT_SLUGS } from "../lib/project-slugs.ts";
-import { PROJECTS, SITE_CONFIG } from "../lib/site-config.ts";
+import { buildSecurityTxt } from "../lib/security-txt.ts";
+import { BASE_URL, PROJECTS, SITE_CONFIG } from "../lib/site-config.ts";
 import { SPECIMENS } from "../lib/specimens.ts";
 import {
   PROJECT_COSTS,
@@ -171,4 +173,36 @@ test("homepage description fits a search snippet", () => {
     SITE_CONFIG.description.length <= DESCRIPTION_MAX,
     String(SITE_CONFIG.description.length),
   );
+});
+
+test("llms.txt lists every project once with its field-notes URL", () => {
+  const body = buildLlmsTxt();
+  assert.doesNotMatch(body, /undefined/);
+  assert.ok(body.startsWith("# CodesWhat\n"));
+  const projects = body.split("## Projects")[1].split("## Optional")[0];
+  for (const p of PROJECTS) {
+    assert.ok(body.includes(`${BASE_URL}/projects/${p.slug}`), `${p.slug} field notes missing`);
+    const hits = projects.split(`- [${p.name}](`).length - 1;
+    assert.equal(hits, 1, `${p.name} appears ${hits} times`);
+    const entry = projects.split("\n- [").find((b) => b.startsWith(`${p.name}](`));
+    assert.ok(entry, `${p.name} entry missing`);
+    assert.ok(
+      entry.includes(`  - Field notes: ${BASE_URL}/projects/${p.slug}`),
+      `${p.name} entry lacks its own field-notes line`,
+    );
+  }
+});
+
+test("security.txt carries the RFC 9116 required fields", () => {
+  const now = new Date("2026-10-28T00:00:00Z");
+  const body = buildSecurityTxt(now);
+  assert.match(body, /^Contact: mailto:security@codeswhat\.com$/m);
+  assert.match(body, /^Canonical: .+\/\.well-known\/security\.txt$/m);
+  assert.match(body, /^Policy: https:\/\//m);
+  const expires = body.match(/^Expires: (.+)$/m)?.[1];
+  assert.ok(expires);
+  const days = (Date.parse(expires) - now.getTime()) / 86_400_000;
+  assert.ok(days >= 1 && days <= 365, String(days));
+  const fixed = buildSecurityTxt(new Date("2026-01-01T00:00:00Z"));
+  assert.equal(fixed.match(/^Expires: (.+)$/m)?.[1], "2026-06-30T00:00:00.000Z");
 });
