@@ -78,7 +78,7 @@ export const PROJECTS: Project[] = [
     tagline: "Default-deny Docker socket proxy",
     description:
       "A default-deny proxy for the Docker socket. You pick exactly which requests reach the daemon.",
-    status: "Apache-2.0 · Go",
+    status: "MIT · Go",
     href: "https://getsockguard.com",
   },
   {
@@ -88,7 +88,7 @@ export const PROJECTS: Project[] = [
     tagline: "Container update monitoring",
     description:
       "Self-hosted update monitoring. Finds what you're running, flags outdated or exposed images, and tells you.",
-    status: "AGPL-3.0 · TypeScript",
+    status: "MIT · TypeScript",
     href: "https://getdrydock.com",
   },
   {
