@@ -23,12 +23,11 @@ function midSentence(kind: string) {
 }
 
 export function projectDescription(p: ProjectMetaInput) {
-  const forms = [
-    `${p.about} ${p.license}, written in ${p.language}.`,
-    `${p.about} Open-source ${midSentence(p.kind)} under ${p.license}, written in ${p.language}.`,
-    `${p.about} ${p.license}, ${p.language}.`,
-  ];
-  const [plain, long, short] = forms;
+  // Each form ends in a complete sentence about the project, so the licence never
+  // reads as the subject of "written in".
+  const plain = `${p.about} It's open source under ${p.license} and written in ${p.language}.`;
+  const long = `${p.about} It's an open-source ${midSentence(p.kind)} under ${p.license}, written in ${p.language}.`;
+  const short = `${p.about} Licensed under ${p.license}.`;
   if (plain.length < DESCRIPTION_MIN) return long;
   if (plain.length > DESCRIPTION_MAX) return short;
   return plain;
