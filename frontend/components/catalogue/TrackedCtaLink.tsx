@@ -4,7 +4,7 @@ import posthog from "posthog-js";
 import type { AnchorHTMLAttributes } from "react";
 
 type TrackedCtaLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
-  placement: "header" | "hero" | "footer" | "projects" | "support";
+  placement: "header" | "hero" | "footer" | "projects" | "support" | "services";
   /** Must be in ALLOWED_CTA_IDS (lib/posthog-privacy.ts) or the sanitizer drops the event. */
   ctaId?: string;
 };
