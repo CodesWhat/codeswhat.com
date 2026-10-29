@@ -6,19 +6,16 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const routes = [
     {
       url: BASE_URL,
-      lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 1,
     },
     {
       url: `${BASE_URL}/support`,
-      lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.5,
     },
     ...PROJECT_SLUGS.map((slug) => ({
       url: `${BASE_URL}/projects/${slug}`,
-      lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.7,
     })),
