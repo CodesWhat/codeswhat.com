@@ -4,8 +4,10 @@ import styles from "@/components/catalogue/catalogue.module.css";
 import { Supporters } from "@/components/catalogue/Supporters";
 import { SupportLink } from "@/components/catalogue/SupportLink";
 import { BASE_URL, PROJECTS, SITE_CONFIG } from "@/lib/site-config";
+import { bySlug } from "@/lib/specimens";
 import {
   GITHUB_SPONSORS_URL,
+  PLACEHOLDER,
   PROJECT_COSTS,
   SHARED_COSTS,
   type SupportProjectId,
@@ -49,6 +51,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default function SupportPage() {
+  const listed = PROJECTS.filter((project) => project.slug !== "systema-machinae");
+  const confirmed = listed.filter((p) => !PROJECT_COSTS[p.slug as SupportProjectId].placeholder);
+  const unmeasured = listed.filter((p) => PROJECT_COSTS[p.slug as SupportProjectId].placeholder);
   const tiers = tiersWith(supportLinksFrom(process.env.CODESWHAT_SUPPORT_LINKS, console.warn));
 
   return (
@@ -66,9 +71,134 @@ export default function SupportPage() {
           <p className={styles.lede}>
             These projects are free and open source, and they cost real money and time to keep
             going. Everything below goes into one pool that covers whichever project needs it most.
-            Each project's running cost is listed further down.
+            Each project's running cost is listed below.
           </p>
         </div>
+      </section>
+
+      <section className={styles.section} aria-labelledby="where-the-money-goes">
+        <header className={styles.sectionHead}>
+          <p className={styles.eyebrow}>Running costs</p>
+          <h2 id="where-the-money-goes" className={styles.h2}>
+            Where the money <em>goes.</em>
+          </h2>
+          <p className={styles.sectionLede}>
+            Only the confirmed figures are printed. The rest aren't measured yet, and I'd sooner say
+            so than invent one.
+          </p>
+        </header>
+
+        <h3 className={styles.subhead}>Shared costs</h3>
+        <table className={styles.table}>
+          <caption className={styles.srOnly}>Costs shared across projects</caption>
+          <thead>
+            <tr>
+              <th scope="col">Item</th>
+              <th scope="col" className={styles.num}>
+                Cost
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {SHARED_COSTS.map((item) => (
+              <tr key={item.label}>
+                <td data-label="Item">{item.label}</td>
+                <td data-label="Cost" className={styles.num}>
+                  <strong>{item.cost}</strong>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <h3 className={styles.subhead}>By project</h3>
+        <table className={styles.table}>
+          <caption className={styles.srOnly}>Running cost by project</caption>
+          <thead>
+            <tr>
+              <th scope="col">Project</th>
+              <th scope="col">Source</th>
+              <th scope="col" className={styles.num}>
+                Running cost
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {confirmed.map((project) => {
+              const cost = PROJECT_COSTS[project.slug as SupportProjectId];
+              const repo = bySlug(project.slug)?.repo;
+              return (
+                <tr key={project.slug} id={project.slug} className={styles.scrollAnchor}>
+                  <td data-label="Project" className={styles.cellTitle}>
+                    <Link href={`/projects/${project.slug}`} className={styles.titleLink}>
+                      {project.name}
+                    </Link>
+                  </td>
+                  <td data-label="Source">
+                    <a
+                      href={repo ?? project.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={styles.costLink}
+                    >
+                      {repo ? "Repo" : "Site"}
+                      <span className={styles.srOnly}>
+                        {" "}
+                        for {project.name} (opens in a new tab)
+                      </span>
+                    </a>
+                  </td>
+                  <td data-label="Running cost" className={styles.num}>
+                    <strong>{cost.line}</strong>
+                  </td>
+                </tr>
+              );
+            })}
+            {unmeasured.length > 0 && (
+              <tr className={styles.rowTbd}>
+                <td data-label="Project" className={styles.cellTitle}>
+                  {unmeasured.map((project, index) => (
+                    <span key={project.slug} id={project.slug} className={styles.scrollAnchor}>
+                      {index > 0 && ", "}
+                      <Link href={`/projects/${project.slug}`} className={styles.titleLink}>
+                        {project.name}
+                      </Link>
+                    </span>
+                  ))}
+                </td>
+                <td data-label="Source">
+                  <span className={styles.tbd}>—</span>
+                </td>
+                <td data-label="Running cost" className={styles.num}>
+                  <span className={styles.tbd}>{PLACEHOLDER.line}</span>
+                </td>
+              </tr>
+            )}
+            <tr id="systema" className={styles.scrollAnchor}>
+              <td data-label="Project" className={styles.cellTitle}>
+                <Link href="/projects/systema-machinae" className={styles.titleLink}>
+                  {SYSTEMA.name}
+                </Link>
+                <span className={styles.oneLiner}>{SYSTEMA.note}</span>
+              </td>
+              <td data-label="Source">
+                <SupportLink
+                  href={SYSTEMA.supportUrl}
+                  ctaId="support_systema"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.costLink}
+                >
+                  Support Systema
+                  <span className={styles.srOnly}> (opens in a new tab)</span>
+                </SupportLink>
+              </td>
+              <td data-label="Running cost" className={styles.num}>
+                <strong>{SYSTEMA.cost}</strong>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </section>
 
       <section id="tiers" className={styles.section} aria-labelledby="menu-title">
@@ -149,118 +279,6 @@ export default function SupportPage() {
           </h2>
         </header>
         <Supporters />
-      </section>
-
-      <section className={styles.section} aria-labelledby="where-the-money-goes">
-        <header className={styles.sectionHead}>
-          <p className={styles.eyebrow}>Running costs</p>
-          <h2 id="where-the-money-goes" className={styles.h2}>
-            Where the money <em>goes.</em>
-          </h2>
-          <p className={styles.sectionLede}>
-            Only the confirmed figures are printed. A placeholder means the number isn't confirmed
-            yet, and I'd sooner say so than invent one.
-          </p>
-        </header>
-
-        <h3 className={styles.subhead}>Shared costs</h3>
-        <table className={styles.table}>
-          <caption className={styles.srOnly}>Costs shared across projects</caption>
-          <thead>
-            <tr>
-              <th scope="col">Item</th>
-              <th scope="col" className={styles.num}>
-                Cost
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {SHARED_COSTS.map((item) => (
-              <tr key={item.label}>
-                <td data-label="Item">{item.label}</td>
-                <td data-label="Cost" className={styles.num}>
-                  <strong>{item.cost}</strong>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        <h3 className={styles.subhead}>By project</h3>
-        <table className={styles.table}>
-          <caption className={styles.srOnly}>Running cost by project</caption>
-          <thead>
-            <tr>
-              <th scope="col">Project</th>
-              <th scope="col">Source</th>
-              <th scope="col" className={styles.num}>
-                Running cost
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {PROJECTS.filter((project) => project.slug !== "systema-machinae").map((project) => {
-              const cost = PROJECT_COSTS[project.slug as SupportProjectId];
-              return (
-                <tr
-                  key={project.slug}
-                  id={project.slug}
-                  className={`${styles.scrollAnchor} ${cost.placeholder ? styles.rowTbd : ""}`}
-                >
-                  <td data-label="Project" className={styles.cellTitle}>
-                    <Link href={`/projects/${project.slug}`} className={styles.titleLink}>
-                      {project.name}
-                    </Link>
-                  </td>
-                  <td data-label="Source">
-                    <a
-                      href={project.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className={styles.costLink}
-                    >
-                      Repo
-                      <span className={styles.srOnly}>
-                        {" "}
-                        for {project.name} (opens in a new tab)
-                      </span>
-                    </a>
-                  </td>
-                  <td data-label="Running cost" className={styles.num}>
-                    {cost.placeholder ? (
-                      <span className={styles.tbd}>{cost.line}</span>
-                    ) : (
-                      <strong>{cost.line}</strong>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-            <tr id="systema" className={styles.scrollAnchor}>
-              <td data-label="Project" className={styles.cellTitle}>
-                <Link href="/projects/systema-machinae" className={styles.titleLink}>
-                  {SYSTEMA.name}
-                </Link>
-                <span className={styles.oneLiner}>{SYSTEMA.note}</span>
-              </td>
-              <td data-label="Source">
-                <SupportLink
-                  href={SYSTEMA.supportUrl}
-                  ctaId="support_systema"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.costLink}
-                >
-                  Support Systema
-                  <span className={styles.srOnly}> (opens in a new tab)</span>
-                </SupportLink>
-              </td>
-              <td data-label="Running cost" className={styles.num}>
-                <strong>{SYSTEMA.cost}</strong>
-              </td>
-            </tr>
-          </tbody>
-        </table>
       </section>
 
       <section className={styles.section}>

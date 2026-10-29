@@ -86,8 +86,8 @@ export type ProjectCost = {
   placeholder: boolean;
 };
 
-const PLACEHOLDER: ProjectCost = {
-  line: "PLACEHOLDER: running cost not yet confirmed",
+export const PLACEHOLDER: ProjectCost = {
+  line: "Not measured yet",
   placeholder: true,
 };
 

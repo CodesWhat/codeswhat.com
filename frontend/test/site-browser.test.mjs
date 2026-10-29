@@ -217,6 +217,37 @@ test("support renders GitHub Sponsors first and the six tiers with validated lin
   assert.deepEqual(errors, []);
 });
 
+test("support shows the confirmed costs before the ask and collapses unmeasured projects", {
+  timeout: 20_000,
+}, async (t) => {
+  const page = await localPage(t);
+  await page.goto(`${baseUrl}/support`, { waitUntil: "networkidle" });
+  const order = await page.evaluate(() => {
+    const costs = document.getElementById("where-the-money-goes");
+    const tiers = document.getElementById("tiers");
+    return Boolean(
+      costs && tiers && costs.compareDocumentPosition(tiers) & Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+  assert.ok(order, "#where-the-money-goes must come before #tiers");
+  const body = await page.locator("body").innerText();
+  assert.equal(body.includes("PLACEHOLDER"), false);
+  assert.ok(body.includes("$99/year"));
+  assert.ok(body.includes("$30/month all-in"));
+  for (const slug of [
+    "sockguard",
+    "drydock",
+    "portwing",
+    "portkey-admin-mcp",
+    "mouthtype",
+    "idlescreen",
+    "careerrat",
+  ]) {
+    assert.equal(await page.locator(`[id="${slug}"]`).count(), 1, `missing anchor ${slug}`);
+  }
+  assert.equal(await page.locator("tbody tr[class*='rowTbd']").count(), 1);
+});
+
 test("the footer signup rejects an invalid address without calling the API", {
   timeout: 15_000,
 }, async (t) => {
