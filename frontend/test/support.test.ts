@@ -221,6 +221,7 @@ test("each project is one schema.org entity with a stable slug-based id", () => 
     assert.equal(node["@id"], `${BASE_URL}/projects/${s.slug}#software`);
     assert.equal(node["@id"], projectSchemaId(s.slug));
     assert.equal(node.url, `${BASE_URL}/projects/${s.slug}`);
+    assert.equal(node.name, s.name, s.slug);
     assert.equal(node.description, s.about);
     assert.equal(node.programmingLanguage, s.language);
     assert.deepEqual(node.author, { "@id": `${BASE_URL}/#org` });
@@ -233,6 +234,7 @@ test("project nodes only point codeRepository at CodesWhat GitHub repos", () => 
     const node = projectSoftwareNode(s) as Record<string, unknown>;
     const repo = node.codeRepository as string | undefined;
     assert.ok(repo === undefined || repo.startsWith("https://github.com/CodesWhat/"), s.slug);
+    assert.equal(repo, s.repo, s.slug);
     if (repo) {
       assert.equal(node.license, `${repo}/blob/main/LICENSE`);
     } else {
@@ -262,6 +264,11 @@ test("project page graph has a breadcrumb ending at the project URL", () => {
     assert.equal(crumb.itemListElement[0].item, BASE_URL);
     assert.equal(crumb.itemListElement[1].item, `${BASE_URL}/projects/${s.slug}`);
     assert.equal(crumb.itemListElement[1].name, s.name);
+    assert.deepEqual(
+      ld["@graph"].find((n) => n["@type"] === "SoftwareSourceCode"),
+      projectSoftwareNode(s),
+      s.slug,
+    );
   }
 });
 
