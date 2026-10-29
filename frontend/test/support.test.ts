@@ -9,6 +9,7 @@ import {
   TITLE_MAX,
 } from "../lib/project-meta.ts";
 import { PROJECT_SLUGS } from "../lib/project-slugs.ts";
+import { buildSecurityTxt } from "../lib/security-txt.ts";
 import { BASE_URL, PROJECTS, SITE_CONFIG } from "../lib/site-config.ts";
 import { SPECIMENS } from "../lib/specimens.ts";
 import {
@@ -184,4 +185,16 @@ test("llms.txt lists every project once with its field-notes URL", () => {
     const hits = projects.split(`- [${p.name}](`).length - 1;
     assert.equal(hits, 1, `${p.name} appears ${hits} times`);
   }
+});
+
+test("security.txt carries the RFC 9116 required fields", () => {
+  const now = new Date("2026-10-28T00:00:00Z");
+  const body = buildSecurityTxt(now);
+  assert.match(body, /^Contact: mailto:security@codeswhat\.com$/m);
+  assert.match(body, /^Canonical: .+\/\.well-known\/security\.txt$/m);
+  assert.match(body, /^Policy: https:\/\//m);
+  const expires = body.match(/^Expires: (.+)$/m)?.[1];
+  assert.ok(expires);
+  const days = (Date.parse(expires) - now.getTime()) / 86_400_000;
+  assert.ok(days >= 1 && days <= 365, String(days));
 });
