@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import {
+  DESCRIPTION_MAX,
+  DESCRIPTION_MIN,
+  projectDescription,
+  projectTitle,
+  TITLE_MAX,
+} from "../lib/project-meta.ts";
 import { PROJECT_SLUGS } from "../lib/project-slugs.ts";
-import { PROJECTS } from "../lib/site-config.ts";
+import { PROJECTS, SITE_CONFIG } from "../lib/site-config.ts";
 import { SPECIMENS } from "../lib/specimens.ts";
 import {
   PROJECT_COSTS,
@@ -136,4 +143,32 @@ test("PROJECTS, SPECIMENS and PROJECT_SLUGS list the same slugs in the same orde
     projects,
   );
   assert.deepEqual([...PROJECT_SLUGS], projects);
+});
+
+test("project titles and descriptions fit search snippets and stay unique", () => {
+  const titles = SPECIMENS.map((s) => projectTitle(s, SITE_CONFIG.name));
+  const descriptions = SPECIMENS.map((s) => projectDescription(s));
+
+  for (const [i, s] of SPECIMENS.entries()) {
+    assert.ok(titles[i].length <= TITLE_MAX, `${s.slug} title is ${titles[i].length}`);
+    assert.ok(titles[i].startsWith(`${s.name}: ${s.tagline}`), s.slug);
+    assert.ok(
+      descriptions[i].length >= DESCRIPTION_MIN && descriptions[i].length <= DESCRIPTION_MAX,
+      `${s.slug} description is ${descriptions[i].length}`,
+    );
+    assert.ok(descriptions[i].includes(s.license), `${s.slug} description omits its licence`);
+  }
+  assert.equal(new Set(titles).size, titles.length);
+  assert.equal(new Set(descriptions).size, descriptions.length);
+  for (const d of descriptions) {
+    assert.doesNotMatch(d, /open-source (Server|Web) /, `kind is capitalised mid-sentence: ${d}`);
+    assert.doesNotMatch(d, /\. [A-Za-z0-9.-]+, written in /, `licence reads as a fragment: ${d}`);
+  }
+});
+
+test("homepage description fits a search snippet", () => {
+  assert.ok(
+    SITE_CONFIG.description.length <= DESCRIPTION_MAX,
+    String(SITE_CONFIG.description.length),
+  );
 });
