@@ -17,10 +17,15 @@ export function projectTitle(p: Pick<ProjectMetaInput, "name" | "tagline">, site
   return full.length > TITLE_MAX ? bare : full;
 }
 
+/** "Server tool" reads as "server tool" mid-sentence; "macOS app" keeps its casing. */
+function midSentence(kind: string) {
+  return /^[A-Z][a-z]/.test(kind) ? kind[0].toLowerCase() + kind.slice(1) : kind;
+}
+
 export function projectDescription(p: ProjectMetaInput) {
   const forms = [
     `${p.about} ${p.license}, written in ${p.language}.`,
-    `${p.about} Open-source ${p.kind} under ${p.license}, written in ${p.language}.`,
+    `${p.about} Open-source ${midSentence(p.kind)} under ${p.license}, written in ${p.language}.`,
     `${p.about} ${p.license}, ${p.language}.`,
   ];
   const [plain, long, short] = forms;

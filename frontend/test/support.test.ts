@@ -159,6 +159,9 @@ test("project titles and descriptions fit search snippets and stay unique", () =
   }
   assert.equal(new Set(titles).size, titles.length);
   assert.equal(new Set(descriptions).size, descriptions.length);
+  for (const d of descriptions) {
+    assert.doesNotMatch(d, /Open-source (Server|Web) /, `kind is capitalised mid-sentence: ${d}`);
+  }
 });
 
 test("homepage description fits a search snippet", () => {
