@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { buildLlmsTxt } from "../lib/llms.ts";
 import {
   DESCRIPTION_MAX,
   DESCRIPTION_MIN,
@@ -8,7 +9,7 @@ import {
   TITLE_MAX,
 } from "../lib/project-meta.ts";
 import { PROJECT_SLUGS } from "../lib/project-slugs.ts";
-import { PROJECTS, SITE_CONFIG } from "../lib/site-config.ts";
+import { BASE_URL, PROJECTS, SITE_CONFIG } from "../lib/site-config.ts";
 import { SPECIMENS } from "../lib/specimens.ts";
 import {
   PROJECT_COSTS,
@@ -171,4 +172,16 @@ test("homepage description fits a search snippet", () => {
     SITE_CONFIG.description.length <= DESCRIPTION_MAX,
     String(SITE_CONFIG.description.length),
   );
+});
+
+test("llms.txt lists every project once with its field-notes URL", () => {
+  const body = buildLlmsTxt();
+  assert.doesNotMatch(body, /undefined/);
+  assert.ok(body.startsWith("# CodesWhat\n"));
+  const projects = body.split("## Projects")[1].split("## Optional")[0];
+  for (const p of PROJECTS) {
+    assert.ok(body.includes(`${BASE_URL}/projects/${p.slug}`), `${p.slug} field notes missing`);
+    const hits = projects.split(`- [${p.name}](`).length - 1;
+    assert.equal(hits, 1, `${p.name} appears ${hits} times`);
+  }
 });
