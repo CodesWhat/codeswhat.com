@@ -27,8 +27,10 @@ export function projectDescription(p: ProjectMetaInput) {
   // reads as the subject of "written in".
   const plain = `${p.about} It's open source under ${p.license} and written in ${p.language}.`;
   const long = `${p.about} It's an open-source ${midSentence(p.kind)} under ${p.license}, written in ${p.language}.`;
+  const medium = `${p.about} Written in ${p.language}, licensed under ${p.license}.`;
   const short = `${p.about} Licensed under ${p.license}.`;
   if (plain.length < DESCRIPTION_MIN) return long;
-  if (plain.length > DESCRIPTION_MAX) return short;
-  return plain;
+  if (plain.length <= DESCRIPTION_MAX) return plain;
+  // Keep the language whenever it still fits; drop it only as a last resort.
+  return medium.length <= DESCRIPTION_MAX ? medium : short;
 }

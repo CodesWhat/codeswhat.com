@@ -156,6 +156,7 @@ test("project titles and descriptions fit search snippets and stay unique", () =
       descriptions[i].length >= DESCRIPTION_MIN && descriptions[i].length <= DESCRIPTION_MAX,
       `${s.slug} description is ${descriptions[i].length}`,
     );
+    assert.ok(descriptions[i].includes(s.license), `${s.slug} description omits its licence`);
   }
   assert.equal(new Set(titles).size, titles.length);
   assert.equal(new Set(descriptions).size, descriptions.length);
