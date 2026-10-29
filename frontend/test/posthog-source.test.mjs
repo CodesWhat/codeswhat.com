@@ -15,7 +15,7 @@ test("PostHog is initialized only by instrumentation-client", async () => {
 
 test("telemetry dependencies use the audited exact PostHog version", async () => {
   const packageJson = JSON.parse(await read("package.json"));
-  assert.equal(packageJson.dependencies["posthog-js"], "1.417.0");
+  assert.equal(packageJson.dependencies["posthog-js"], "1.438.15");
   assert.equal(packageJson.dependencies["@vercel/analytics"], undefined);
   assert.equal(packageJson.dependencies["@vercel/speed-insights"], undefined);
 });
