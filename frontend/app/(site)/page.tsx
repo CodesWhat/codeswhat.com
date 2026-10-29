@@ -4,7 +4,8 @@ import styles from "@/components/catalogue/catalogue.module.css";
 import { Sprite } from "@/components/catalogue/Sprite";
 import { SupportLink } from "@/components/catalogue/SupportLink";
 import { TrackedCtaLink } from "@/components/catalogue/TrackedCtaLink";
-import { BASE_URL, GITHUB_URL, OG_IMAGE, PROJECTS, SITE_CONFIG } from "@/lib/site-config";
+import { homepageJsonLd, serializeJsonLd } from "@/lib/project-schema";
+import { BASE_URL, OG_IMAGE, SITE_CONFIG } from "@/lib/site-config";
 import { SERVICES, SPECIMENS } from "@/lib/specimens";
 import { GITHUB_SPONSORS_URL } from "@/lib/support";
 
@@ -32,56 +33,12 @@ export const metadata: Metadata = {
   },
 };
 
-// schema.org graph — Organization + WebSite + Person (founder) + one
-// SoftwareSourceCode per project. This is the crawlable/answer-engine backbone,
-// server-rendered.
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "Organization",
-      "@id": `${BASE_URL}/#org`,
-      name: SITE_CONFIG.name,
-      url: BASE_URL,
-      logo: `${BASE_URL}${SITE_CONFIG.logo}`,
-      description: SITE_CONFIG.description,
-      founder: { "@id": `${BASE_URL}/#scott` },
-      sameAs: [GITHUB_URL, SITE_CONFIG.twitterUrl],
-      contactPoint: {
-        "@type": "ContactPoint",
-        email: "hello@codeswhat.com",
-        contactType: "customer support",
-      },
-    },
-    {
-      "@type": "WebSite",
-      "@id": `${BASE_URL}/#website`,
-      url: BASE_URL,
-      name: SITE_CONFIG.name,
-      publisher: { "@id": `${BASE_URL}/#org` },
-    },
-    {
-      "@type": "Person",
-      "@id": `${BASE_URL}/#scott`,
-      name: SITE_CONFIG.author.name,
-      url: SITE_CONFIG.author.url,
-    },
-    ...PROJECTS.map((p) => ({
-      "@type": "SoftwareSourceCode",
-      name: p.name,
-      description: p.description,
-      codeRepository: p.href,
-      author: { "@id": `${BASE_URL}/#org` },
-    })),
-  ],
-};
-
 export default function Home() {
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(homepageJsonLd) }}
       />
       <main id="main" className={styles.main}>
         <section className={styles.hero} aria-labelledby="hero-title">

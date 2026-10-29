@@ -8,6 +8,13 @@ import {
   projectTitle,
   TITLE_MAX,
 } from "../lib/project-meta.ts";
+import {
+  homepageJsonLd,
+  projectPageJsonLd,
+  projectSchemaId,
+  projectSoftwareNode,
+  serializeJsonLd,
+} from "../lib/project-schema.ts";
 import { PROJECT_SLUGS } from "../lib/project-slugs.ts";
 import { buildSecurityTxt } from "../lib/security-txt.ts";
 import { BASE_URL, PROJECTS, SITE_CONFIG } from "../lib/site-config.ts";
@@ -205,4 +212,77 @@ test("security.txt carries the RFC 9116 required fields", () => {
   assert.ok(days >= 1 && days <= 365, String(days));
   const fixed = buildSecurityTxt(new Date("2026-01-01T00:00:00Z"));
   assert.equal(fixed.match(/^Expires: (.+)$/m)?.[1], "2026-06-30T00:00:00.000Z");
+});
+
+test("each project is one schema.org entity with a stable slug-based id", () => {
+  for (const s of SPECIMENS) {
+    const node = projectSoftwareNode(s) as Record<string, unknown>;
+    assert.equal(node["@type"], "SoftwareSourceCode");
+    assert.equal(node["@id"], `${BASE_URL}/projects/${s.slug}#software`);
+    assert.equal(node["@id"], projectSchemaId(s.slug));
+    assert.equal(node.url, `${BASE_URL}/projects/${s.slug}`);
+    assert.equal(node.name, s.name, s.slug);
+    assert.equal(node.description, s.about);
+    assert.equal(node.programmingLanguage, s.language);
+    assert.deepEqual(node.author, { "@id": `${BASE_URL}/#org` });
+    assert.deepEqual(node.publisher, { "@id": `${BASE_URL}/#org` });
+  }
+});
+
+test("project nodes only point codeRepository at CodesWhat GitHub repos", () => {
+  for (const s of SPECIMENS) {
+    const node = projectSoftwareNode(s) as Record<string, unknown>;
+    const repo = node.codeRepository as string | undefined;
+    assert.ok(repo === undefined || repo.startsWith("https://github.com/CodesWhat/"), s.slug);
+    assert.equal(repo, s.repo, s.slug);
+    if (repo) {
+      assert.equal(node.license, `${repo}/blob/main/LICENSE`);
+    } else {
+      assert.equal("license" in node, false, s.slug);
+    }
+    const same = node.sameAs as string[] | undefined;
+    if (same) assert.ok(!same.includes(repo as string), s.slug);
+  }
+});
+
+test("systema-machinae has no repository and no licence file link", () => {
+  const s = SPECIMENS.find((x) => x.slug === "systema-machinae");
+  assert.ok(s);
+  const node = projectSoftwareNode(s) as Record<string, unknown>;
+  assert.equal("codeRepository" in node, false);
+  assert.equal("license" in node, false);
+});
+
+test("project page graph has a breadcrumb ending at the project URL", () => {
+  for (const s of SPECIMENS) {
+    const ld = projectPageJsonLd(s) as { "@context": string; "@graph": Record<string, unknown>[] };
+    assert.equal(ld["@context"], "https://schema.org");
+    const crumb = ld["@graph"].find((n) => n["@type"] === "BreadcrumbList") as {
+      itemListElement: { position: number; name: string; item: string }[];
+    };
+    assert.equal(crumb.itemListElement.length, 2);
+    assert.equal(crumb.itemListElement[0].item, BASE_URL);
+    assert.equal(crumb.itemListElement[1].item, `${BASE_URL}/projects/${s.slug}`);
+    assert.equal(crumb.itemListElement[1].name, s.name);
+    assert.deepEqual(
+      ld["@graph"].find((n) => n["@type"] === "SoftwareSourceCode"),
+      projectSoftwareNode(s),
+      s.slug,
+    );
+  }
+});
+
+test("serializeJsonLd escapes < so markup can't close the script tag", () => {
+  const out = serializeJsonLd({ a: "</script><b>" });
+  assert.equal(out.includes("<"), false);
+  assert.deepEqual(JSON.parse(out), { a: "</script><b>" });
+});
+
+test("homepage graph lists the same project ids as the project pages", () => {
+  const home = (homepageJsonLd["@graph"] as Record<string, unknown>[])
+    .filter((n) => n["@type"] === "SoftwareSourceCode")
+    .map((n) => n["@id"])
+    .sort();
+  const pages = SPECIMENS.map((s) => projectSchemaId(s.slug)).sort();
+  assert.deepEqual(home, pages);
 });
