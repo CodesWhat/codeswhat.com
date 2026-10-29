@@ -14,7 +14,7 @@ export const SITE_CONFIG = {
   tagline: "Small, sharp tools from one developer and a lot of agents",
   /** Default meta / OpenGraph / description. */
   description:
-    "Open-source developer tools and apps from one developer and a lot of agents: Docker and MCP servers, macOS utilities, a job-search workspace and a live bot census.",
+    "Open-source developer tools from one developer and a lot of agents: Docker and MCP servers, macOS utilities, a job-search workspace and a live bot census.",
   /** Production domain (no protocol, no trailing slash). */
   domain: "codeswhat.com",
   /** GitHub org. */
