@@ -184,6 +184,12 @@ test("llms.txt lists every project once with its field-notes URL", () => {
     assert.ok(body.includes(`${BASE_URL}/projects/${p.slug}`), `${p.slug} field notes missing`);
     const hits = projects.split(`- [${p.name}](`).length - 1;
     assert.equal(hits, 1, `${p.name} appears ${hits} times`);
+    const entry = projects.split("\n- [").find((b) => b.startsWith(`${p.name}](`));
+    assert.ok(entry, `${p.name} entry missing`);
+    assert.ok(
+      entry.includes(`  - Field notes: ${BASE_URL}/projects/${p.slug}`),
+      `${p.name} entry lacks its own field-notes line`,
+    );
   }
 });
 
@@ -197,4 +203,6 @@ test("security.txt carries the RFC 9116 required fields", () => {
   assert.ok(expires);
   const days = (Date.parse(expires) - now.getTime()) / 86_400_000;
   assert.ok(days >= 1 && days <= 365, String(days));
+  const fixed = buildSecurityTxt(new Date("2026-01-01T00:00:00Z"));
+  assert.equal(fixed.match(/^Expires: (.+)$/m)?.[1], "2026-06-30T00:00:00.000Z");
 });

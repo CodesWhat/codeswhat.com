@@ -1,8 +1,9 @@
 import { buildSecurityTxt } from "@/lib/security-txt";
 
-export const dynamic = "force-static";
+export const revalidate = 86400;
 
-// Static, so Expires is build date + 180 days. Every deploy refreshes it.
+// ISR: regenerated at most daily, so Expires stays ~180 days ahead without
+// per-request rendering and never goes stale between deploys.
 export function GET() {
   return new Response(buildSecurityTxt(), {
     headers: { "Content-Type": "text/plain; charset=utf-8" },
