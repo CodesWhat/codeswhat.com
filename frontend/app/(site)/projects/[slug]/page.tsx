@@ -5,6 +5,7 @@ import styles from "@/components/catalogue/catalogue.module.css";
 import { Sprite } from "@/components/catalogue/Sprite";
 import { SupportLink } from "@/components/catalogue/SupportLink";
 import { TrackedCtaLink } from "@/components/catalogue/TrackedCtaLink";
+import { projectDescription, projectTitle } from "@/lib/project-meta";
 import { BASE_URL, SITE_CONFIG } from "@/lib/site-config";
 import { bySlug, SPECIMENS } from "@/lib/specimens";
 import { SYSTEMA } from "@/lib/support";
@@ -22,8 +23,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const s = bySlug((await params).slug);
   if (!s) return {};
-  const title = `${s.name}, ${s.latin} | ${SITE_CONFIG.name}`;
-  const description = `${s.tagline}. Field notes, links and upkeep for ${s.name}.`;
+  const title = projectTitle(s, SITE_CONFIG.name);
+  const description = projectDescription(s);
   const image = {
     url: `/og/${s.slug}.png`,
     width: 1200,
