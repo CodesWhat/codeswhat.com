@@ -14,6 +14,7 @@ export const ALLOWED_ROUTES = [
 export const ALLOWED_CTA_IDS = [
   "github_org",
   "sponsors_github",
+  "contact_email",
   "support_systema",
   ...TIERS.map((tier) => supportCtaId(tier)),
   ...PROJECT_SLUGS.map((slug) => `project_${slug}` as const),
@@ -158,6 +159,9 @@ export function classifyClientErrorName(value: unknown): string {
 function isAllowedCtaPlacement(ctaId: string, placement: string): boolean {
   if (ctaId === "github_org") {
     return placement === "header" || placement === "hero" || placement === "footer";
+  }
+  if (ctaId === "contact_email") {
+    return placement === "services";
   }
   if (ctaId === "sponsors_github" || ctaId.startsWith(supportCtaPrefix)) {
     return placement === "support";

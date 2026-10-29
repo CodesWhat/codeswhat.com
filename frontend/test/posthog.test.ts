@@ -280,6 +280,7 @@ test("CTA events are limited to the fixed vocabulary", () => {
   assert.deepEqual(ALLOWED_CTA_IDS, [
     "github_org",
     "sponsors_github",
+    "contact_email",
     "support_systema",
     "support_monthly-5",
     "support_monthly-10",
@@ -613,6 +614,36 @@ test("support CTAs need the support placement and only run on /support", () => {
     null,
   );
   assert.equal(sanitizeRoute("/support?utm_source=x"), "/support");
+});
+
+test("the services contact CTA needs contact_email with the services placement", () => {
+  const kept = sanitizeEvent({
+    event: "cta activated",
+    properties: { ...ENVELOPE, cta_id: "contact_email", placement: "services" },
+  });
+  assert.ok(kept);
+  assert.equal(kept.properties.cta_id, "contact_email");
+  assert.equal(kept.properties.placement, "services");
+  for (const placement of ["header", "hero", "footer", "projects", "support", ""]) {
+    assert.equal(
+      sanitizeEvent({
+        event: "cta activated",
+        properties: { ...ENVELOPE, cta_id: "contact_email", placement },
+      }),
+      null,
+      `contact_email accepted with ${placement}`,
+    );
+  }
+  for (const ctaId of ["github_org", "sponsors_github", "project_drydock"]) {
+    assert.equal(
+      sanitizeEvent({
+        event: "cta activated",
+        properties: { ...ENVELOPE, cta_id: ctaId, placement: "services" },
+      }),
+      null,
+      `${ctaId} accepted with services`,
+    );
+  }
 });
 
 test("newsletter submitted keeps only a result and a fixed error class", () => {

@@ -216,9 +216,14 @@ export default function Home() {
             ))}
           </ol>
           <div className={styles.actions}>
-            <a className={styles.btnLime} href="mailto:hello@codeswhat.com">
+            <TrackedCtaLink
+              placement="services"
+              ctaId="contact_email"
+              className={styles.btnLime}
+              href="mailto:hello@codeswhat.com"
+            >
               Tell me what you need help with
-            </a>
+            </TrackedCtaLink>
           </div>
         </section>
 
