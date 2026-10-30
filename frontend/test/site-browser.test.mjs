@@ -217,6 +217,36 @@ test("support renders GitHub Sponsors first and the six tiers with validated lin
   assert.deepEqual(errors, []);
 });
 
+test("support page publishes no costs and links Systema's own page", {
+  timeout: 20_000,
+}, async (t) => {
+  const page = await localPage(t);
+  await page.goto(`${baseUrl}/support`, { waitUntil: "networkidle" });
+  assert.equal(await page.locator("#where-the-money-goes").count(), 0);
+  assert.equal(await page.locator("#tiers").count(), 1);
+  const body = await page.locator("body").innerText();
+  for (const text of [
+    "PLACEHOLDER",
+    "Running cost",
+    "$99/year",
+    "$30/month",
+    "costs to run",
+    "What it costs",
+  ]) {
+    assert.equal(body.includes(text), false, text);
+  }
+  const systema = page.getByRole("link", { name: /its own page/ });
+  assert.equal(await systema.count(), 1);
+  assert.equal(await systema.getAttribute("href"), "https://systemamachinae.com/support");
+  assert.equal(
+    await page
+      .locator('section[aria-labelledby="sup-title"]')
+      .getByRole("link", { name: /its own page/ })
+      .count(),
+    1,
+  );
+});
+
 test("the footer signup rejects an invalid address without calling the API", {
   timeout: 15_000,
 }, async (t) => {

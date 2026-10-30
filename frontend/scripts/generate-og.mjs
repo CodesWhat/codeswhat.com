@@ -100,7 +100,7 @@ const cards = [
     out: path.join(publicDir, "og/support.png"),
     html: page(`${brand}
       <div class="label">Support</div>
-      <h1 class="narrow">What it costs, and <em>how to help.</em></h1>
+      <h1 class="narrow">Feed the <em>specimens.</em></h1>
       <div class="tiers"><span>$5</span><span>$10</span><span>$25</span><span>$100 a month</span></div>
       <div class="dots"></div>
       <div class="paper coll">${HOME_SLUGS.map((s) => `<div class="cell">${sprite(s, 3)}</div>`).join("")}<span class="fig">Fig. 1 · The collection</span></div>

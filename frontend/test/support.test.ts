@@ -20,8 +20,6 @@ import { buildSecurityTxt } from "../lib/security-txt.ts";
 import { BASE_URL, PROJECTS, SITE_CONFIG } from "../lib/site-config.ts";
 import { SPECIMENS } from "../lib/specimens.ts";
 import {
-  PROJECT_COSTS,
-  type SupportProjectId,
   SYSTEMA,
   supportCtaId,
   supportLinksFrom,
@@ -124,14 +122,14 @@ test("all six ids accept a valid link from the env value", () => {
   assert.ok(tiersWith(links).every((t) => t.link === good));
 });
 
-test("every project has a running-cost entry and Systema stays separate", () => {
-  const costed = PROJECTS.filter((project) => project.slug !== "systema-machinae");
-  for (const project of costed) {
-    assert.ok(PROJECT_COSTS[project.slug as SupportProjectId], project.slug);
-  }
-  assert.equal(Object.keys(PROJECT_COSTS).length, costed.length);
+test("Systema keeps its own support page and nothing publishes costs", () => {
   assert.equal(SYSTEMA.supportUrl, "https://systemamachinae.com/support");
-  assert.equal(SYSTEMA.cost, "$30/month all-in");
+  assert.equal("cost" in SYSTEMA, false);
+  for (const s of SPECIMENS) {
+    assert.equal("monthly" in s, false, s.slug);
+    assert.equal("upkeep" in s, false, s.slug);
+  }
+  assert.equal(buildLlmsTxt().toLowerCase().includes("cost"), false);
 });
 
 test("supportCtaId derives from the tier id", () => {
