@@ -235,7 +235,16 @@ test("support page publishes no costs and links Systema's own page", {
   ]) {
     assert.equal(body.includes(text), false, text);
   }
-  assert.equal(await page.getByRole("link", { name: /its own page/ }).count(), 1);
+  const systema = page.getByRole("link", { name: /its own page/ });
+  assert.equal(await systema.count(), 1);
+  assert.equal(await systema.getAttribute("href"), "https://systemamachinae.com/support");
+  assert.equal(
+    await page
+      .locator('section[aria-labelledby="sup-title"]')
+      .getByRole("link", { name: /its own page/ })
+      .count(),
+    1,
+  );
 });
 
 test("the footer signup rejects an invalid address without calling the API", {

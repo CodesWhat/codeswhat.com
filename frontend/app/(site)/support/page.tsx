@@ -61,7 +61,17 @@ export default function SupportPage() {
           </h1>
           <p className={styles.lede}>
             These projects are free and open source. Everything here goes into one pool that keeps
-            all of them running.
+            them running. {SYSTEMA.name} takes support on{" "}
+            <SupportLink
+              href={SYSTEMA.supportUrl}
+              ctaId="support_systema"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              its own page
+              <span className={styles.srOnly}> (opens in a new tab)</span>
+            </SupportLink>
+            .
           </p>
         </div>
       </section>
@@ -149,17 +159,7 @@ export default function SupportPage() {
       <section className={styles.section}>
         <p className={styles.fine}>
           Stripe handles card payments on its own pages. This site loads nothing from Stripe, and a
-          link only opens when you click it. {SYSTEMA.name} takes support on{" "}
-          <SupportLink
-            href={SYSTEMA.supportUrl}
-            ctaId="support_systema"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            its own page
-            <span className={styles.srOnly}> (opens in a new tab)</span>
-          </SupportLink>
-          . Supporting a project buys no say in its roadmap.
+          link only opens when you click it. Supporting a project buys no say in its roadmap.
         </p>
       </section>
     </main>
