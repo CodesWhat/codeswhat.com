@@ -18,9 +18,6 @@ export type Specimen = {
   site: string;
   repo?: string;
   docs?: string;
-  /** monthly running cost in dollars; null means nobody has measured it yet */
-  monthly: number | null;
-  upkeep: string;
   alt: string;
 };
 
@@ -124,15 +121,6 @@ const FIELD: Record<string, Field> = {
   },
 };
 
-const TBD_UPKEEP =
-  "Running costs aren't measured yet, so there's no number here. It draws on the shared pool.";
-const SYSTEMA_UPKEEP = "$30 a month all-in. It also takes support on its own page.";
-
-/** Per-slug values that differ from the defaults every other specimen gets. */
-const OVERRIDES: Record<string, Partial<Pick<Specimen, "monthly" | "upkeep">>> = {
-  "systema-machinae": { monthly: 30, upkeep: SYSTEMA_UPKEEP },
-};
-
 export const SPECIMENS: Specimen[] = PROJECTS.map((p, i) => {
   const [license, language] = p.status.split(" · ");
   return {
@@ -145,10 +133,7 @@ export const SPECIMENS: Specimen[] = PROJECTS.map((p, i) => {
     tagline: p.tagline,
     about: p.description,
     site: p.href,
-    monthly: null,
-    upkeep: TBD_UPKEEP,
     ...FIELD[p.slug],
-    ...OVERRIDES[p.slug],
   };
 });
 

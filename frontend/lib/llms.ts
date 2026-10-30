@@ -17,6 +17,6 @@ export function buildLlmsTxt(): string {
     `> ${SITE_CONFIG.description}`,
     "CodesWhat is Scott Benson building open-source tools with a crew of coding agents. Each project's own site is its canonical home; codeswhat.com has field notes for each.",
     `## Projects\n\n${projects.join("\n")}`,
-    `## Optional\n\n- [Support CodesWhat](${BASE_URL}/support): GitHub Sponsors and Stripe tiers, and what each project costs to run.`,
+    `## Optional\n\n- [Support CodesWhat](${BASE_URL}/support): GitHub Sponsors and Stripe tiers.`,
   ].join("\n\n")}\n`;
 }

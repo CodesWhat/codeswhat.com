@@ -153,19 +153,24 @@ export default async function SpecimenPage({ params }: { params: Promise<{ slug:
 
         <div className={styles.upkeep}>
           <strong>Upkeep</strong>
-          <span>{s.upkeep}</span>
-          {s.monthly === null ? (
-            <Link href="/support">Support</Link>
+          {s.slug === "systema-machinae" ? (
+            <>
+              <span>Takes support on its own page.</span>
+              <SupportLink
+                href={SYSTEMA.supportUrl}
+                ctaId="support_systema"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Its support page
+                <span className={styles.srOnly}> (opens in a new tab)</span>
+              </SupportLink>
+            </>
           ) : (
-            <SupportLink
-              href={SYSTEMA.supportUrl}
-              ctaId="support_systema"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Its support page
-              <span className={styles.srOnly}> (opens in a new tab)</span>
-            </SupportLink>
+            <>
+              <span>Funded from the shared pool.</span>
+              <Link href="/support">Support</Link>
+            </>
           )}
         </div>
 
