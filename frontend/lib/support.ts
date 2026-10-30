@@ -5,15 +5,6 @@
  * visitor follows a Stripe-hosted Payment Link.
  */
 
-export type SupportProjectId =
-  | "sockguard"
-  | "drydock"
-  | "portwing"
-  | "portkey-admin-mcp"
-  | "mouthtype"
-  | "idlescreen"
-  | "careerrat";
-
 export type Tier = {
   /** stable id, also the key in CODESWHAT_SUPPORT_LINKS */
   id: string;
@@ -79,46 +70,10 @@ export const TIERS: readonly Tier[] = [
   },
 ];
 
-export type ProjectCost = {
-  /** shown as the running-cost line */
-  line: string;
-  /** true while the figure is a stand-in Scott has not confirmed */
-  placeholder: boolean;
-};
-
-export const PLACEHOLDER: ProjectCost = {
-  line: "Not measured yet",
-  placeholder: true,
-};
-
-/**
- * Running costs per project. Every entry is an explicit placeholder for Scott
- * to fill in; the known shared costs live in SHARED_COSTS. Never invent a figure.
- */
-export const PROJECT_COSTS: Record<SupportProjectId, ProjectCost> = {
-  sockguard: PLACEHOLDER,
-  drydock: PLACEHOLDER,
-  portwing: PLACEHOLDER,
-  "portkey-admin-mcp": PLACEHOLDER,
-  mouthtype: PLACEHOLDER,
-  idlescreen: PLACEHOLDER,
-  careerrat: PLACEHOLDER,
-};
-
-/** Confirmed costs that several projects share. */
-export const SHARED_COSTS: readonly { label: string; cost: string }[] = [
-  { label: "Apple Developer Program, shared by Mouthtype and Idlescreen", cost: "$99/year" },
-  { label: "Domains", cost: "about $1/month each" },
-  { label: "Vercel", cost: "$0" },
-  { label: "PostHog", cost: "$0" },
-];
-
 /** Systema Machinae, shown separately; it runs its own /support page. */
 export const SYSTEMA = {
   name: "Systema Machinae",
   supportUrl: "https://systemamachinae.com/support",
-  cost: "$30/month all-in",
-  note: "Systema has its own support page and doesn't draw from this one.",
 } as const;
 
 export const GITHUB_SPONSORS_URL = "https://github.com/sponsors/CodesWhat";
