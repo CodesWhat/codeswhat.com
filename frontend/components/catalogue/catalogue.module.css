@@ -100,7 +100,7 @@
   min-height: 44px;
   padding: 0 10px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink) !important;
@@ -130,7 +130,7 @@
 .eyebrow {
   margin: 0 0 14px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
@@ -220,7 +220,7 @@
   border-radius: 4px;
   border: 1px solid var(--ink);
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
@@ -315,7 +315,7 @@
   border-top: 2px solid var(--ink);
   border-bottom: 1px solid var(--ink);
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -328,7 +328,7 @@
   padding-top: 14px;
   padding-bottom: 14px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -338,7 +338,7 @@
 }
 .cellNo {
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   width: 56px;
 }
@@ -366,7 +366,7 @@
 .tbd {
   display: inline-block;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.04em;
   color: var(--muted);
   background: repeating-linear-gradient(-45deg, transparent 0 5px, var(--line) 5px 6px);
@@ -378,12 +378,12 @@
 }
 .quiet {
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
 }
 .coveredText {
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
 }
 .meter {
   display: block;
@@ -451,7 +451,7 @@
 }
 .specs dt {
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
@@ -506,7 +506,7 @@
 }
 .menuPrice small {
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
@@ -545,9 +545,10 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
+  min-width: 24px;
   padding: 0 10px 0 0;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -601,7 +602,7 @@
   .table td::before {
     content: attr(data-label);
     font-family: var(--font-cat-mono), monospace;
-    font-size: 11px;
+    font-size: 12px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--muted);
@@ -753,6 +754,12 @@
 .detailEmpty {
   color: var(--muted);
 }
+.detailEmpty a {
+  display: inline-flex;
+  align-items: center;
+  min-width: 24px;
+  min-height: 24px;
+}
 @media (max-width: 860px) {
   .table tbody tr.rowTbd td.hideTbd {
     display: none;
@@ -780,8 +787,13 @@
 .nav a.navQuiet {
   color: var(--muted) !important;
 }
-.nav a.navQuiet:hover {
+.nav a.navQuiet:hover,
+.nav a[aria-current="page"] {
   color: var(--ink) !important;
+}
+.nav a[aria-current="page"] {
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
 
 /* hero figure card */
@@ -819,7 +831,7 @@
   transform: translateX(-50%);
   margin-top: 2px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -877,7 +889,7 @@
   font-style: normal;
   font-weight: 400;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-right: 6px;
@@ -944,7 +956,7 @@
 .plateNo {
   margin: 0 0 8px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
@@ -990,7 +1002,7 @@
 .field dt {
   padding-top: 3px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1010,7 +1022,7 @@
 }
 .chip {
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1022,7 +1034,7 @@
   min-height: 44px;
   padding: 0 6px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1065,7 +1077,7 @@
   min-height: 44px;
   margin-top: 12px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1103,7 +1115,7 @@
   padding: 0;
   list-style: none;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1138,7 +1150,7 @@
 }
 .upkeep strong {
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1169,7 +1181,7 @@
 }
 .pager small {
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1280,7 +1292,7 @@
   display: block;
   margin-bottom: 10px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
@@ -1370,7 +1382,7 @@
 .subhead {
   margin: 40px 0 12px;
   font-family: var(--font-cat-mono), monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 400;
   letter-spacing: 0.12em;
   text-transform: uppercase;
