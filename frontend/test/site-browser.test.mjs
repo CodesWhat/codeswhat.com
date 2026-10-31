@@ -148,6 +148,87 @@ test("homepage renders the specimen plates and the theme toggle flips and persis
   assert.deepEqual(errors, []);
 });
 
+test("the primary navigation marks Support only while its page is current", {
+  timeout: 20_000,
+}, async (t) => {
+  const page = await localPage(t);
+  await page.goto(`${baseUrl}/support`, { waitUntil: "networkidle" });
+  const nav = page.getByRole("navigation", { name: "Primary" });
+  const support = nav.getByRole("link", { name: "Support", exact: true });
+  assert.equal(await support.getAttribute("aria-current"), "page");
+  assert.equal(
+    await support.evaluate((link) => getComputedStyle(link).textDecorationLine),
+    "underline",
+  );
+  assert.equal(
+    await support.evaluate((link) => getComputedStyle(link).color),
+    await nav
+      .getByRole("link", { name: "Specimens" })
+      .evaluate((link) => getComputedStyle(link).color),
+  );
+
+  await nav.getByRole("link", { name: "Specimens" }).click();
+  await page.waitForURL(`${baseUrl}/#specimens`);
+  assert.equal(await nav.locator('[aria-current="page"]').count(), 0);
+  await support.click();
+  await page.waitForURL(`${baseUrl}/support`);
+  await page.waitForFunction(
+    () => document.querySelector('nav a[href="/support"]')?.getAttribute("aria-current") === "page",
+  );
+  await page.goBack();
+  await page.waitForURL(`${baseUrl}/#specimens`);
+  await page.waitForFunction(() => !document.querySelector('nav [aria-current="page"]'));
+});
+
+test("catalogue link targets and mono labels remain readable on desktop and mobile", {
+  timeout: 20_000,
+}, async (t) => {
+  const page = await localPage(t);
+  for (const viewport of [
+    { width: 1440, height: 900 },
+    { width: 390, height: 844 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const path of ["/", "/support", "/projects/sockguard"]) {
+      await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle" });
+      const x = page
+        .locator("footer")
+        .getByRole("link", { name: "X (opens in a new tab)", exact: true });
+      const targets = [x];
+      if (path === "/support") targets.push(page.getByRole("link", { name: "tier", exact: true }));
+      for (const target of targets) {
+        const box = await target.boundingBox();
+        assert.ok(
+          box && box.width >= 24 && box.height >= 24,
+          `${path}: link target must be at least 24px in both dimensions`,
+        );
+      }
+      const smallLabels = await page.locator("header, main, footer").evaluateAll((regions) =>
+        regions.flatMap((region) =>
+          [...region.querySelectorAll("*")]
+            .filter((element) => {
+              const style = getComputedStyle(element);
+              const box = element.getBoundingClientRect();
+              return (
+                box.width > 1 &&
+                box.height > 1 &&
+                element.textContent?.trim() &&
+                style.fontFamily.includes("mono") &&
+                Number.parseFloat(style.fontSize) < 12
+              );
+            })
+            .map((element) => element.textContent.trim().slice(0, 60)),
+        ),
+      );
+      assert.deepEqual(smallLabels, [], `${path}: mono labels must be at least 12px`);
+      assert.ok(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+        `${path}: no horizontal overflow`,
+      );
+    }
+  }
+});
+
 test("light is the default paper when the system has no dark preference", {
   timeout: 15_000,
 }, async (t) => {

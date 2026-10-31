@@ -2,6 +2,7 @@ import Link from "next/link";
 import { GITHUB_URL } from "@/lib/site-config";
 import styles from "./catalogue.module.css";
 import { Sprite } from "./Sprite";
+import { SupportNavLink } from "./SupportNavLink";
 import { ThemeToggle } from "./ThemeToggle";
 import { TrackedCtaLink } from "./TrackedCtaLink";
 
@@ -22,9 +23,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <nav aria-label="Primary" className={styles.nav}>
             <Link href="/#specimens">Specimens</Link>
             <Link href="/#services">Services</Link>
-            <Link href="/support" className={styles.navQuiet}>
-              Support
-            </Link>
+            <SupportNavLink />
             <TrackedCtaLink
               href={GITHUB_URL}
               target="_blank"
