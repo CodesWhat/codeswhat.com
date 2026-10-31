@@ -1,0 +1,19 @@
+config_version = "0"
+
+[[source]]
+name = "default"
+default = true
+
+[[plugin]]
+name = "actionlint"
+triggers = ["manual"]
+
+[[plugin]]
+name = "biome"
+prefix = "frontend"
+version = "2.4.6"
+triggers = ["manual"]
+
+[[plugin]]
+name = "zizmor"
+triggers = ["manual"]
