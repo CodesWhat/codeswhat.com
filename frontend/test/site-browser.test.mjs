@@ -229,6 +229,48 @@ test("catalogue link targets and mono labels remain readable on desktop and mobi
   }
 });
 
+test("field notes show attributed README excerpts and leave unsourced examples absent", {
+  timeout: 30_000,
+}, async (t) => {
+  const page = await localPage(t);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const examples = [
+    ["sockguard", "rules:"],
+    ["drydock", "    environment:"],
+    ["portwing", "services:"],
+    ["portkey-admin-mcp", "PORTKEY_API_KEY=your_key \\"],
+    ["mouthtype", "2. Open the DMG, drag Mouthtype to Applications and open it."],
+    ["idlescreen", "Open idlescreen once, then select it in System Settings under Wallpaper and"],
+    ["careerrat", "careerrat next          # show the next useful agent-led workflow"],
+  ];
+  for (const [slug, firstLine] of examples) {
+    await page.goto(`${baseUrl}/projects/${slug}`, { waitUntil: "networkidle" });
+    const row = page.locator("dl > div").filter({ hasText: "Specimen in use" });
+    assert.equal(await row.count(), 1, `${slug}: an example belongs in the field notes`);
+    const excerpt = await row.locator("pre code").textContent();
+    const lines = excerpt.split("\n");
+    assert.equal(lines[0], firstLine, slug);
+    assert.ok(lines.length >= 3 && lines.length <= 6, `${slug}: a short excerpt`);
+    const source = row.getByRole("link", { name: "Read the full README" });
+    assert.match(
+      await source.getAttribute("href"),
+      new RegExp(
+        `^https://github\\.com/CodesWhat/${slug}/blob/[a-f0-9]{40}/README\\.md#L\\d+-L\\d+$`,
+      ),
+    );
+    assert.ok(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+      `${slug}: excerpt wraps on mobile`,
+    );
+  }
+  await page.goto(`${baseUrl}/projects/systema-machinae`, { waitUntil: "networkidle" });
+  assert.equal(
+    await page.getByText("Specimen in use", { exact: true }).count(),
+    0,
+    "Systema has no verified public README excerpt",
+  );
+});
+
 test("light is the default paper when the system has no dark preference", {
   timeout: 15_000,
 }, async (t) => {

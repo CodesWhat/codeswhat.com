@@ -8,6 +8,7 @@ import { TrackedCtaLink } from "@/components/catalogue/TrackedCtaLink";
 import { projectDescription, projectTitle } from "@/lib/project-meta";
 import { projectPageJsonLd, serializeJsonLd } from "@/lib/project-schema";
 import { BASE_URL, SITE_CONFIG } from "@/lib/site-config";
+import { SPECIMEN_EXAMPLES } from "@/lib/specimen-examples";
 import { bySlug, SPECIMENS } from "@/lib/specimens";
 import { SYSTEMA } from "@/lib/support";
 
@@ -51,6 +52,7 @@ export async function generateMetadata({
 export default async function SpecimenPage({ params }: { params: Promise<{ slug: string }> }) {
   const s = bySlug((await params).slug);
   if (!s) notFound();
+  const example = SPECIMEN_EXAMPLES[s.slug];
   const i = SPECIMENS.findIndex((x) => x.slug === s.slug);
   const prev = SPECIMENS[(i + SPECIMENS.length - 1) % SPECIMENS.length];
   const next = SPECIMENS[(i + 1) % SPECIMENS.length];
@@ -148,6 +150,19 @@ export default async function SpecimenPage({ params }: { params: Promise<{ slug:
               <dt>Handling</dt>
               <dd>{s.handling}</dd>
             </div>
+            {example ? (
+              <div>
+                <dt>Specimen in use</dt>
+                <dd>
+                  <pre className={styles.example}>
+                    <code>{example.excerpt}</code>
+                  </pre>
+                  <p className={styles.exampleSource}>
+                    README excerpt · <a href={example.sourceUrl}>Read the full README</a>
+                  </p>
+                </dd>
+              </div>
+            ) : null}
           </dl>
         </section>
 
