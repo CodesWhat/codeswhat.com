@@ -460,6 +460,30 @@
 .specs dd {
   margin: 0;
 }
+.example {
+  margin: 0 0 10px;
+  padding: 12px;
+  background: var(--panel);
+  font-family: var(--font-cat-mono), monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.example code {
+  font: inherit;
+}
+.exampleSource {
+  margin: 0;
+  font-family: var(--font-cat-mono), monospace;
+  font-size: 12px;
+  color: var(--muted);
+}
+.exampleSource a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+}
 
 /* support: menu */
 .menu {
