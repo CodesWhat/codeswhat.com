@@ -319,7 +319,7 @@ test("catalogue link targets and mono labels remain readable on desktop and mobi
   }
 });
 
-test("field notes show attributed source excerpts", {
+test("field notes show attributed README excerpts and leave unsourced examples absent", {
   timeout: 30_000,
 }, async (t) => {
   const page = await localPage(t);
@@ -353,24 +353,11 @@ test("field notes show attributed source excerpts", {
       `${slug}: excerpt wraps on mobile`,
     );
   }
-  // Systema has no public repo; its excerpt quotes the live agents.md notice, unpinned.
   await page.goto(`${baseUrl}/projects/systema-machinae`, { waitUntil: "networkidle" });
-  const systema = page.locator("dl > div").filter({ hasText: "Specimen in use" });
-  assert.equal(await systema.count(), 1, "systema-machinae: an example belongs in the field notes");
   assert.equal(
-    await systema.locator("pre code").textContent(),
-    "For people who run agents: the site has an optional, read-only Model Context Protocol endpoint at https://systemamachinae.com/mcp. It needs no sign-in.",
-  );
-  assert.equal(
-    await systema
-      .getByRole("link", { name: "Read the full agents.md notice" })
-      .getAttribute("href"),
-    "https://systemamachinae.com/agents.md",
-  );
-  assert.equal(await systema.getByText("README").count(), 0, "systema-machinae: not a README");
-  assert.ok(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-    "systema-machinae: excerpt wraps on mobile",
+    await page.getByText("Specimen in use", { exact: true }).count(),
+    0,
+    "Systema has no verified public README excerpt",
   );
 });
 

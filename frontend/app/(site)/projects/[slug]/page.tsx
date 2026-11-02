@@ -53,7 +53,6 @@ export default async function SpecimenPage({ params }: { params: Promise<{ slug:
   const s = bySlug((await params).slug);
   if (!s) notFound();
   const example = SPECIMEN_EXAMPLES[s.slug];
-  const sourceName = example?.sourceName ?? "README";
   const i = SPECIMENS.findIndex((x) => x.slug === s.slug);
   const prev = SPECIMENS[(i + SPECIMENS.length - 1) % SPECIMENS.length];
   const next = SPECIMENS[(i + 1) % SPECIMENS.length];
@@ -159,8 +158,7 @@ export default async function SpecimenPage({ params }: { params: Promise<{ slug:
                     <code>{example.excerpt}</code>
                   </pre>
                   <p className={styles.exampleSource}>
-                    {sourceName} excerpt ·{" "}
-                    <a href={example.sourceUrl}>Read the full {sourceName}</a>
+                    README excerpt · <a href={example.sourceUrl}>Read the full README</a>
                   </p>
                 </dd>
               </div>
