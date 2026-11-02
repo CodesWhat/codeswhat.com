@@ -1,6 +1,8 @@
 type SpecimenExample = {
   excerpt: string;
   sourceUrl: string;
+  /** What the source is called in the attribution. Defaults to README. */
+  sourceName?: string;
 };
 
 export const SPECIMEN_EXAMPLES: Partial<Record<string, SpecimenExample>> = {
@@ -45,5 +47,11 @@ export const SPECIMEN_EXAMPLES: Partial<Record<string, SpecimenExample>> = {
       "careerrat next          # show the next useful agent-led workflow\ncareerrat doctor        # verify setup, data, skills, and runtime health\ncareerrat update        # update an npm installation without touching user data\ncareerrat tracker       # write a recovery snapshot and summary\ncareerrat tracker-dev   # serve the local browser workspace at localhost:7777",
     sourceUrl:
       "https://github.com/CodesWhat/careerrat/blob/f2f696d52de1f7352fdd6398bdf0dc855dff26ea/README.md#L490-L494",
+  },
+  "systema-machinae": {
+    excerpt:
+      "For people who run agents: the site has an optional, read-only Model Context Protocol endpoint at https://systemamachinae.com/mcp. It needs no sign-in.",
+    sourceUrl: "https://systemamachinae.com/agents.md",
+    sourceName: "agents.md notice",
   },
 };
