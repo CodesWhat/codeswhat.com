@@ -184,7 +184,16 @@ async function turnstilePage(t, mode) {
 }
 
 async function signup(page, email = "reader@example.com") {
-  await page.getByLabel(/A note when something new ships/).fill(email);
+  const field = page.getByLabel(/A note when something new ships/);
+  // Tests that load with "domcontentloaded" can reach the form before React has
+  // hydrated it. Input typed then never reaches state, so the submit sees an empty
+  // address. React marks a hydrated node with a __reactProps$ key; wait for it.
+  const handle = await field.elementHandle();
+  await page.waitForFunction(
+    (el) => Object.keys(el).some((key) => key.startsWith("__reactProps$")),
+    handle,
+  );
+  await field.fill(email);
   await page.getByRole("button", { name: "Notify me" }).click();
 }
 
