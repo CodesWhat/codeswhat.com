@@ -23,6 +23,8 @@ export const NEWSLETTER_ERROR_CLASSES = [
   "invalid_email",
   "rate_limited",
   "unavailable",
+  "verification_missing",
+  "verification_failed",
   "network",
 ] as const;
 export const CLIENT_ERROR_KINDS = ["error", "unhandled_rejection"] as const;

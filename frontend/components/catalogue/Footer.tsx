@@ -31,7 +31,8 @@ export function Footer() {
       </p>
       <p className={styles.fine}>
         Open source, no telemetry in the projects. This site counts visits with cookieless,
-        anonymous stats and nothing more.
+        anonymous stats and nothing more. The signup form loads Cloudflare Turnstile to keep bots
+        out.
       </p>
     </footer>
   );

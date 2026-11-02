@@ -18,6 +18,7 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "test:support": "node --experimental-strip-types --test test/support.test.ts",
+    "test:subscribe": "node --experimental-strip-types --import ./test/resolve-next-server.mjs --test test/subscribe-turnstile.test.ts",
     "test:scene": "node --test test/scene.test.mjs",
     "test:posthog": "node --experimental-strip-types --test test/posthog.test.ts test/posthog-source.test.mjs",
     "test:posthog:browser": "node --test test/posthog-browser.test.mjs",
