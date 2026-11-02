@@ -1,7 +1,7 @@
 "use client";
 
 import posthog from "posthog-js";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styles from "./catalogue.module.css";
 
 // Maps the /api/subscribe status to a fixed error_class. Never the email or the
@@ -9,16 +9,175 @@ import styles from "./catalogue.module.css";
 function classifyNewsletterError(status: number) {
   if (status === 429) return "rate_limited";
   if (status === 400) return "invalid_email";
+  if (status === 422) return "verification_missing";
+  if (status === 403) return "verification_failed";
   return "unavailable";
 }
 
 type Status = "idle" | "loading" | "success" | "error";
+
+// Cloudflare Turnstile guards /api/subscribe. The script is only fetched once a
+// visitor touches the form, and the widget stays invisible unless Cloudflare
+// needs them to interact. Responses are single use, so every attempt resets it.
+const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+const TURNSTILE_SCRIPT = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+// Long enough for an interactive challenge, including with assistive tech.
+const CHALLENGE_WAIT_MS = 120_000;
+const SCRIPT_DEADLINE_MS = 15_000;
+
+type TurnstileApi = {
+  render: (container: HTMLElement, options: Record<string, unknown>) => string;
+  reset: (widgetId: string) => void;
+  remove: (widgetId: string) => void;
+};
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileApi;
+  }
+}
+
+let scriptPromise: Promise<TurnstileApi> | null = null;
+
+function loadTurnstile(): Promise<TurnstileApi> {
+  if (window.turnstile) return Promise.resolve(window.turnstile);
+  scriptPromise ??= new Promise<TurnstileApi>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = TURNSTILE_SCRIPT;
+    script.async = true;
+    // Any failure removes the script and clears the cache so a retry loads afresh.
+    const giveUp = (reason: string) => {
+      clearTimeout(deadline);
+      script.remove();
+      scriptPromise = null;
+      reject(new Error(reason));
+    };
+    const deadline = setTimeout(() => giveUp("turnstile script timed out"), SCRIPT_DEADLINE_MS);
+    script.onload = () => {
+      if (!window.turnstile) return giveUp("turnstile missing");
+      clearTimeout(deadline);
+      resolve(window.turnstile);
+    };
+    script.onerror = () => giveUp("turnstile script failed");
+    document.head.append(script);
+  });
+  return scriptPromise;
+}
+
+type Waiter = { resolve: (response: string) => void; reject: (error: Error) => void };
+type ChallengeState = {
+  widgetId: string | null;
+  starting: Promise<string> | null;
+  response: string | null;
+  failed: boolean;
+  unmounted: boolean;
+  waiter: Waiter | null;
+};
 
 export function EmailSignupForm() {
   const [email, setEmail] = useState("");
   const [honeypot, setHoneypot] = useState(""); // Bot trap
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+
+  const container = useRef<HTMLDivElement>(null);
+  const challenge = useRef<ChallengeState>({
+    widgetId: null,
+    starting: null,
+    response: null,
+    failed: false,
+    unmounted: false,
+    waiter: null,
+  });
+
+  useEffect(() => {
+    const state = challenge.current;
+    state.unmounted = false;
+    return () => {
+      state.unmounted = true;
+      if (state.widgetId) window.turnstile?.remove(state.widgetId);
+      state.widgetId = null;
+      state.starting = null;
+    };
+  }, []);
+
+  const startChallenge = (): Promise<string> => {
+    const state = challenge.current;
+    if (!SITE_KEY || !container.current) return Promise.reject(new Error("no site key"));
+    const target = container.current;
+    state.starting ??= loadTurnstile().then(
+      (api) => {
+        // Unmounted while the script loaded: the container is detached.
+        if (state.unmounted || !target.isConnected) {
+          state.starting = null;
+          throw new Error("form unmounted");
+        }
+        try {
+          state.widgetId = api.render(target, {
+            sitekey: SITE_KEY,
+            appearance: "interaction-only",
+            theme: document.documentElement.dataset.theme === "dark" ? "dark" : "light",
+            callback: (response: string) => {
+              state.response = response;
+              state.failed = false;
+              state.waiter?.resolve(response);
+            },
+            "error-callback": () => {
+              state.response = null;
+              state.failed = true;
+              state.waiter?.reject(new Error("challenge error"));
+            },
+            "expired-callback": () => {
+              state.response = null;
+            },
+            "timeout-callback": () => {
+              state.response = null;
+            },
+          });
+        } catch (error) {
+          state.starting = null; // let a retry render again
+          throw error;
+        }
+        return state.widgetId;
+      },
+      (error: Error) => {
+        state.starting = null;
+        throw error;
+      },
+    );
+    return state.starting;
+  };
+
+  const resetChallenge = () => {
+    const state = challenge.current;
+    state.response = null;
+    state.failed = false;
+    if (state.widgetId) window.turnstile?.reset(state.widgetId);
+  };
+
+  const awaitResponse = (): Promise<string> => {
+    const state = challenge.current;
+    if (state.response) return Promise.resolve(state.response);
+    if (state.failed) return Promise.reject(new Error("challenge error"));
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        state.waiter = null;
+        reject(new Error("challenge timed out"));
+      }, CHALLENGE_WAIT_MS);
+      state.waiter = {
+        resolve: (response) => {
+          clearTimeout(timer);
+          state.waiter = null;
+          resolve(response);
+        },
+        reject: (error) => {
+          clearTimeout(timer);
+          state.waiter = null;
+          reject(error);
+        },
+      };
+    });
+  };
 
   const fail = (text: string) => {
     setStatus("error");
@@ -48,13 +207,25 @@ export function EmailSignupForm() {
     setStatus("loading");
     setMessage("");
 
+    let turnstileResponse: string;
+    try {
+      await startChallenge();
+      if (challenge.current.failed) resetChallenge(); // retry a widget that errored earlier
+      turnstileResponse = await awaitResponse();
+    } catch {
+      resetChallenge();
+      fail("Couldn't finish the human check. Turn off any blocker for this page, then try again.");
+      return;
+    }
+
     try {
       const response = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: trimmedEmail }),
+        body: JSON.stringify({ email: trimmedEmail, turnstileResponse }),
       });
       const data = await response.json().catch(() => ({}));
+      resetChallenge(); // the response was spent either way
 
       if (response.ok) {
         posthog.capture("newsletter submitted", { result: "success" });
@@ -69,6 +240,7 @@ export function EmailSignupForm() {
         fail(typeof data.error === "string" ? data.error : "Something went wrong. Try again.");
       }
     } catch {
+      resetChallenge();
       posthog.capture("newsletter submitted", { result: "error", error_class: "network" });
       fail("Network error. Check your connection and try again.");
     }
@@ -77,7 +249,14 @@ export function EmailSignupForm() {
   const busy = status === "loading" || status === "success";
 
   return (
-    <form onSubmit={handleSubmit} className={styles.signup} noValidate>
+    <form
+      onSubmit={handleSubmit}
+      onFocusCapture={() => {
+        if (SITE_KEY) startChallenge().catch(() => {});
+      }}
+      className={styles.signup}
+      noValidate
+    >
       <label htmlFor="signup-email" className={styles.signupLabel}>
         A note when something new ships. No spam.
       </label>
@@ -117,6 +296,8 @@ export function EmailSignupForm() {
               : "Notify me"}
         </button>
       </div>
+      {/* Turnstile renders here; interaction-only keeps it empty unless a challenge is needed */}
+      <div ref={container} className={styles.signupChallenge} />
       <p
         className={styles.signupMsg}
         data-state={status}

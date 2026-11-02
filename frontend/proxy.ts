@@ -2,15 +2,18 @@ import { randomBytes } from "node:crypto";
 import { type NextRequest, NextResponse } from "next/server";
 
 const posthogProxy = "https://e.codeswhat.com";
+// Turnstile loads its script and renders its challenge in an iframe from here.
+const turnstileOrigin = "https://challenges.cloudflare.com";
 
 export function proxy(request: NextRequest) {
   const nonce = randomBytes(16).toString("base64");
   const developmentScriptPolicy = process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : "";
   const contentSecurityPolicy = [
     "default-src 'self'",
-    `script-src 'self' 'nonce-${nonce}' ${posthogProxy}${developmentScriptPolicy}`,
+    `script-src 'self' 'nonce-${nonce}' ${posthogProxy} ${turnstileOrigin}${developmentScriptPolicy}`,
     "style-src 'self' 'unsafe-inline'",
     `connect-src 'self' ${posthogProxy}`,
+    `frame-src ${turnstileOrigin}`,
     "img-src 'self' data: blob:",
     "font-src 'self'",
     "worker-src 'self' blob:",
