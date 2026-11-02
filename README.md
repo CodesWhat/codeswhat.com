@@ -47,3 +47,7 @@ Internal plans and operational scratch belong in ignored `.planning/`, and
 `.claude/` stays ignored to protect nested agent worktrees. Neither is a build input.
 Don't commit credentials or local environment files. Existing public source
 does not imply that private planning is safe to publish here.
+
+## License
+
+All rights reserved. See [LICENSE](LICENSE). The projects the site describes have their own licenses.

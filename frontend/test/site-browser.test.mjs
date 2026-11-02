@@ -157,6 +157,7 @@ async function turnstilePage(t, mode) {
         let resets = 0;
         const answer = (o) => {
           if (mode === "error") return o["error-callback"]();
+          if (mode === "withhold") return;
           const value = mode === "reject" ? "BAD.RESPONSE" : ${JSON.stringify(TURNSTILE_DUMMY_RESPONSE)};
           setTimeout(() => o.callback(value), 0);
         };
@@ -563,6 +564,48 @@ test("a stalled Turnstile script times out instead of leaving the form disabled"
   assert.equal(await page.getByRole("button", { name: "Notify me" }).isEnabled(), true);
   assert.equal(await page.locator("script[src*='challenges.cloudflare.com']").count(), 0);
   assert.equal(requests.length, 1);
+});
+
+test("a challenge answered before the 120s wait ends still submits", {
+  timeout: 20_000,
+}, async (t) => {
+  const { page } = await turnstilePage(t, "withhold");
+  const bodies = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/subscribe")) bodies.push(request.postDataJSON());
+  });
+  await page.clock.install();
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await signup(page);
+  await page.waitForFunction(() => window.__turnstile?.options.length === 1);
+  await page.clock.fastForward(119_000);
+  assert.deepEqual(bodies, []);
+  await page.evaluate((value) => window.__turnstile.options[0].callback(value), TURNSTILE_DUMMY_RESPONSE);
+  await page.getByText("Check your inbox to find out what's next").waitFor({ timeout: 5_000 });
+  assert.deepEqual(bodies, [
+    { email: "reader@example.com", turnstileResponse: TURNSTILE_DUMMY_RESPONSE },
+  ]);
+});
+
+test("a challenge withheld past 120s shows the failure and re-enables the form", {
+  timeout: 20_000,
+}, async (t) => {
+  const { page } = await turnstilePage(t, "withhold");
+  const calls = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/subscribe")) calls.push(request.url());
+  });
+  await page.clock.install();
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await signup(page);
+  await page.waitForFunction(() => window.__turnstile?.options.length === 1);
+  await page.clock.fastForward(121_000);
+  await page
+    .getByRole("alert")
+    .filter({ hasText: "Couldn't finish the human check" })
+    .waitFor({ timeout: 5_000 });
+  assert.deepEqual(calls, []);
+  assert.equal(await page.getByRole("button", { name: "Notify me" }).isEnabled(), true);
 });
 
 test("a missing verification response tells the visitor to refresh", {

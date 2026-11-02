@@ -5,6 +5,7 @@
     "node": "24.x"
   },
   "description": "CodesWhat: small, sharp open-source tools and software consulting",
+  "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
