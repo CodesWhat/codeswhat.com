@@ -24,6 +24,7 @@
     "test:posthog": "node --experimental-strip-types --test test/posthog.test.ts test/posthog-source.test.mjs",
     "test:posthog:browser": "node --test test/posthog-browser.test.mjs",
     "test:browser": "node --test test/site-browser.test.mjs",
+    "test:browser:all": "BROWSER_ENGINE=chromium npm run test:browser && BROWSER_ENGINE=firefox npm run test:browser && BROWSER_ENGINE=webkit npm run test:browser",
     "og": "node scripts/generate-og.mjs",
     "coin": "node scripts/capture-assets.mjs --subject coin",
     "balloon": "node scripts/capture-assets.mjs --subject balloon",
