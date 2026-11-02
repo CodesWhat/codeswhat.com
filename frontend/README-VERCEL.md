@@ -162,7 +162,9 @@ The `vercel.json` file includes:
   `application/json` (415). Requests with neither header, such as curl, are
   still accepted. The in-memory rate limit is per instance only.
 - Verify EmailOctopus credentials
-- A 503 from `/api/subscribe` means `TURNSTILE_SECRET_KEY` is missing or Cloudflare
-  siteverify couldn't be reached; a 403 means the verification was rejected
+- A 503 from `/api/subscribe` means `TURNSTILE_SECRET_KEY` is missing, or siteverify
+  failed: a network error or timeout, a non-2xx status, or a body that isn't valid
+  JSON. A 403 means the verification was rejected. A 422 means the browser sent no
+  verification response (widget blocked, or a tab left open across a deploy).
 - Check function logs in Vercel dashboard
 - Ensure API routes are correctly configured

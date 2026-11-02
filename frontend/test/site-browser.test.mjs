@@ -141,10 +141,18 @@ async function turnstilePage(t, mode) {
   await page.context().route(`${TURNSTILE_SCRIPT_URL}**`, (route) => {
     requests.push(route.request().url());
     if (mode === "blocked") return route.abort();
+    if (mode === "empty-then-pass" && requests.length === 1) {
+      return route.fulfill({
+        contentType: "text/javascript",
+        body: "/* loads, defines nothing */",
+      });
+    }
+    if (mode === "stall") return new Promise(() => {});
     return route.fulfill({
       contentType: "text/javascript",
+      headers: { "cache-control": "no-store" },
       body: `(() => {
-        const mode = ${JSON.stringify(mode)};
+        const mode = ${JSON.stringify(mode === "empty-then-pass" ? "pass" : mode)};
         const options = [];
         let resets = 0;
         const answer = (o) => {
@@ -525,6 +533,56 @@ test("a blocked or failing widget explains itself and never calls the API", {
   }
 });
 
+test("a script that loads without Turnstile does not poison the next attempt", {
+  timeout: 20_000,
+}, async (t) => {
+  const { page, requests } = await turnstilePage(t, "empty-then-pass");
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  // Touching the form starts the first (empty) load, which fails quietly; the
+  // submit must fetch the script again instead of reusing the failed load.
+  await signup(page);
+  await page.getByText("Check your inbox to find out what's next").waitFor({ timeout: 5_000 });
+  assert.equal(requests.length, 2, "the failed load was not cached");
+});
+
+test("a stalled Turnstile script times out instead of leaving the form disabled", {
+  timeout: 20_000,
+}, async (t) => {
+  const { page, requests } = await turnstilePage(t, "stall");
+  await page.clock.install();
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  await signup(page);
+  await page.waitForFunction(() =>
+    document.querySelector("script[src*='challenges.cloudflare.com']"),
+  );
+  await page.clock.fastForward(16_000);
+  await page
+    .getByRole("alert")
+    .filter({ hasText: "Couldn't finish the human check" })
+    .waitFor({ timeout: 5_000 });
+  assert.equal(await page.getByRole("button", { name: "Notify me" }).isEnabled(), true);
+  assert.equal(await page.locator("script[src*='challenges.cloudflare.com']").count(), 0);
+  assert.equal(requests.length, 1);
+});
+
+test("a missing verification response tells the visitor to refresh", {
+  timeout: 20_000,
+}, async (t) => {
+  const { page } = await turnstilePage(t, "pass");
+  await page.route("**/api/subscribe", (route) =>
+    route.fulfill({
+      status: 422,
+      contentType: "application/json",
+      body: JSON.stringify({
+        error: "Verification did not load. Refresh the page, then try again.",
+      }),
+    }),
+  );
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await signup(page);
+  await page.getByRole("alert").filter({ hasText: "Refresh the page" }).waitFor({ timeout: 5_000 });
+});
+
 test("each HTML request gets a fresh nonce that cannot be supplied by the caller", {
   timeout: 15_000,
 }, async () => {
@@ -620,9 +678,9 @@ test("subscription requires a Turnstile response that Cloudflare accepts", {
 }, async () => {
   const email = "reader@example.com";
   const cases = [
-    { name: "missing", body: { email }, status: 400 },
-    { name: "empty", body: { email, turnstileResponse: "" }, status: 400 },
-    { name: "not a string", body: { email, turnstileResponse: 7 }, status: 400 },
+    { name: "missing", body: { email }, status: 422 },
+    { name: "empty", body: { email, turnstileResponse: "" }, status: 422 },
+    { name: "not a string", body: { email, turnstileResponse: 7 }, status: 422 },
     { name: "refused", body: { email, turnstileResponse: "forged" }, status: 403 },
     {
       name: "accepted",

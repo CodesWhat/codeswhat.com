@@ -9,6 +9,8 @@ import styles from "./catalogue.module.css";
 function classifyNewsletterError(status: number) {
   if (status === 429) return "rate_limited";
   if (status === 400) return "invalid_email";
+  if (status === 422) return "verification_missing";
+  if (status === 403) return "verification_failed";
   return "unavailable";
 }
 
@@ -19,7 +21,9 @@ type Status = "idle" | "loading" | "success" | "error";
 // needs them to interact. Responses are single use, so every attempt resets it.
 const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 const TURNSTILE_SCRIPT = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-const CHALLENGE_WAIT_MS = 30_000;
+// Long enough for an interactive challenge, including with assistive tech.
+const CHALLENGE_WAIT_MS = 120_000;
+const SCRIPT_DEADLINE_MS = 15_000;
 
 type TurnstileApi = {
   render: (container: HTMLElement, options: Record<string, unknown>) => string;
@@ -41,13 +45,20 @@ function loadTurnstile(): Promise<TurnstileApi> {
     const script = document.createElement("script");
     script.src = TURNSTILE_SCRIPT;
     script.async = true;
-    script.onload = () =>
-      window.turnstile ? resolve(window.turnstile) : reject(new Error("turnstile missing"));
-    script.onerror = () => {
+    // Any failure removes the script and clears the cache so a retry loads afresh.
+    const giveUp = (reason: string) => {
+      clearTimeout(deadline);
       script.remove();
-      scriptPromise = null; // allow a retry after a blocked or failed load
-      reject(new Error("turnstile script failed"));
+      scriptPromise = null;
+      reject(new Error(reason));
     };
+    const deadline = setTimeout(() => giveUp("turnstile script timed out"), SCRIPT_DEADLINE_MS);
+    script.onload = () => {
+      if (!window.turnstile) return giveUp("turnstile missing");
+      clearTimeout(deadline);
+      resolve(window.turnstile);
+    };
+    script.onerror = () => giveUp("turnstile script failed");
     document.head.append(script);
   });
   return scriptPromise;
@@ -59,6 +70,7 @@ type ChallengeState = {
   starting: Promise<string> | null;
   response: string | null;
   failed: boolean;
+  unmounted: boolean;
   waiter: Waiter | null;
 };
 
@@ -74,12 +86,15 @@ export function EmailSignupForm() {
     starting: null,
     response: null,
     failed: false,
+    unmounted: false,
     waiter: null,
   });
 
   useEffect(() => {
     const state = challenge.current;
+    state.unmounted = false;
     return () => {
+      state.unmounted = true;
       if (state.widgetId) window.turnstile?.remove(state.widgetId);
       state.widgetId = null;
       state.starting = null;
@@ -92,27 +107,37 @@ export function EmailSignupForm() {
     const target = container.current;
     state.starting ??= loadTurnstile().then(
       (api) => {
-        state.widgetId = api.render(target, {
-          sitekey: SITE_KEY,
-          appearance: "interaction-only",
-          theme: document.documentElement.dataset.theme === "dark" ? "dark" : "light",
-          callback: (response: string) => {
-            state.response = response;
-            state.failed = false;
-            state.waiter?.resolve(response);
-          },
-          "error-callback": () => {
-            state.response = null;
-            state.failed = true;
-            state.waiter?.reject(new Error("challenge error"));
-          },
-          "expired-callback": () => {
-            state.response = null;
-          },
-          "timeout-callback": () => {
-            state.response = null;
-          },
-        });
+        // Unmounted while the script loaded: the container is detached.
+        if (state.unmounted || !target.isConnected) {
+          state.starting = null;
+          throw new Error("form unmounted");
+        }
+        try {
+          state.widgetId = api.render(target, {
+            sitekey: SITE_KEY,
+            appearance: "interaction-only",
+            theme: document.documentElement.dataset.theme === "dark" ? "dark" : "light",
+            callback: (response: string) => {
+              state.response = response;
+              state.failed = false;
+              state.waiter?.resolve(response);
+            },
+            "error-callback": () => {
+              state.response = null;
+              state.failed = true;
+              state.waiter?.reject(new Error("challenge error"));
+            },
+            "expired-callback": () => {
+              state.response = null;
+            },
+            "timeout-callback": () => {
+              state.response = null;
+            },
+          });
+        } catch (error) {
+          state.starting = null; // let a retry render again
+          throw error;
+        }
         return state.widgetId;
       },
       (error: Error) => {

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { afterEach, beforeEach, test } from "node:test";
+import { afterEach, beforeEach, mock, test } from "node:test";
 import { POST } from "../app/api/subscribe/route.ts";
 
 const SITEVERIFY = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
@@ -9,7 +9,7 @@ const savedEnv = new Map<string, string | undefined>();
 
 type Call = { url: string; init?: RequestInit };
 let calls: Call[];
-let siteverifyReply: () => Promise<Response>;
+let siteverifyReply: (signal?: AbortSignal) => Promise<Response>;
 let counter = 0;
 
 function json(body: unknown, status = 200) {
@@ -30,7 +30,7 @@ beforeEach(() => {
   globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     const url = String(input);
     calls.push({ url, init });
-    if (url === SITEVERIFY) return siteverifyReply();
+    if (url === SITEVERIFY) return siteverifyReply(init?.signal ?? undefined);
     if (url.startsWith("https://api.emailoctopus.com/")) return json({ id: "c1" }, 201);
     throw new Error(`unexpected fetch ${url}`);
   }) as typeof fetch;
@@ -104,8 +104,11 @@ test("a missing or malformed response value is rejected without calling anything
     { email: good.email, turnstileResponse: "x".repeat(2049) },
   ]) {
     const response = await subscribe(body);
-    assert.equal(response.status, 400);
-    assert.equal(typeof (await response.json()).error, "string");
+    assert.equal(response.status, 422);
+    assert.equal(
+      (await response.json()).error,
+      "Verification did not load. Refresh the page, then try again.",
+    );
   }
   assert.equal(calls.length, 0);
 });
@@ -145,9 +148,23 @@ test("a siteverify network error, timeout or bad status fails closed with 503", 
   assert.equal(octopusCalls().length, 0);
 });
 
-test("siteverify is bounded by an abort signal", async () => {
-  await subscribe(good);
-  assert.ok(siteverifyCalls()[0].init?.signal instanceof AbortSignal);
+test("a hung siteverify is cut off at the 5s deadline and fails closed", async (t) => {
+  // Keep the real signal semantics but shrink the wait, and pin the production bound.
+  const requested: number[] = [];
+  const realTimeout = AbortSignal.timeout.bind(AbortSignal);
+  t.mock.method(AbortSignal, "timeout", (ms: number) => {
+    requested.push(ms);
+    return realTimeout(20);
+  });
+  siteverifyReply = (signal) =>
+    new Promise<Response>((_resolve, reject) => {
+      signal?.addEventListener("abort", () => reject(signal.reason));
+    });
+  const response = await subscribe(good);
+  assert.deepEqual(requested, [5000]);
+  assert.equal(response.status, 503);
+  assert.equal(octopusCalls().length, 0);
+  mock.restoreAll();
 });
 
 test("production checks the hostname Cloudflare reports", async () => {

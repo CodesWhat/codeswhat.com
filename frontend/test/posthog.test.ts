@@ -656,7 +656,14 @@ test("newsletter submitted keeps only a result and a fixed error class", () => {
   assert.equal("error_class" in success.properties, false);
   assert.equal("email" in success.properties, false);
 
-  for (const errorClass of ["invalid_email", "rate_limited", "unavailable", "network"]) {
+  for (const errorClass of [
+    "invalid_email",
+    "rate_limited",
+    "unavailable",
+    "verification_missing",
+    "verification_failed",
+    "network",
+  ]) {
     const result = sanitizeEvent({
       event: "newsletter submitted",
       properties: {

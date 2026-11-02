@@ -292,9 +292,10 @@ export async function POST(request: Request) {
       challengeResponse.length === 0 ||
       challengeResponse.length > MAX_CHALLENGE_RESPONSE_LENGTH
     ) {
+      // 422, not 400, so a tab left open across a deploy can tell it needs a reload.
       return NextResponse.json(
-        { error: "Please complete the verification and try again." },
-        { status: 400 },
+        { error: "Verification did not load. Refresh the page, then try again." },
+        { status: 422 },
       );
     }
     const verification = await verifyChallenge(secret, challengeResponse, getClientIp(request));
