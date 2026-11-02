@@ -15,7 +15,6 @@ its progressive-enhancement fallback plan are gone with it.
       `test:posthog` today, not the browser test.
 - [ ] #57, the public-repo security baseline, is partly done. The remaining
       items are tracked privately.
-      are on, but the repo has no update automation.
 - [ ] Decide whether three, react-three-fiber, drei and rapier stay. They're only
       imported under `frontend/components/studio/`, which backs the dev-only
       `/studio/*` capture routes (they 404 in production), but they're still in
