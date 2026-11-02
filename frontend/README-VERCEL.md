@@ -104,6 +104,7 @@ path and no credentials are accepted. Unknown ids and invalid links are dropped
 with a server warning, and any tier without a link renders as "Opening soon".
 The page is rendered per request, so changing the variable needs a redeploy but
 no rebuild of page code.
+
 ## Domain Configuration
 
 1. Go to your Vercel project settings
