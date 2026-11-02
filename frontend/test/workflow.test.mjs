@@ -1,53 +1,44 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
-import { runInNewContext } from "node:vm";
 
 const workflow = readFileSync(
   new URL("../../.github/workflows/website.yml", import.meta.url),
   "utf8",
 );
-const condition = workflow.match(/^ {4}if: (.+)$/m)?.[1];
-assert.ok(condition, "verify must have an explicit duplicate-run condition");
 
-// This condition uses only boolean operators and same-type comparisons, shared
-// by JavaScript and Actions for these lowercase string/numeric fixtures.
-function runsVerify(github) {
-  return runInNewContext(condition, { github }, { timeout: 100 });
-}
+const jobs = workflow.match(/^jobs:\n((?: {2,}.*\n|\n)*)/m)?.[1];
+const verifyJob = workflow.match(/^ {2}verify:\n((?: {4}.*\n|\n)*)/m)?.[1];
+const triggers = workflow.match(/^on:\n((?: {2}.*\n|\n)*)/m)?.[1];
 
-function pullRequest(head, base, headRepository = 1) {
-  return {
-    event_name: "pull_request",
-    head_ref: head,
-    base_ref: base,
-    event: {
-      repository: { id: 1 },
-      pull_request: { head: { repo: { id: headRepository } } },
-    },
-  };
-}
-
-for (const branch of ["main", "dev"]) {
-  test(`a push to ${branch} runs verify without a pull request payload`, () => {
-    assert.equal(runsVerify({ event_name: "push", ref: `refs/heads/${branch}` }), true);
-  });
-}
-
-test("only the internal dev-to-main promotion skips duplicate verification", () => {
-  assert.equal(runsVerify(pullRequest("dev", "main")), false);
+test("the workflow defines triggers and a verify job", () => {
+  assert.ok(triggers, "on: must exist");
+  assert.ok(jobs, "jobs: must exist");
+  assert.ok(verifyJob, "jobs.verify must exist");
 });
 
-for (const base of ["main", "dev"]) {
-  test(`a fork branch named dev targeting ${base} still runs verify`, () => {
-    assert.equal(runsVerify(pullRequest("dev", base, 2)), true);
-  });
+test("verify has no job-level condition, so it can never be skipped", () => {
+  assert.doesNotMatch(verifyJob, /^ {4}if:/m);
+});
 
-  test(`an ordinary feature PR targeting ${base} runs verify`, () => {
-    assert.equal(runsVerify(pullRequest("fix/example", base)), true);
-  });
-}
+test("verify is the only job, keeps its key as the check name, and has no matrix", () => {
+  assert.deepEqual(
+    [...jobs.matchAll(/^ {2}([\w-]+):/gm)].map((m) => m[1]),
+    ["verify"],
+  );
+  assert.doesNotMatch(verifyJob, /^ {4}name:/m, "a name: would change the check context");
+  assert.doesNotMatch(verifyJob, /\bmatrix\b/);
+});
 
-test("a dev PR targeting another integration branch is not a production promotion", () => {
-  assert.equal(runsVerify(pullRequest("dev", "dev")), true);
+test("triggers have no paths or paths-ignore filters", () => {
+  assert.doesNotMatch(triggers, /\bpaths(-ignore)?:/);
+});
+
+test("verify installs and runs all three browser engines", () => {
+  assert.match(verifyJob, /install --with-deps chromium firefox webkit/);
+  assert.match(verifyJob, /npm run test:browser:all/);
+  const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+  for (const engine of ["chromium", "firefox", "webkit"]) {
+    assert.match(pkg.scripts["test:browser:all"], new RegExp(`BROWSER_ENGINE=${engine}\\b`));
+  }
 });

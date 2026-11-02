@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { chromium } from "playwright-core";
+import { chromium, firefox, webkit } from "playwright-core";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const nextBin = fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url));
@@ -13,6 +13,11 @@ const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api
 const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
 const TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA";
 const TURNSTILE_DUMMY_RESPONSE = "XXXX.DUMMY.TOKEN.XXXX";
+const ENGINES = { chromium, firefox, webkit };
+const engineName = process.env.BROWSER_ENGINE || "chromium";
+if (!Object.hasOwn(ENGINES, engineName)) {
+  throw new Error(`Unknown BROWSER_ENGINE "${engineName}"; expected chromium, firefox or webkit`);
+}
 let server;
 let browser;
 let baseUrl;
@@ -93,15 +98,20 @@ before(async () => {
     });
   });
 
-  const systemChrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-  const executablePath =
-    process.env.BROWSER_EXECUTABLE_PATH ||
-    (existsSync(chromium.executablePath())
-      ? chromium.executablePath()
-      : existsSync(systemChrome)
-        ? systemChrome
-        : undefined);
-  browser = await chromium.launch({ headless: true, executablePath });
+  // Executable overrides and the system Chrome fallback are Chromium-only.
+  // Firefox and WebKit use Playwright's own install.
+  let executablePath;
+  if (engineName === "chromium") {
+    const systemChrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+    executablePath =
+      process.env.BROWSER_EXECUTABLE_PATH ||
+      (existsSync(chromium.executablePath())
+        ? chromium.executablePath()
+        : existsSync(systemChrome)
+          ? systemChrome
+          : undefined);
+  }
+  browser = await ENGINES[engineName].launch({ headless: true, executablePath });
 });
 
 after(async () => {
