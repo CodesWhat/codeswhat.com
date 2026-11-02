@@ -24,29 +24,30 @@
     "test:posthog": "node --experimental-strip-types --test test/posthog.test.ts test/posthog-source.test.mjs",
     "test:posthog:browser": "node --test test/posthog-browser.test.mjs",
     "test:browser": "node --test test/site-browser.test.mjs",
+    "test:browser:all": "BROWSER_ENGINE=chromium npm run test:browser && BROWSER_ENGINE=firefox npm run test:browser && BROWSER_ENGINE=webkit npm run test:browser",
     "og": "node scripts/generate-og.mjs",
     "coin": "node scripts/capture-assets.mjs --subject coin",
     "balloon": "node scripts/capture-assets.mjs --subject balloon",
     "vercel-build": "npm run build"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.6.1",
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.2",
     "@react-three/rapier": "^2.2.0",
     "next": "^16.4.3",
-    "posthog-js": "1.438.15",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "three": "^0.185.0"
+    "posthog-js": "1.442.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "three": "^0.186.1"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.6",
-    "@types/node": "^25.3.5",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "@types/three": "^0.185.0",
-    "lefthook": "^2.1.2",
-    "playwright-core": "^1.61.1",
-    "typescript": "^5.9.3"
+    "@biomejs/biome": "^2.6.4",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "lefthook": "^2.2.2",
+    "playwright-core": "^1.64.1",
+    "typescript": "^7.0.2"
   }
 }

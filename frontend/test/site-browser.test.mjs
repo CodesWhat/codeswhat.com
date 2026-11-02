@@ -3,7 +3,7 @@ import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { chromium } from "playwright-core";
+import { chromium, firefox, webkit } from "playwright-core";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const nextBin = fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url));
@@ -13,6 +13,11 @@ const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api
 const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
 const TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA";
 const TURNSTILE_DUMMY_RESPONSE = "XXXX.DUMMY.TOKEN.XXXX";
+const ENGINES = { chromium, firefox, webkit };
+const engineName = process.env.BROWSER_ENGINE || "chromium";
+if (!Object.hasOwn(ENGINES, engineName)) {
+  throw new Error(`Unknown BROWSER_ENGINE "${engineName}"; expected chromium, firefox or webkit`);
+}
 let server;
 let browser;
 let baseUrl;
@@ -93,15 +98,20 @@ before(async () => {
     });
   });
 
-  const systemChrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-  const executablePath =
-    process.env.BROWSER_EXECUTABLE_PATH ||
-    (existsSync(chromium.executablePath())
-      ? chromium.executablePath()
-      : existsSync(systemChrome)
-        ? systemChrome
-        : undefined);
-  browser = await chromium.launch({ headless: true, executablePath });
+  // Executable overrides and the system Chrome fallback are Chromium-only.
+  // Firefox and WebKit use Playwright's own install.
+  let executablePath;
+  if (engineName === "chromium") {
+    const systemChrome = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+    executablePath =
+      process.env.BROWSER_EXECUTABLE_PATH ||
+      (existsSync(chromium.executablePath())
+        ? chromium.executablePath()
+        : existsSync(systemChrome)
+          ? systemChrome
+          : undefined);
+  }
+  browser = await ENGINES[engineName].launch({ headless: true, executablePath });
 });
 
 after(async () => {
@@ -174,7 +184,16 @@ async function turnstilePage(t, mode) {
 }
 
 async function signup(page, email = "reader@example.com") {
-  await page.getByLabel(/A note when something new ships/).fill(email);
+  const field = page.getByLabel(/A note when something new ships/);
+  // Tests that load with "domcontentloaded" can reach the form before React has
+  // hydrated it. Input typed then never reaches state, so the submit sees an empty
+  // address. React marks a hydrated node with a __reactProps$ key; wait for it.
+  const handle = await field.elementHandle();
+  await page.waitForFunction(
+    (el) => Object.keys(el).some((key) => key.startsWith("__reactProps$")),
+    handle,
+  );
+  await field.fill(email);
   await page.getByRole("button", { name: "Notify me" }).click();
 }
 
@@ -380,7 +399,7 @@ test("a project page renders its specimen and unknown slugs 404", {
   const page = await localPage(t);
   const response = await page.goto(`${baseUrl}/projects/drydock`, { waitUntil: "networkidle" });
   assert.equal(response.status(), 200);
-  assert.equal(await page.getByRole("heading", { level: 1 }).innerText(), "Drydock");
+  assert.equal(await page.getByRole("heading", { level: 1 }).textContent(), "Drydock");
   assert.ok(await page.getByText("Balaena siccata").first().isVisible());
   const missing = await fetch(`${baseUrl}/projects/not-a-project`, {
     signal: AbortSignal.timeout(5_000),
@@ -418,6 +437,7 @@ test("support page publishes no costs and links Systema's own page", {
   await page.goto(`${baseUrl}/support`, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#where-the-money-goes").count(), 0);
   assert.equal(await page.locator("#tiers").count(), 1);
+  // biome-ignore lint/performance/useDomNodeTextContent: Playwright innerText is visible text only; textContent would include script payloads.
   const body = await page.locator("body").innerText();
   for (const text of [
     "PLACEHOLDER",

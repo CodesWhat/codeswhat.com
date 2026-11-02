@@ -15,27 +15,24 @@ permissions:
 
 concurrency:
   # PR runs share a group per PR so a superseded head is cancelled. Push runs get
-  # a unique group so a queued dev/main run is never replaced by a newer push;
-  # the promotion skip relies on every dev SHA keeping its own verify run.
+  # a unique group so a queued dev/main run is never replaced by a newer push.
   group: website-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   verify:
-    # Only this repository's dev-to-main promotion has a matching dev push run.
-    if: github.event_name != 'pull_request' || github.head_ref != 'dev' || github.base_ref != 'main' || github.event.pull_request.head.repo.id != github.event.repository.id
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: frontend
     steps:
       - name: Check out repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
       - name: Set up Node.js
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 24.x
           cache: npm
@@ -62,7 +59,7 @@ jobs:
         env:
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
         run: npm run build
-      - name: Install browser for production checks
-        run: node node_modules/playwright-core/cli.js install --with-deps chromium
-      - name: Verify production page and API boundaries
-        run: npm run test:browser
+      - name: Install browsers for production checks
+        run: node node_modules/playwright-core/cli.js install --with-deps chromium firefox webkit
+      - name: Verify production page and API boundaries (Chromium, Firefox, WebKit)
+        run: npm run test:browser:all
