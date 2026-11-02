@@ -28,8 +28,8 @@ export const SPRITES: Record<string, SpriteArt> = {
       ".kabbbaaacccabbbkkkkkkbak.......",
       "..keaabbbbbbbaakcccccckk........",
       "...kbbaaaaaaabkaaaaaabk.........",
-      "....kkbbbbbbbkkkkkkkkk..........",
-      "......kkkkkkk...kkkk............",
+      "....kkbbbbbbbkkbbbbbk...........",
+      "......kkkkkkk..kkkkk............",
     ],
   },
   sockguard: {
