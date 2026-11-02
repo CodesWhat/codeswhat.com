@@ -33,7 +33,10 @@ function checkRateLimit(key: string, limit = 5, windowMs = 60000): boolean {
 }
 
 const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-const SITEVERIFY_TIMEOUT_MS = 5000;
+// The route runs with maxDuration 10 (vercel.json). These two deadlines add up to 8s,
+// which leaves room to respond instead of being killed by the platform.
+const SITEVERIFY_TIMEOUT_MS = 3000;
+const EMAILOCTOPUS_TIMEOUT_MS = 5000;
 // Cloudflare documents 2048 characters as the longest response value.
 const MAX_CHALLENGE_RESPONSE_LENGTH = 2048;
 
@@ -314,24 +317,38 @@ export async function POST(request: Request) {
     }
 
     // EmailOctopus API v2 endpoint
-    const response = await fetch(
-      `https://api.emailoctopus.com/lists/${process.env.EMAILOCTOPUS_LIST_ID}/contacts`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.EMAILOCTOPUS_API_KEY}`,
-          "Content-Type": "application/json",
+    let response: Response;
+    let data: { title?: string };
+    try {
+      response = await fetch(
+        `https://api.emailoctopus.com/lists/${process.env.EMAILOCTOPUS_LIST_ID}/contacts`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${process.env.EMAILOCTOPUS_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email_address: normalizedEmail,
+            // Double opt-in: EmailOctopus holds the contact as pending until the
+            // confirmation link is clicked, so nobody can subscribe someone else.
+            status: "pending",
+          }),
+          signal: AbortSignal.timeout(EMAILOCTOPUS_TIMEOUT_MS),
         },
-        body: JSON.stringify({
-          email_address: normalizedEmail,
-          // Double opt-in: EmailOctopus holds the contact as pending until the
-          // confirmation link is clicked, so nobody can subscribe someone else.
-          status: "pending",
-        }),
-      },
-    );
-
-    const data = await response.json();
+      );
+      data = await response.json();
+    } catch (error) {
+      if (error instanceof DOMException && ["TimeoutError", "AbortError"].includes(error.name)) {
+        // A retry is safe: a duplicate comes back as success.
+        console.error("Subscription unavailable: EmailOctopus did not respond in time");
+        return NextResponse.json(
+          { error: "Signup is unavailable right now. Please try again later." },
+          { status: 503 },
+        );
+      }
+      throw error;
+    }
 
     // Handle EmailOctopus API responses
     if (!response.ok) {

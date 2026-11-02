@@ -165,6 +165,7 @@ The `vercel.json` file includes:
 - A 503 from `/api/subscribe` means `TURNSTILE_SECRET_KEY` is missing, or siteverify
   failed: a network error or timeout, a non-2xx status, or a body that isn't valid
   JSON. A 403 means the verification was rejected. A 422 means the browser sent no
-  verification response (widget blocked, or a tab left open across a deploy).
+  verification response (a tab left open across a deploy). A blocked widget or script
+  stops the form before it calls the API, so it never produces a 422.
 - Check function logs in Vercel dashboard
 - Ensure API routes are correctly configured
