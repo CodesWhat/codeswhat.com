@@ -7,11 +7,11 @@ const workflow = readFileSync(
   "utf8",
 );
 
-// Column-zero comments and blank lines can sit inside a block, so drop them before
+// Comment-only lines, at any indent, can sit inside a block, so drop them before
 // the indentation-based captures. Otherwise a "# note" ends the block early and a
 // later paths: filter escapes the guards below.
 function stripComments(yaml) {
-  return yaml.replace(/^#.*\n/gm, "");
+  return yaml.replace(/^[ \t]*#.*\n/gm, "");
 }
 
 function extractBlocks(yaml) {
@@ -65,6 +65,7 @@ test("a column-zero comment inside on: does not hide a later paths filter", () =
     "  push:",
     "    branches: [main]",
     "# a comment at column zero",
+    " # an indented comment",
     "  pull_request:",
     "    paths:",
     "      - frontend/**",
