@@ -148,7 +148,7 @@ test("a siteverify network error, timeout or bad status fails closed with 503", 
   assert.equal(octopusCalls().length, 0);
 });
 
-test("a hung siteverify is cut off at the 5s deadline and fails closed", async (t) => {
+test("a hung siteverify is cut off at the 3s deadline and fails closed", async (t) => {
   // Keep the real signal semantics but shrink the wait, and pin the production bound.
   const requested: number[] = [];
   const realTimeout = AbortSignal.timeout.bind(AbortSignal);
@@ -161,7 +161,7 @@ test("a hung siteverify is cut off at the 5s deadline and fails closed", async (
       signal?.addEventListener("abort", () => reject(signal.reason));
     });
   const response = await subscribe(good);
-  assert.deepEqual(requested, [5000]);
+  assert.deepEqual(requested, [3000]);
   assert.equal(response.status, 503);
   assert.equal(octopusCalls().length, 0);
   mock.restoreAll();
@@ -177,6 +177,40 @@ test("production checks the hostname Cloudflare reports", async () => {
   }
   siteverifyReply = async () => json({ success: true });
   assert.equal((await subscribe(good)).status, 403, "a missing hostname is not trusted");
+});
+
+test("production accepts the host from NEXT_PUBLIC_SITE_URL", async () => {
+  process.env.VERCEL_ENV = "production";
+  process.env.NEXT_PUBLIC_SITE_URL = "https://staging.example.org";
+  siteverifyReply = async () => json({ success: true, hostname: "staging.example.org" });
+  assert.equal((await subscribe(good)).status, 200);
+});
+
+test("a hung EmailOctopus is cut off at the 5s deadline and returns 503", async (t) => {
+  const requested: number[] = [];
+  const realTimeout = AbortSignal.timeout.bind(AbortSignal);
+  t.mock.method(AbortSignal, "timeout", (ms: number) => {
+    requested.push(ms);
+    return realTimeout(20);
+  });
+  const inner = globalThis.fetch;
+  globalThis.fetch = (async (input: string | URL | Request, init?: RequestInit) => {
+    if (String(input).startsWith("https://api.emailoctopus.com/")) {
+      calls.push({ url: String(input), init });
+      return new Promise<Response>((_resolve, reject) => {
+        init?.signal?.addEventListener("abort", () => reject(init.signal?.reason));
+      });
+    }
+    return inner(input, init);
+  }) as typeof fetch;
+  const response = await subscribe(good);
+  assert.deepEqual(requested, [3000, 5000]);
+  assert.equal(response.status, 503);
+  assert.equal(
+    (await response.json()).error,
+    "Signup is unavailable right now. Please try again later.",
+  );
+  mock.restoreAll();
 });
 
 test("outside production the hostname is not enforced", async () => {
