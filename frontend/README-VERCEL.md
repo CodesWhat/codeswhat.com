@@ -7,14 +7,11 @@ The existing Vercel project deploys `CodesWhat/codeswhat.com` from `main`, with
 `dev`, then a reviewed promotion advances `main`. Git integration is working;
 a local CLI deployment is not the routine production path.
 
-`vercel.json` turns off Git deployments for `dev` (`git.deploymentEnabled`). The
-team's Hobby plan allows 100 deployments a day across every CodesWhat site, and
-dev previews were about a third of this project's builds with nobody using them:
-a promotion's tree matches a PR head whose preview already built. Feature and fix
-PR branches still get previews. The `dev` to `main` promotion PR no longer gets a
-Vercel preview check, because `dev` doesn't deploy; `main` still deploys production. Don't swap
-this for an Ignored Build Step, because Vercel counts canceled builds against the
-same daily limit.
+`vercel.json` turns off Git deployments for `dev` (`git.deploymentEnabled`), so
+`dev` doesn't deploy and the `dev` to `main` promotion PR gets no Vercel preview
+check. Production is the only deployment target: `main` deploys production. Don't
+swap this for an Ignored Build Step, because Vercel counts canceled builds against
+the same daily deployment limit.
 
 After promotion, confirm the production deployment references the intended
 commit. Open the canonical domain and verify the theme toggle changes theme
@@ -76,16 +73,15 @@ is inlined at build time: set it first, then redeploy so the build picks it up.
 The widget's hostname list must include `codeswhat.com` and `www.codeswhat.com`.
 Production also checks the hostname Cloudflare reports against those two (plus
 the host of `NEXT_PUBLIC_SITE_URL`); other environments skip that check. For
-Preview, either add the preview hostnames to the widget or use Cloudflare's
-test pair (site key `1x00000000000000000000AA`, secret
-`1x0000000000000000000000000000000AA`) in the Preview environment, which passes
-only the dummy response the test site key issues. The script loads when a
+non-production testing, use Cloudflare's test pair (site key
+`1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`), which
+passes only the dummy response the test site key issues. The script loads when a
 visitor first touches the signup form, not on page load.
 
 ### Optional Variables
 
 PostHog is configured with three Production-only variables. Leave all three
-unset in Preview and Development so those deployments emit no analytics:
+unset everywhere else so other environments emit no analytics:
 
 | Variable | Value |
 | --- | --- |
@@ -107,8 +103,7 @@ Only `https://buy.stripe.com/...` and `https://donate.stripe.com/...` links with
 path and no credentials are accepted. Unknown ids and invalid links are dropped
 with a server warning, and any tier without a link renders as "Opening soon".
 The page is rendered per request, so changing the variable needs a redeploy but
-no rebuild of page code. Costs marked PLACEHOLDER in `lib/support.ts` are for the
-maintainer to fill in.
+no rebuild of page code.
 
 ## Domain Configuration
 
