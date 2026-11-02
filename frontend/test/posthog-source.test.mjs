@@ -51,6 +51,13 @@ test("CSP allows only the exact PostHog proxy", async () => {
   assert.doesNotMatch(proxy, /https:\/\/(app|us)\.posthog\.com/);
 });
 
+test("CSP admits only Turnstile's origin for its script and challenge frame", async () => {
+  const proxy = await read("proxy.ts");
+  assert.ok(proxy.includes('"https://challenges.cloudflare.com"'));
+  assert.match(proxy, /frame-src \$\{turnstileOrigin\}/);
+  assert.doesNotMatch(proxy, /\*\.cloudflare\.com/);
+});
+
 test("repo-owned CI runs the website contracts and production build", async () => {
   const workflow = await read("../.github/workflows/website.yml");
   assert.match(workflow, /npm ci/);

@@ -62,6 +62,25 @@ delivery and stay server-side.
 | `NEXT_PUBLIC_SITE_URL`         | Your production URL      | `https://codeswhat.com`          |
 | `EMAILOCTOPUS_API_KEY`         | EmailOctopus API key     | `abc123...`                      |
 | `EMAILOCTOPUS_LIST_ID`         | EmailOctopus list ID     | `123e4567-e89b...`               |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile widget site key (public, read at build time) | `0x4AAAA...` |
+| `TURNSTILE_SECRET_KEY`         | Turnstile widget secret key (server-side only) | `0x4AAAA...` |
+
+### Turnstile
+
+`/api/subscribe` requires a Cloudflare Turnstile response and verifies it with
+Cloudflare before anything reaches EmailOctopus. Without `TURNSTILE_SECRET_KEY`
+the route returns 503 and no signup goes through, so the secret must be set in
+every environment that should accept signups. `NEXT_PUBLIC_TURNSTILE_SITE_KEY`
+is inlined at build time: set it first, then redeploy so the build picks it up.
+
+The widget's hostname list must include `codeswhat.com` and `www.codeswhat.com`.
+Production also checks the hostname Cloudflare reports against those two (plus
+the host of `NEXT_PUBLIC_SITE_URL`); other environments skip that check. For
+Preview, either add the preview hostnames to the widget or use Cloudflare's
+test pair (site key `1x00000000000000000000AA`, secret
+`1x0000000000000000000000000000000AA`) in the Preview environment, which passes
+only the dummy response the test site key issues. The script loads when a
+visitor first touches the signup form, not on page load.
 
 ### Optional Variables
 
@@ -143,5 +162,7 @@ The `vercel.json` file includes:
   `application/json` (415). Requests with neither header, such as curl, are
   still accepted. The in-memory rate limit is per instance only.
 - Verify EmailOctopus credentials
+- A 503 from `/api/subscribe` means `TURNSTILE_SECRET_KEY` is missing or Cloudflare
+  siteverify couldn't be reached; a 403 means the verification was rejected
 - Check function logs in Vercel dashboard
 - Ensure API routes are correctly configured

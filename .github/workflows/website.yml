@@ -54,7 +54,13 @@ jobs:
         run: npm run test:posthog
       - name: Run support contracts
         run: npm run test:support
+      - name: Run subscribe verification contracts
+        run: npm run test:subscribe
       - name: Build production app
+        # Cloudflare's published always-pass test site key; the browser checks
+        # need the widget compiled in. Real keys live only in Vercel.
+        env:
+          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
         run: npm run build
       - name: Install browser for production checks
         run: node node_modules/playwright-core/cli.js install --with-deps chromium

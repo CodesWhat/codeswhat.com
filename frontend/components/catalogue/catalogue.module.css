@@ -1346,6 +1346,9 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+.signupChallenge {
+  max-width: 100%;
+}
 .signupMsg {
   min-height: 1.55em;
   margin: 8px 0 0;

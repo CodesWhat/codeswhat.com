@@ -7,17 +7,39 @@ import { chromium } from "playwright-core";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const nextBin = fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url));
+const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+// Cloudflare's published test credentials. CI builds with the test site key.
+const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
+const TURNSTILE_TEST_SECRET = "1x0000000000000000000000000000000AA";
+const TURNSTILE_DUMMY_RESPONSE = "XXXX.DUMMY.TOKEN.XXXX";
 let server;
 let browser;
 let baseUrl;
 
 before(async () => {
-  const denyExternalFetch = `globalThis.fetch = async () => { throw new Error("External fetch is disabled in site tests"); };`;
+  // The server may only reach two externals, and both are local stand-ins. The
+  // siteverify stub follows Cloudflare's documented test-secret behaviour: the
+  // always-pass secret accepts only the dummy response value and rejects the rest.
+  const stubExternalFetch = `globalThis.fetch = async (input, init) => {
+    const url = String(input?.url ?? input);
+    if (url === ${JSON.stringify(SITEVERIFY_URL)}) {
+      const form = new URLSearchParams(String(init?.body));
+      const ok =
+        form.get("secret") === ${JSON.stringify(TURNSTILE_TEST_SECRET)} &&
+        form.get("response") === ${JSON.stringify(TURNSTILE_DUMMY_RESPONSE)};
+      return Response.json(
+        ok ? { success: true, "error-codes": [] } : { success: false, "error-codes": ["invalid-input-response"] },
+      );
+    }
+    if (url.startsWith("https://api.emailoctopus.com/")) return Response.json({ id: "stub" }, { status: 201 });
+    throw new Error("External fetch is disabled in site tests: " + url);
+  };`;
   server = spawn(
     process.execPath,
     [
       "--import",
-      `data:text/javascript,${encodeURIComponent(denyExternalFetch)}`,
+      `data:text/javascript,${encodeURIComponent(stubExternalFetch)}`,
       nextBin,
       "start",
       "--hostname",
@@ -33,6 +55,8 @@ before(async () => {
         NEXT_TELEMETRY_DISABLED: "1",
         EMAILOCTOPUS_API_KEY: "",
         EMAILOCTOPUS_LIST_ID: "",
+        TURNSTILE_SECRET_KEY: TURNSTILE_TEST_SECRET,
+        VERCEL_ENV: "",
         CODESWHAT_SUPPORT_LINKS: JSON.stringify({
           "monthly-5": "https://buy.stripe.com/test_monthly5",
           "once-50": "https://buy.stripe.com/test_once50",
@@ -105,6 +129,44 @@ async function localPage(t) {
     return route.abort();
   });
   return context.newPage();
+}
+
+// Stands in for Cloudflare's api.js, served through the page's real CSP. Modes
+// mirror the widget: "pass" hands back the dummy response the always-pass keys
+// issue, "reject" hands back a value siteverify refuses, "error" fires the
+// error callback. Each render and reset is recorded for the assertions.
+async function turnstilePage(t, mode) {
+  const page = await localPage(t);
+  const requests = [];
+  await page.context().route(`${TURNSTILE_SCRIPT_URL}**`, (route) => {
+    requests.push(route.request().url());
+    if (mode === "blocked") return route.abort();
+    return route.fulfill({
+      contentType: "text/javascript",
+      body: `(() => {
+        const mode = ${JSON.stringify(mode)};
+        const options = [];
+        let resets = 0;
+        const answer = (o) => {
+          if (mode === "error") return o["error-callback"]();
+          const value = mode === "reject" ? "BAD.RESPONSE" : ${JSON.stringify(TURNSTILE_DUMMY_RESPONSE)};
+          setTimeout(() => o.callback(value), 0);
+        };
+        window.__turnstile = { options, resets: () => resets };
+        window.turnstile = {
+          render(el, o) { options.push(o); answer(o); return "widget-" + options.length; },
+          reset() { resets += 1; answer(options[options.length - 1]); },
+          remove() {},
+        };
+      })();`,
+    });
+  });
+  return { page, requests };
+}
+
+async function signup(page, email = "reader@example.com") {
+  await page.getByLabel(/A note when something new ships/).fill(email);
+  await page.getByRole("button", { name: "Notify me" }).click();
 }
 
 test("homepage renders the specimen plates and the theme toggle flips and persists", {
@@ -388,6 +450,81 @@ test("the footer signup rejects an invalid address without calling the API", {
   assert.deepEqual(calls, []);
 });
 
+test("the signup loads Turnstile only once the form is touched, then submits its response", {
+  timeout: 20_000,
+}, async (t) => {
+  const { page, requests } = await turnstilePage(t, "pass");
+  const bodies = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/subscribe")) bodies.push(request.postDataJSON());
+  });
+  const violations = [];
+  page.on("console", (message) => {
+    if (/content security policy/i.test(message.text())) violations.push(message.text());
+  });
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  assert.deepEqual(requests, [], "no Cloudflare request before the form is used");
+
+  await signup(page);
+  await page.getByText("Check your inbox to find out what's next").waitFor({ timeout: 5_000 });
+  assert.equal(requests.length, 1);
+  assert.match(requests[0], /render=explicit/);
+  assert.deepEqual(bodies, [
+    { email: "reader@example.com", turnstileResponse: TURNSTILE_DUMMY_RESPONSE },
+  ]);
+  const options = await page.evaluate(() => window.__turnstile.options[0]);
+  assert.equal(options.sitekey, TURNSTILE_TEST_SITE_KEY);
+  assert.equal(options.appearance, "interaction-only");
+  assert.equal(
+    await page.evaluate(() => window.__turnstile.resets()),
+    1,
+    "a spent response is reset after the submit",
+  );
+  assert.deepEqual(violations, []);
+});
+
+test("a rejected verification shows an error and resets the widget for another try", {
+  timeout: 20_000,
+}, async (t) => {
+  const { page } = await turnstilePage(t, "reject");
+  const statuses = [];
+  page.on("response", (response) => {
+    if (response.url().includes("/api/subscribe")) statuses.push(response.status());
+  });
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await signup(page);
+  await page.getByRole("alert").filter({ hasText: "Verification failed" }).waitFor({
+    timeout: 5_000,
+  });
+  assert.deepEqual(statuses, [403]);
+  assert.equal(await page.evaluate(() => window.__turnstile.resets()), 1);
+  await page.getByRole("button", { name: "Notify me" }).click();
+  await page.waitForFunction(() => window.__turnstile.resets() === 2, undefined, {
+    timeout: 5_000,
+  });
+  assert.deepEqual(statuses, [403, 403], "the form stays usable after a failure");
+});
+
+test("a blocked or failing widget explains itself and never calls the API", {
+  timeout: 20_000,
+}, async (t) => {
+  for (const mode of ["blocked", "error"]) {
+    const { page } = await turnstilePage(t, mode);
+    const calls = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/api/subscribe")) calls.push(request.url());
+    });
+    await page.goto(baseUrl, { waitUntil: "networkidle" });
+    await signup(page);
+    await page
+      .getByRole("alert")
+      .filter({ hasText: "Couldn't finish the human check" })
+      .waitFor({ timeout: 5_000 });
+    assert.deepEqual(calls, [], mode);
+    assert.equal(await page.getByRole("button", { name: "Notify me" }).isEnabled(), true, mode);
+  }
+});
+
 test("each HTML request gets a fresh nonce that cannot be supplied by the caller", {
   timeout: 15_000,
 }, async () => {
@@ -411,8 +548,16 @@ test("each HTML request gets a fresh nonce that cannot be supplied by the caller
     .split(";")
     .map((directive) => directive.trim())
     .find((directive) => directive.startsWith("script-src "));
-  assert.equal(scriptPolicy, `script-src 'self' 'nonce-${firstNonce}' https://e.codeswhat.com`);
+  assert.equal(
+    scriptPolicy,
+    `script-src 'self' 'nonce-${firstNonce}' https://e.codeswhat.com https://challenges.cloudflare.com`,
+  );
   assert.match(firstPolicy, /connect-src 'self' https:\/\/e\.codeswhat\.com;/);
+  assert.match(firstPolicy, /frame-src https:\/\/challenges\.cloudflare\.com;/);
+  for (const kept of ["object-src 'none'", "form-action 'self'", "frame-ancestors 'none'"]) {
+    assert.ok(firstPolicy.includes(kept), kept);
+  }
+  assert.doesNotMatch(firstPolicy, /\*/);
   const html = await first.text();
   assert.ok((await second.text()).includes(`nonce="${secondNonce}"`));
   const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].filter(
@@ -467,6 +612,39 @@ test("subscription rejects nonobject and malformed bodies without calling a prov
     });
     assert.equal(response.status, 400, `${body} is invalid input, not a server error`);
     assert.equal(typeof (await response.json()).error, "string");
+  }
+});
+
+test("subscription requires a Turnstile response that Cloudflare accepts", {
+  timeout: 15_000,
+}, async () => {
+  const email = "reader@example.com";
+  const cases = [
+    { name: "missing", body: { email }, status: 400 },
+    { name: "empty", body: { email, turnstileResponse: "" }, status: 400 },
+    { name: "not a string", body: { email, turnstileResponse: 7 }, status: 400 },
+    { name: "refused", body: { email, turnstileResponse: "forged" }, status: 403 },
+    {
+      name: "accepted",
+      body: { email, turnstileResponse: TURNSTILE_DUMMY_RESPONSE },
+      status: 200,
+    },
+    {
+      name: "invalid address wins over the check",
+      body: { email: "not-an-email", turnstileResponse: TURNSTILE_DUMMY_RESPONSE },
+      status: 400,
+    },
+  ];
+  for (const [index, { name, body, status }] of cases.entries()) {
+    const response = await fetch(`${baseUrl}/api/subscribe`, {
+      signal: AbortSignal.timeout(5_000),
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": `203.0.113.${index + 1}` },
+      body: JSON.stringify(body),
+    });
+    assert.equal(response.status, status, name);
+    const payload = await response.json();
+    assert.equal(typeof (payload.message ?? payload.error), "string", name);
   }
 });
 

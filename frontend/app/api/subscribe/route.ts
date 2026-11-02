@@ -32,6 +32,63 @@ function checkRateLimit(key: string, limit = 5, windowMs = 60000): boolean {
   return true;
 }
 
+const SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const SITEVERIFY_TIMEOUT_MS = 5000;
+// Cloudflare documents 2048 characters as the longest response value.
+const MAX_CHALLENGE_RESPONSE_LENGTH = 2048;
+
+type Verification = "passed" | "rejected" | "unavailable";
+
+function allowedChallengeHosts(): Set<string> {
+  const hosts = new Set(["codeswhat.com", "www.codeswhat.com"]);
+  try {
+    if (process.env.NEXT_PUBLIC_SITE_URL) {
+      hosts.add(new URL(process.env.NEXT_PUBLIC_SITE_URL).hostname.toLowerCase());
+    }
+  } catch {
+    // An unparsable override leaves only the fixed production hosts.
+  }
+  return hosts;
+}
+
+function getClientIp(request: Request): string | null {
+  const direct = request.headers.get("cf-connecting-ip")?.trim();
+  if (direct) return direct;
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0].trim();
+  return forwarded || null;
+}
+
+// Fails closed: anything other than a clean "success" from Cloudflare is not a pass.
+async function verifyChallenge(
+  secret: string,
+  response: string,
+  ip: string | null,
+): Promise<Verification> {
+  const form = new URLSearchParams({ secret, response });
+  if (ip) form.set("remoteip", ip);
+  try {
+    const result = await fetch(SITEVERIFY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: form,
+      signal: AbortSignal.timeout(SITEVERIFY_TIMEOUT_MS),
+    });
+    if (!result.ok) return "unavailable";
+    const data: unknown = await result.json();
+    if (data === null || typeof data !== "object") return "unavailable";
+    const outcome = data as { success?: unknown; hostname?: unknown };
+    if (outcome.success !== true) return "rejected";
+    // Preview deployments sit on their own hostnames, so only production pins it.
+    if (process.env.VERCEL_ENV === "production") {
+      const hostname = typeof outcome.hostname === "string" ? outcome.hostname.toLowerCase() : "";
+      if (!allowedChallengeHosts().has(hostname)) return "rejected";
+    }
+    return "passed";
+  } catch {
+    return "unavailable";
+  }
+}
+
 function isCrossSite(request: Request): boolean {
   if (request.headers.get("sec-fetch-site") === "cross-site") {
     return true;
@@ -217,6 +274,42 @@ export async function POST(request: Request) {
     const domain = normalizedEmail.split("@")[1].toLowerCase();
     if (disposableDomains.has(domain)) {
       return NextResponse.json({ error: "Please use a permanent email address" }, { status: 400 });
+    }
+
+    // Human check, after the cheap validation and the rate limit so floods
+    // and bad input never reach Cloudflare. Nothing below runs without a pass.
+    const secret = process.env.TURNSTILE_SECRET_KEY;
+    if (!secret) {
+      console.error("Subscription unavailable: TURNSTILE_SECRET_KEY is not set");
+      return NextResponse.json(
+        { error: "Signup is unavailable right now. Please try again later." },
+        { status: 503 },
+      );
+    }
+    const challengeResponse = "turnstileResponse" in body ? body.turnstileResponse : undefined;
+    if (
+      typeof challengeResponse !== "string" ||
+      challengeResponse.length === 0 ||
+      challengeResponse.length > MAX_CHALLENGE_RESPONSE_LENGTH
+    ) {
+      return NextResponse.json(
+        { error: "Please complete the verification and try again." },
+        { status: 400 },
+      );
+    }
+    const verification = await verifyChallenge(secret, challengeResponse, getClientIp(request));
+    if (verification === "unavailable") {
+      console.error("Subscription unavailable: Turnstile verification could not complete");
+      return NextResponse.json(
+        { error: "Signup is unavailable right now. Please try again later." },
+        { status: 503 },
+      );
+    }
+    if (verification === "rejected") {
+      return NextResponse.json(
+        { error: "Verification failed. Please try again." },
+        { status: 403 },
+      );
     }
 
     // EmailOctopus API v2 endpoint
