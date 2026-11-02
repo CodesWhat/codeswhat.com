@@ -399,7 +399,7 @@ test("a project page renders its specimen and unknown slugs 404", {
   const page = await localPage(t);
   const response = await page.goto(`${baseUrl}/projects/drydock`, { waitUntil: "networkidle" });
   assert.equal(response.status(), 200);
-  assert.equal(await page.getByRole("heading", { level: 1 }).innerText(), "Drydock");
+  assert.equal(await page.getByRole("heading", { level: 1 }).textContent(), "Drydock");
   assert.ok(await page.getByText("Balaena siccata").first().isVisible());
   const missing = await fetch(`${baseUrl}/projects/not-a-project`, {
     signal: AbortSignal.timeout(5_000),
@@ -437,6 +437,7 @@ test("support page publishes no costs and links Systema's own page", {
   await page.goto(`${baseUrl}/support`, { waitUntil: "networkidle" });
   assert.equal(await page.locator("#where-the-money-goes").count(), 0);
   assert.equal(await page.locator("#tiers").count(), 1);
+  // biome-ignore lint/performance/useDomNodeTextContent: Playwright innerText is visible text only; textContent would include script payloads.
   const body = await page.locator("body").innerText();
   for (const text of [
     "PLACEHOLDER",
