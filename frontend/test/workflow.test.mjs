@@ -7,9 +7,24 @@ const workflow = readFileSync(
   "utf8",
 );
 
-const jobs = workflow.match(/^jobs:\n((?: {2,}.*\n|\n)*)/m)?.[1];
-const verifyJob = workflow.match(/^ {2}verify:\n((?: {4}.*\n|\n)*)/m)?.[1];
-const triggers = workflow.match(/^on:\n((?: {2}.*\n|\n)*)/m)?.[1];
+// Comment-only lines, at any indent, can sit inside a block, so drop them before
+// the indentation-based captures. Otherwise a "# note" ends the block early and a
+// later paths: filter escapes the guards below.
+function stripComments(yaml) {
+  return yaml.replace(/^[ \t]*#.*\n/gm, "");
+}
+
+function extractBlocks(yaml) {
+  const text = stripComments(yaml);
+  return {
+    jobs: text.match(/^jobs:\n((?: {2,}.*\n|\n)*)/m)?.[1],
+    verifyJob: text.match(/^ {2}verify:\n((?: {4}.*\n|\n)*)/m)?.[1],
+    triggers: text.match(/^on:\n((?: {2}.*\n|\n)*)/m)?.[1],
+  };
+}
+
+const { jobs, verifyJob, triggers } = extractBlocks(workflow);
+const PATH_FILTER = /\bpaths(-ignore)?:/;
 
 test("the workflow defines triggers and a verify job", () => {
   assert.ok(triggers, "on: must exist");
@@ -31,7 +46,7 @@ test("verify is the only job, keeps its key as the check name, and has no matrix
 });
 
 test("triggers have no paths or paths-ignore filters", () => {
-  assert.doesNotMatch(triggers, /\bpaths(-ignore)?:/);
+  assert.doesNotMatch(triggers, PATH_FILTER);
 });
 
 test("verify installs and runs all three browser engines", () => {
@@ -41,4 +56,26 @@ test("verify installs and runs all three browser engines", () => {
   for (const engine of ["chromium", "firefox", "webkit"]) {
     assert.match(pkg.scripts["test:browser:all"], new RegExp(`BROWSER_ENGINE=${engine}\\b`));
   }
+});
+
+test("a column-zero comment inside on: does not hide a later paths filter", () => {
+  const fixture = [
+    "name: Website",
+    "on:",
+    "  push:",
+    "    branches: [main]",
+    "# a comment at column zero",
+    " # an indented comment",
+    "  pull_request:",
+    "    paths:",
+    "      - frontend/**",
+    "jobs:",
+    "  verify:",
+    "    runs-on: ubuntu-latest",
+    "",
+  ].join("\n");
+  const blocks = extractBlocks(fixture);
+  assert.match(blocks.triggers, PATH_FILTER);
+  assert.match(blocks.triggers, /pull_request:/);
+  assert.match(blocks.verifyJob, /runs-on/);
 });

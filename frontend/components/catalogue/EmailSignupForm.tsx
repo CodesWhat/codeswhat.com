@@ -81,6 +81,8 @@ export function EmailSignupForm() {
   const [message, setMessage] = useState("");
 
   const container = useRef<HTMLDivElement>(null);
+  const emailInput = useRef<HTMLInputElement>(null);
+  const honeypotInput = useRef<HTMLInputElement>(null);
   const challenge = useRef<ChallengeState>({
     widgetId: null,
     starting: null,
@@ -93,6 +95,10 @@ export function EmailSignupForm() {
   useEffect(() => {
     const state = challenge.current;
     state.unmounted = false;
+    // Anything typed before hydration lives only in the DOM; React's state starts
+    // empty and would otherwise overwrite it on the next render.
+    if (emailInput.current?.value) setEmail(emailInput.current.value.slice(0, 254));
+    if (honeypotInput.current?.value) setHoneypot(honeypotInput.current.value);
     return () => {
       state.unmounted = true;
       if (state.widgetId) window.turnstile?.remove(state.widgetId);
@@ -184,17 +190,23 @@ export function EmailSignupForm() {
     setMessage(text);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Read the fields from the form itself: input typed before hydration never
+    // reached state, but the visitor can see it and expects it to be sent.
+    const fields = new FormData(e.currentTarget);
+    const emailValue = String(fields.get("email") ?? email);
+    const honeypotValue = String(fields.get("website") ?? honeypot);
+
     // Check honeypot (anti-bot): pretend it worked, send nothing.
-    if (honeypot) {
+    if (honeypotValue) {
       setStatus("success");
       setMessage("Thanks. Check your inbox to find out what's next.");
       return;
     }
 
-    const trimmedEmail = email.trim().toLowerCase();
+    const trimmedEmail = emailValue.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
       fail("Please enter a valid email address.");
       return;
@@ -264,6 +276,7 @@ export function EmailSignupForm() {
         <input
           id="signup-email"
           type="email"
+          ref={emailInput}
           name="email"
           placeholder="your@email.com"
           value={email}
@@ -279,6 +292,7 @@ export function EmailSignupForm() {
         {/* Honeypot field: hidden from people, visible to bots */}
         <input
           type="text"
+          ref={honeypotInput}
           name="website"
           value={honeypot}
           onChange={(e) => setHoneypot(e.target.value)}

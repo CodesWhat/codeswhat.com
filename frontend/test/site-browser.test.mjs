@@ -479,6 +479,46 @@ test("the footer signup rejects an invalid address without calling the API", {
   assert.deepEqual(calls, []);
 });
 
+test("an address typed before hydration is still submitted", {
+  timeout: 30_000,
+}, async (t) => {
+  const { page } = await turnstilePage(t, "pass");
+  const bodies = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/subscribe")) bodies.push(request.postDataJSON());
+  });
+  // The other browser tests share one rate-limit bucket (5 a minute); use our own.
+  await page.route("**/api/subscribe", (route) =>
+    route.continue({ headers: { ...route.request().headers(), "x-forwarded-for": "192.0.2.250" } }),
+  );
+  // Hold every script chunk so the server HTML stays unhydrated while we type.
+  let release;
+  const held = new Promise((resolve) => {
+    release = resolve;
+  });
+  await page.route("**/_next/static/**/*.js", async (route) => {
+    await held;
+    await route.continue();
+  });
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  const field = page.getByLabel(/A note when something new ships/);
+  await field.fill("early@example.com");
+  assert.equal(await field.inputValue(), "early@example.com");
+
+  release();
+  const handle = await field.elementHandle();
+  await page.waitForFunction(
+    (el) => Object.keys(el).some((key) => key.startsWith("__reactProps$")),
+    handle,
+    { timeout: 15_000 },
+  );
+  await page.getByRole("button", { name: "Notify me" }).click();
+  await page.getByText("Check your inbox to find out what's next").waitFor({ timeout: 5_000 });
+  assert.deepEqual(bodies, [
+    { email: "early@example.com", turnstileResponse: TURNSTILE_DUMMY_RESPONSE },
+  ]);
+});
+
 test("the signup loads Turnstile only once the form is touched, then submits its response", {
   timeout: 20_000,
 }, async (t) => {
