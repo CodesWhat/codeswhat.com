@@ -7,6 +7,11 @@ The Catalogue design is the shipped homepage: CSS and pixel-sprite specimen
 plates (`frontend/components/catalogue/sprites.ts`). The old WebGL homepage and
 its progressive-enhancement fallback plan are gone with it.
 
+Already shipped, so not on the list below: double opt-in newsletter signup with
+Turnstile (`/api/subscribe`), the nonce-based CSP set in the Next proxy, PostHog
+through the `e.codeswhat.com` proxy, the `/support` page with Stripe Payment
+Links, `llms.txt` and `.well-known/security.txt`.
+
 ## Open
 
 - [ ] Clean up `frontend/test/posthog.test.ts`, which imports a posthog-js

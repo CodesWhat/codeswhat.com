@@ -25,6 +25,10 @@ Then run the PostHog response contract against the canonical domain:
 POSTHOG_BROWSER_BASE_URL=https://codeswhat.com npm run test:posthog:browser
 ```
 
+CI (`.github/workflows/website.yml`, `verify` job) doesn't run that one. It runs
+`test:posthog`, builds, then runs `test:browser:all` on Chromium, Firefox and
+WebKit.
+
 `npm run og` regenerates the share cards in `public/og*` with playwright-core
 and the locally installed Google Chrome; it isn't part of the build.
 
@@ -52,15 +56,15 @@ The site metadata variables are optional overrides for the defaults in
 `lib/site-config.ts`. EmailOctopus credentials are required for newsletter
 delivery and stay server-side.
 
-| Variable                       | Description              | Example                          |
-| ------------------------------ | ------------------------ | -------------------------------- |
-| `NEXT_PUBLIC_SITE_NAME`        | Your site name           | `CodesWhat?`                     |
-| `NEXT_PUBLIC_SITE_DESCRIPTION` | Site description for SEO | `Modern software consultancy...` |
-| `NEXT_PUBLIC_SITE_URL`         | Your production URL      | `https://codeswhat.com`          |
-| `EMAILOCTOPUS_API_KEY`         | EmailOctopus API key     | `abc123...`                      |
-| `EMAILOCTOPUS_LIST_ID`         | EmailOctopus list ID     | `123e4567-e89b...`               |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile widget site key (public, read at build time) | `0x4AAAA...` |
-| `TURNSTILE_SECRET_KEY`         | Turnstile widget secret key (server-side only) | `0x4AAAA...` |
+| Variable                         | Description                                            | Example                          |
+| -------------------------------- | ------------------------------------------------------ | -------------------------------- |
+| `NEXT_PUBLIC_SITE_NAME`          | Your site name                                         | `CodesWhat?`                     |
+| `NEXT_PUBLIC_SITE_DESCRIPTION`   | Site description for SEO                               | `Modern software consultancy...` |
+| `NEXT_PUBLIC_SITE_URL`           | Your production URL                                    | `https://codeswhat.com`          |
+| `EMAILOCTOPUS_API_KEY`           | EmailOctopus API key                                   | `abc123...`                      |
+| `EMAILOCTOPUS_LIST_ID`           | EmailOctopus list ID                                   | `123e4567-e89b...`               |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile widget site key (public, read at build time) | `0x4AAAA...`                     |
+| `TURNSTILE_SECRET_KEY`           | Turnstile widget secret key (server-side only)         | `0x4AAAA...`                     |
 
 ### Turnstile
 
@@ -83,11 +87,11 @@ visitor first touches the signup form, not on page load.
 PostHog is configured with three Production-only variables. Leave all three
 unset everywhere else so other environments emit no analytics:
 
-| Variable | Value |
-| --- | --- |
+| Variable                            | Value                                            |
+| ----------------------------------- | ------------------------------------------------ |
 | `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN` | The public token for `CodesWhat Public Websites` |
-| `NEXT_PUBLIC_POSTHOG_HOST` | `https://e.codeswhat.com` |
-| `NEXT_PUBLIC_POSTHOG_UI_HOST` | `https://us.posthog.com` |
+| `NEXT_PUBLIC_POSTHOG_HOST`          | `https://e.codeswhat.com`                        |
+| `NEXT_PUBLIC_POSTHOG_UI_HOST`       | `https://us.posthog.com`                         |
 
 ### Support page
 
@@ -137,7 +141,7 @@ The `vercel.json` file includes:
 
 ### Environment Variables Not Working
 
-- Ensure variables are added to the correct environment (Production/Preview/Development)
+- Ensure variables are added to the correct environment (Production; there are no preview deployments)
 - Redeploy after adding variables
 - Check for typos in variable names
 
