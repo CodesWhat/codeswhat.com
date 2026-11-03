@@ -148,4 +148,14 @@ export const PROJECTS: Project[] = [
     status: "MIT · TypeScript",
     href: "https://systemamachinae.com",
   },
+  {
+    slug: "dilated",
+    name: "Dilated",
+    category: "macos-app",
+    tagline: "Keeps your Mac awake",
+    description:
+      "Keeps your Mac awake. A native macOS menu bar app with timed holds, triggers, a CLI for agents and an opt-in closed-lid mode.",
+    status: "MIT · Swift",
+    href: "https://dilated.app",
+  },
 ];
