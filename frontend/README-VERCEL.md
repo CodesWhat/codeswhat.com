@@ -25,6 +25,10 @@ Then run the PostHog response contract against the canonical domain:
 POSTHOG_BROWSER_BASE_URL=https://codeswhat.com npm run test:posthog:browser
 ```
 
+CI (`.github/workflows/website.yml`, `verify` job) doesn't run that one. It runs
+`test:posthog`, builds, then runs `test:browser:all` on Chromium, Firefox and
+WebKit.
+
 `npm run og` regenerates the share cards in `public/og*` with playwright-core
 and the locally installed Google Chrome; it isn't part of the build.
 
@@ -137,7 +141,7 @@ The `vercel.json` file includes:
 
 ### Environment Variables Not Working
 
-- Ensure variables are added to the correct environment (Production/Preview/Development)
+- Ensure variables are added to the correct environment (Production; there are no preview deployments)
 - Redeploy after adding variables
 - Check for typos in variable names
 
