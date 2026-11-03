@@ -48,8 +48,8 @@ export const SPECIMEN_EXAMPLES: Partial<Record<string, SpecimenExample>> = {
   },
   dilated: {
     excerpt:
-      "1. Download the signed, notarized DMG from [dilated.app](https://dilated.app/download/file).\n2. Open the DMG, drag Dilated to Applications and open it.\n3. Pick **Keep awake for** from the menu bar item.",
+      "2. Open the DMG, drag Dilated to Applications and open it.\n3. Pick **Keep awake for** from the menu bar item.",
     sourceUrl:
-      "https://github.com/CodesWhat/dilated/blob/6673e3f1af24b6cc80e46303f886075d28b1ace9/README.md#L63-L65",
+      "https://github.com/CodesWhat/dilated/blob/6673e3f1af24b6cc80e46303f886075d28b1ace9/README.md#L64-L65",
   },
 };

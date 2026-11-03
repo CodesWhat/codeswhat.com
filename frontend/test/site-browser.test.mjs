@@ -332,10 +332,7 @@ test("field notes show attributed README excerpts and leave unsourced examples a
     ["mouthtype", "2. Open the DMG, drag Mouthtype to Applications and open it."],
     ["idlescreen", "Open idlescreen once, then select it in System Settings under Wallpaper and"],
     ["careerrat", "careerrat next          # show the next useful agent-led workflow"],
-    [
-      "dilated",
-      "1. Download the signed, notarized DMG from [dilated.app](https://dilated.app/download/file).",
-    ],
+    ["dilated", "2. Open the DMG, drag Dilated to Applications and open it."],
   ];
   for (const [slug, firstLine] of examples) {
     await page.goto(`${baseUrl}/projects/${slug}`, { waitUntil: "networkidle" });
