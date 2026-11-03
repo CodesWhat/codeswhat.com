@@ -46,4 +46,10 @@ export const SPECIMEN_EXAMPLES: Partial<Record<string, SpecimenExample>> = {
     sourceUrl:
       "https://github.com/CodesWhat/careerrat/blob/f2f696d52de1f7352fdd6398bdf0dc855dff26ea/README.md#L490-L494",
   },
+  dilated: {
+    excerpt:
+      "2. Open the DMG, drag Dilated to Applications and open it.\n3. Pick **Keep awake for** from the menu bar item.\n\nPrefer Homebrew? `brew install --cask codeswhat/tap/dilated` installs the same build.",
+    sourceUrl:
+      "https://github.com/CodesWhat/dilated/blob/6673e3f1af24b6cc80e46303f886075d28b1ace9/README.md#L64-L67",
+  },
 };

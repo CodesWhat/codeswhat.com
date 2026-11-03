@@ -63,8 +63,8 @@ h1 em, .name em { font-style: italic; background: #d3e58b; padding: 0 .1em; marg
 .sub { position: absolute; left: 66px; top: 452px; width: 600px; margin: 0; font: 24px/1.4 Sans; color: #4b5563; }
 .dots { position: absolute; top: 96px; right: 36px; width: 430px; height: 410px; background: radial-gradient(#b3bdb6 1.2px, transparent 1.2px) 0 0 / 22px 22px; opacity: .6; }
 .paper { position: absolute; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; border: 1px solid #111827; border-radius: 6px; background: #f8f9fa; box-shadow: 8px 8px 0 #d3e58b; }
-.paper.coll { right: 44px; top: 140px; width: 420px; height: 320px; transform: rotate(2deg); gap: 18px 0; padding: 20px 12px 44px; }
-.paper.coll .cell { width: 96px; height: 100px; display: flex; align-items: center; justify-content: center; }
+.paper.coll { right: 44px; top: 112px; width: 420px; height: 392px; transform: rotate(2deg); gap: 10px 0; padding: 20px 12px 44px; }
+.paper.coll .cell { width: 124px; height: 100px; display: flex; align-items: center; justify-content: center; }
 .paper .fig { position: absolute; left: 16px; bottom: 10px; font: 500 12px Mono; letter-spacing: 2px; text-transform: uppercase; color: #4b5563; }
 .paper.big { right: 64px; top: 112px; width: 400px; height: 380px; padding-bottom: 36px; transform: rotate(2deg); display: flex; align-items: center; justify-content: center; }
 .name { position: absolute; left: 62px; top: 168px; margin: 0; width: 640px; height: 112px; overflow: hidden; font: 400 96px/1.1 Serif; letter-spacing: -2px; white-space: nowrap; }
