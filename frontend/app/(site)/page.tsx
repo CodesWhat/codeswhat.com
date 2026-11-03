@@ -93,7 +93,7 @@ export default function Home() {
               The specimens, <em>filed and labelled.</em>
             </h2>
             <p className={styles.sectionLede}>
-              Eight projects, each drawn from its own mascot, with a Latin name that fits and field
+              Nine projects, each drawn from its own mascot, with a Latin name that fits and field
               notes that are mostly true. Open a plate for the full write-up.
             </p>
           </header>

@@ -12,4 +12,5 @@ export const PROJECT_SLUGS = [
   "idlescreen",
   "careerrat",
   "systema-machinae",
+  "dilated",
 ] as const;

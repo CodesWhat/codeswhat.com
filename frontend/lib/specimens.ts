@@ -119,6 +119,18 @@ const FIELD: Record<string, Field> = {
     handling: "A live census of the bots that visit a website, set as a field guide. Lab project.",
     alt: "Pixel art of a small beige server tower with two eyes, three rack units and smoke rising from one corner",
   },
+  dilated: {
+    latin: "Oculus apertus",
+    habitat: "The menu bar of a Mac that isn't allowed to sleep",
+    diet: "Timers, triggers and the odd request from an agent",
+    temperament: "Won't blink first.",
+    marks: "Two red eyes on a yellow tile, pupils wide open. It's been up a while.",
+    handling:
+      "A menu bar app that keeps your Mac awake: timed holds, triggers, a CLI for agents, and an opt-in closed-lid mode. Public beta.",
+    alt: "Pixel art of a yellow tile with two wide red-outlined eyes and small square pupils",
+    docs: `${GITHUB_URL}/dilated/tree/main/docs`,
+    repo: `${GITHUB_URL}/dilated`,
+  },
 };
 
 export const SPECIMENS: Specimen[] = PROJECTS.map((p, i) => {
