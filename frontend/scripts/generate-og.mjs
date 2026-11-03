@@ -127,20 +127,26 @@ const cards = [
 await mkdir(path.join(publicDir, "og"), { recursive: true });
 const browser = await chromium.launch({ channel: "chrome" });
 try {
-  const pg = await browser.newPage({ viewport: { width: 1200, height: 630 }, deviceScaleFactor: 1 });
+  const pg = await browser.newPage({
+    viewport: { width: 1200, height: 630 },
+    deviceScaleFactor: 1,
+  });
   for (const card of cards) {
     await pg.setContent(card.html);
     await pg.evaluate(() => document.fonts.ready);
     const fits = await pg.evaluate(() =>
       [...document.querySelectorAll("h1, .name, .sub, .latin")].every(
-        (el) => el.scrollWidth <= el.clientWidth + 1 && el.scrollHeight <= el.clientHeight + 1 &&
+        (el) =>
+          el.scrollWidth <= el.clientWidth + 1 &&
+          el.scrollHeight <= el.clientHeight + 1 &&
           el.getBoundingClientRect().bottom < 590,
       ),
     );
     if (!fits) throw new Error(`Headline overflows its box: ${path.basename(card.out)}`);
     await pg.screenshot({ path: card.out });
     const { size } = await stat(card.out);
-    if (size > MAX_BYTES) throw new Error(`${path.basename(card.out)} is ${size} bytes, over ${MAX_BYTES}`);
+    if (size > MAX_BYTES)
+      throw new Error(`${path.basename(card.out)} is ${size} bytes, over ${MAX_BYTES}`);
     console.log(`Rendered ${path.relative(publicDir, card.out)} (${(size / 1024).toFixed(0)} KB)`);
   }
 } finally {
