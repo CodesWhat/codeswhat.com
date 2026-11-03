@@ -640,7 +640,10 @@ test("a challenge answered before the 120s wait ends still submits", {
   await page.waitForFunction(() => window.__turnstile?.options.length === 1);
   await page.clock.fastForward(119_000);
   assert.deepEqual(bodies, []);
-  await page.evaluate((value) => window.__turnstile.options[0].callback(value), TURNSTILE_DUMMY_RESPONSE);
+  await page.evaluate(
+    (value) => window.__turnstile.options[0].callback(value),
+    TURNSTILE_DUMMY_RESPONSE,
+  );
   await page.getByText("Check your inbox to find out what's next").waitFor({ timeout: 5_000 });
   assert.deepEqual(bodies, [
     { email: "reader@example.com", turnstileResponse: TURNSTILE_DUMMY_RESPONSE },
