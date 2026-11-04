@@ -59,6 +59,8 @@ jobs:
         env:
           NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
         run: npm run build
+      - name: Verify PostHog production response
+        run: npm run test:posthog:browser
       - name: Install browsers for production checks
         run: node node_modules/playwright-core/cli.js install --with-deps chromium firefox webkit
       - name: Verify production page and API boundaries (Chromium, Firefox, WebKit)
