@@ -79,3 +79,8 @@ test("a column-zero comment inside on: does not hide a later paths filter", () =
   assert.match(blocks.triggers, /pull_request:/);
   assert.match(blocks.verifyJob, /runs-on/);
 });
+
+test("verify runs the PostHog response contract after the production build", () => {
+  assert.match(verifyJob, /npm run test:posthog:browser/);
+  assert.ok(verifyJob.indexOf("npm run build") < verifyJob.indexOf("npm run test:posthog:browser"));
+});
