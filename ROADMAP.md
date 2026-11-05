@@ -14,10 +14,9 @@ Links, `llms.txt` and `.well-known/security.txt`.
 
 ## Open
 
-- [ ] Clean up `frontend/test/posthog.test.ts`, which imports a posthog-js
-      internal path (`posthog-js/lib/src/posthog-core.js`), then bump
-      `posthog-js` and add `test:posthog:browser` to CI. CI runs
-      `test:posthog` today, not the browser test.
+- [ ] Evaluate the next `posthog-js` upgrade against the public SDK capture
+      contract tests. CI runs both `test:posthog` and the production response
+      check, `test:posthog:browser`.
 - [ ] #57, the public-repo security baseline, is partly done. The remaining
       items are tracked privately.
 - [ ] Decide whether three, react-three-fiber, drei and rapier stay. They're only
