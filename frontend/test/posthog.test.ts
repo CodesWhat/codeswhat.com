@@ -63,7 +63,7 @@ const { PostHog } = require("posthog-js") as typeof import("posthog-js");
 
 function createSdkCapture(t: TestContext) {
   t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
-  let observed: unknown = null;
+  let observed: unknown;
   const client = new PostHog();
   client.init("phc_public-token_123", {
     api_host: "http://127.0.0.1:1",
@@ -88,13 +88,13 @@ function createSdkCapture(t: TestContext) {
     $set?: Record<string, unknown>;
     $set_once?: Record<string, unknown>;
   }) => {
-    observed = null;
+    observed = undefined;
     client.capture(input.event, input.properties, {
       timestamp: input.timestamp,
       $set: input.$set,
       $set_once: input.$set_once,
     });
-    return observed as ReturnType<typeof sanitizeEvent>;
+    return observed as ReturnType<typeof sanitizeEvent> | undefined;
   };
 }
 
@@ -860,5 +860,5 @@ test("UTM labels pass only through the bounded vocabulary", () => {
 
 test("the public PostHog pipeline stops events rejected by before_send", (t) => {
   const capture = createSdkCapture(t);
-  assert.equal(capture({ event: "private fixture", properties: COOKIELESS_HASH_PROPERTIES }), null);
+  assert.equal(capture({ event: "private fixture", properties: ENVELOPE }), undefined);
 });
