@@ -48,7 +48,7 @@ test("referring hostnames survive the envelope without URLs or campaign data", (
 });
 
 import { createRequire } from "node:module";
-import { test } from "node:test";
+import { type TestContext, test } from "node:test";
 import {
   ALLOWED_CTA_IDS,
   ALLOWED_ROUTES,
@@ -59,20 +59,44 @@ import {
 } from "../lib/posthog-privacy.ts";
 
 const require = createRequire(import.meta.url);
-// Deep import on purpose: the published main bundle minifies `_runBeforeSend`
-// away, while lib/* is a published file in posthog-js's package.json `files`
-// with no exports map.
-const { PostHog } = require("posthog-js/lib/src/posthog-core.js") as {
-  PostHog: new () => {
-    config: { before_send?: (input: unknown) => unknown };
-    _runBeforeSend: (input: unknown) => unknown;
+const { PostHog } = require("posthog-js") as typeof import("posthog-js");
+
+function createSdkCapture(t: TestContext) {
+  t.mock.timers.enable({ apis: ["setTimeout", "setInterval"] });
+  let observed: unknown = null;
+  const client = new PostHog();
+  client.init("phc_public-token_123", {
+    api_host: "http://127.0.0.1:1",
+    persistence: "memory",
+    autocapture: false,
+    capture_pageview: false,
+    disable_session_recording: true,
+    advanced_disable_flags: true,
+    before_send: [
+      (event) => sanitizeEvent(event) as typeof event | null,
+      (event) => {
+        observed = event;
+        return null;
+      },
+    ],
+  });
+  t.after(() => client.shutdown());
+  return (input: {
+    event: string;
+    properties: Record<string, unknown>;
+    timestamp?: Date;
+    $set?: Record<string, unknown>;
+    $set_once?: Record<string, unknown>;
+  }) => {
+    observed = null;
+    client.capture(input.event, input.properties, {
+      timestamp: input.timestamp,
+      $set: input.$set,
+      $set_once: input.$set_once,
+    });
+    return observed as ReturnType<typeof sanitizeEvent>;
   };
-};
-assert.equal(
-  typeof new PostHog()._runBeforeSend,
-  "function",
-  "posthog-js/lib/src/posthog-core.js no longer exposes PostHog#_runBeforeSend; the before_send pipeline contracts below need updating for this posthog-js version",
-);
+}
 
 // posthog-js attaches these to every envelope by default (PostHog/posthog-js
 // packages/browser-common/src/utils/event-utils.ts, getEventProperties()).
@@ -390,10 +414,9 @@ test("unknown events fail closed", () => {
   assert.equal(sanitizeEvent({ event: "$identify", properties: {} }), null);
 });
 
-test("the pinned PostHog before_send pipeline keeps the required cookieless envelope", () => {
+test("the public PostHog capture pipeline keeps the required cookieless envelope", (t) => {
   const timestamp = new Date("2026-08-14T12:00:00.000Z");
   const input = {
-    uuid: "0189f47a-2f44-7dcb-bf7b-3bf1b8bd5d61",
     timestamp,
     event: "$pageview",
     properties: {
@@ -410,11 +433,12 @@ test("the pinned PostHog before_send pipeline keeps the required cookieless enve
     $set_once: { referrer: "private" },
   };
 
-  const client = new PostHog();
-  client.config.before_send = sanitizeEvent;
-
-  assert.deepEqual(client._runBeforeSend(input), {
-    uuid: input.uuid,
+  const capture = createSdkCapture(t);
+  const result = capture(input);
+  assert.ok(result);
+  assert.match(result.uuid ?? "", /^[0-9a-f-]{36}$/);
+  assert.deepEqual(result, {
+    uuid: result.uuid,
     timestamp,
     event: "$pageview",
     properties: {
@@ -422,6 +446,7 @@ test("the pinned PostHog before_send pipeline keeps the required cookieless enve
       distinct_id: "$posthog_cookieless",
       $cookieless_mode: true,
       $process_person_profile: false,
+      $referring_domain: "$direct",
       schema_version: 1,
       site: "codeswhat",
       surface: "marketing",
@@ -495,16 +520,15 @@ test("web vitals carry a $pathname taken from the sanitized path", () => {
   assert.equal(home.properties.$pathname, "/");
 });
 
-test("a CTA event shaped like the browser sends it (no path property) survives the pinned pipeline", () => {
+test("a CTA event shaped like the browser sends it (no path property) survives the public pipeline", (t) => {
   // posthog-js never sets `path` on a cta capture; the route has to come from
   // $pathname / $current_url, which carry the real query string.
-  const client = new PostHog();
-  client.config.before_send = sanitizeEvent;
+  const capture = createSdkCapture(t);
   for (const [ctaId, placement] of [
     ["github_org", "header"],
     ["project_drydock", "projects"],
   ]) {
-    const result = client._runBeforeSend({
+    const result = capture({
       event: "cta activated",
       properties: {
         token: "phc_public-token_123",
@@ -832,4 +856,9 @@ test("UTM labels pass only through the bounded vocabulary", () => {
   ]) {
     assert.equal(dropped in props, false, dropped);
   }
+});
+
+test("the public PostHog pipeline stops events rejected by before_send", (t) => {
+  const capture = createSdkCapture(t);
+  assert.equal(capture({ event: "private fixture", properties: COOKIELESS_HASH_PROPERTIES }), null);
 });
