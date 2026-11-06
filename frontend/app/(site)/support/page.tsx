@@ -60,8 +60,8 @@ export default function SupportPage() {
             Feed the <em>specimens.</em>
           </h1>
           <p className={styles.lede}>
-            These projects are free and open source. Everything here goes into one pool that keeps
-            them running. {SYSTEMA.name} takes support on{" "}
+            Everything given here goes into one shared pool for the open-source projects.{" "}
+            {SYSTEMA.name} takes support on{" "}
             <SupportLink
               href={SYSTEMA.supportUrl}
               ctaId="support_systema"

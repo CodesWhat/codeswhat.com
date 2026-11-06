@@ -14,7 +14,7 @@ export const SITE_CONFIG = {
   tagline: "Small, sharp tools from one developer and a lot of agents",
   /** Default meta / OpenGraph / description. */
   description:
-    "Open-source developer tools from one developer and a lot of agents: Docker and MCP servers, macOS utilities, a job-search workspace and a live bot census.",
+    "Developer tools, Mac apps and games from Scott Benson: Docker and MCP tools, local dictation, a job-search workspace and a live bot census.",
   /** Production domain (no protocol, no trailing slash). */
   domain: "codeswhat.com",
   /** GitHub org. */
@@ -46,15 +46,16 @@ export const OG_IMAGE = {
   url: "/og.png",
   width: 1200,
   height: 630,
-  alt: "CodesWhat: open-source developer tools and apps",
+  alt: "CodesWhat: developer tools, apps and games",
 } as const;
 
-export type ProjectCategory = "server-tool" | "macos-app" | "web-app";
+export type ProjectCategory = "server-tool" | "macos-app" | "web-app" | "game";
 
 export const CATEGORY_LABELS: Record<ProjectCategory, string> = {
   "server-tool": "Server tool",
   "macos-app": "macOS app",
   "web-app": "Web app",
+  game: "Game",
 };
 
 export type Project = {
@@ -66,7 +67,8 @@ export type Project = {
   /** at-a-glance badges, kept uniform as "License · Language" across cards */
   status: string;
   /** primary link out (repo or product site) */
-  href: string;
+  href?: string;
+  comingSoon?: boolean;
 };
 
 /** The project roster — real, crawlable content and the SEO/AEO backbone. */
@@ -157,5 +159,15 @@ export const PROJECTS: Project[] = [
       "Keeps your Mac awake. A native macOS menu bar app with timed holds, triggers, a CLI for agents and an opt-in closed-lid mode.",
     status: "MIT · Swift",
     href: "https://dilated.app",
+  },
+  {
+    slug: "conga-crawler",
+    name: "Conga Crawler",
+    category: "game",
+    tagline: "Heroes, in single file",
+    description:
+      "A dungeon crawler for iPhone where you recruit a conga line of heroes, each bringing their own weapon and attack.",
+    status: "All rights reserved · GDScript",
+    comingSoon: true,
   },
 ];
