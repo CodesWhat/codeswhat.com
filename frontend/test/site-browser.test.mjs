@@ -206,7 +206,7 @@ test("homepage renders the specimen plates and the theme toggle flips and persis
   await page.goto(baseUrl, { waitUntil: "networkidle" });
 
   assert.equal(await page.getByRole("heading", { level: 1 }).count(), 1);
-  assert.equal(await page.locator("article[aria-labelledby^='plate-']").count(), 9);
+  assert.equal(await page.locator("article[aria-labelledby^='plate-']").count(), 10);
   assert.ok(
     await page
       .getByRole("img", { name: /Pixel art of a glossy blue toy whale/ })
@@ -866,5 +866,52 @@ test("subscription rejects cross-site and non-JSON requests without calling a pr
     });
     assert.equal(response.status, status, name);
     assert.equal(typeof (await response.json()).error, "string", name);
+  }
+});
+
+test("Conga Crawler is coming soon on the homepage and its own plate", async (t) => {
+  const page = await localPage(t);
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  const plate = page.locator("article[aria-labelledby='plate-conga-crawler']");
+  assert.equal(await plate.getByText("Coming soon", { exact: true }).count(), 1);
+  assert.equal(await plate.getByRole("link", { name: /Visit/ }).count(), 0);
+  if (process.env.BROWSER_ARTIFACT_DIR) {
+    await plate.screenshot({
+      path: `${process.env.BROWSER_ARTIFACT_DIR}/conga-${engineName}-plate.png`,
+    });
+  }
+  await plate.getByRole("link", { name: "Field notes", exact: true }).click();
+  await page.waitForURL(`${baseUrl}/projects/conga-crawler`);
+  assert.equal(await page.getByRole("heading", { name: "Conga Crawler", exact: true }).count(), 1);
+  assert.equal(await page.getByText("Coming soon", { exact: true }).count(), 1);
+  assert.equal(
+    await page
+      .getByRole("img", { name: /silver-helmeted knight beside a yellow-eyed skeleton/ })
+      .count(),
+    1,
+  );
+  assert.equal(
+    await page
+      .getByRole("link", { name: /Visit the site|Repository|Docs|Read the full README/ })
+      .count(),
+    0,
+  );
+  assert.equal(await page.locator('a[href*="conga-crawler"][href*="github.com"]').count(), 0);
+  assert.equal(await page.getByText("Funded from the shared pool.", { exact: true }).count(), 0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  if (process.env.BROWSER_ARTIFACT_DIR) {
+    assert.equal(await page.getByRole("banner").count(), 1);
+    assert.equal(
+      await page.getByRole("heading", { name: "Conga Crawler", exact: true }).count(),
+      1,
+    );
+    await page.screenshot({
+      path: `${process.env.BROWSER_ARTIFACT_DIR}/conga-${engineName}-mobile-top.png`,
+    });
+    await page.getByText("Coming soon", { exact: true }).scrollIntoViewIfNeeded();
+    await page.screenshot({
+      path: `${process.env.BROWSER_ARTIFACT_DIR}/conga-${engineName}-mobile-status.png`,
+    });
   }
 });

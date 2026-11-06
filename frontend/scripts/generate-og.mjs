@@ -64,7 +64,7 @@ h1 em, .name em { font-style: italic; background: #d3e58b; padding: 0 .1em; marg
 .dots { position: absolute; top: 96px; right: 36px; width: 430px; height: 410px; background: radial-gradient(#b3bdb6 1.2px, transparent 1.2px) 0 0 / 22px 22px; opacity: .6; }
 .paper { position: absolute; display: flex; flex-wrap: wrap; align-content: center; justify-content: center; border: 1px solid #111827; border-radius: 6px; background: #f8f9fa; box-shadow: 8px 8px 0 #d3e58b; }
 .paper.coll { right: 44px; top: 112px; width: 420px; height: 392px; transform: rotate(2deg); gap: 10px 0; padding: 20px 12px 44px; }
-.paper.coll .cell { width: 124px; height: 100px; display: flex; align-items: center; justify-content: center; }
+.paper.coll .cell { width: 92px; height: 100px; display: flex; align-items: center; justify-content: center; }
 .paper .fig { position: absolute; left: 16px; bottom: 10px; font: 500 12px Mono; letter-spacing: 2px; text-transform: uppercase; color: #4b5563; }
 .paper.big { right: 64px; top: 112px; width: 400px; height: 380px; padding-bottom: 36px; transform: rotate(2deg); display: flex; align-items: center; justify-content: center; }
 .name { position: absolute; left: 62px; top: 168px; margin: 0; width: 640px; height: 112px; overflow: hidden; font: 400 96px/1.1 Serif; letter-spacing: -2px; white-space: nowrap; }
@@ -93,8 +93,8 @@ const cards = [
       <div class="label">Catalogue of small tools</div>
       <h1>One developer. A lot of agents. <em>Small, sharp</em> tools.</h1>
       <div class="dots"></div>
-      <div class="paper coll">${HOME_SLUGS.map((s) => `<div class="cell">${sprite(s, 3)}</div>`).join("")}<span class="fig">Fig. 1 · The collection</span></div>
-      ${footer("Open-source developer tools and apps")}`),
+      <div class="paper coll">${HOME_SLUGS.map((s) => `<div class="cell">${sprite(s, 2)}</div>`).join("")}<span class="fig">Fig. 1 · The collection</span></div>
+      ${footer("Developer tools, apps and games")}`),
   },
   {
     out: path.join(publicDir, "og/support.png"),
@@ -103,8 +103,8 @@ const cards = [
       <h1 class="narrow">Feed the <em>specimens.</em></h1>
       <div class="tiers"><span>$5</span><span>$10</span><span>$25</span><span>$100 a month</span></div>
       <div class="dots"></div>
-      <div class="paper coll">${HOME_SLUGS.map((s) => `<div class="cell">${sprite(s, 3)}</div>`).join("")}<span class="fig">Fig. 1 · The collection</span></div>
-      ${footer("Open-source developer tools and apps")}`),
+      <div class="paper coll">${HOME_SLUGS.map((s) => `<div class="cell">${sprite(s, 2)}</div>`).join("")}<span class="fig">Fig. 1 · The collection</span></div>
+      ${footer("Developer tools, apps and games")}`),
   },
   ...SPECIMENS.map((s) => {
     const art = SPRITES[s.slug];
@@ -113,7 +113,7 @@ const cards = [
     return {
       out: path.join(publicDir, `og/${s.slug}.png`),
       html: page(`${brand}
-        <div class="label">Plate ${esc(s.no)} · ${esc(s.kind)}</div>
+        <div class="label">Plate ${esc(s.no)} · ${esc(s.kind)}${s.comingSoon ? " · Coming soon" : ""}</div>
         <div class="name" style="font-size:${s.name.length > 12 ? 68 : 96}px"><em>${esc(s.name)}</em></div>
         <p class="latin">${esc(s.latin)}</p>
         <p class="sub" style="top:360px">${esc(s.tagline)}</p>

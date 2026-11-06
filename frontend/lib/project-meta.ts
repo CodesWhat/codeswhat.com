@@ -9,6 +9,7 @@ type ProjectMetaInput = {
   kind: string;
   license: string;
   language: string;
+  comingSoon?: boolean;
 };
 
 export function projectTitle(p: Pick<ProjectMetaInput, "name" | "tagline">, siteName: string) {
@@ -23,6 +24,7 @@ function midSentence(kind: string) {
 }
 
 export function projectDescription(p: ProjectMetaInput) {
+  if (p.comingSoon) return `${p.about} Coming soon.`;
   // Each form ends in a complete sentence about the project, so the licence never
   // reads as the subject of "written in".
   const plain = `${p.about} It's open source under ${p.license} and written in ${p.language}.`;

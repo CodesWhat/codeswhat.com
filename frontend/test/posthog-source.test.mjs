@@ -93,7 +93,7 @@ test("the cookieless envelope keeps the fields PostHog's server hash requires", 
   assert.match(privacy, /cookieless_missing_user_agent|cookieless server-hash/u);
 });
 
-test("every project has an allowlisted project_<slug> CTA id and a tracked link", async () => {
+test("project routes and available outbound links use the tracked vocabulary", async () => {
   const { PROJECT_SLUGS } = await import("../lib/project-slugs.ts");
   const { PROJECTS } = await import("../lib/site-config.ts");
   const { SPECIMENS } = await import("../lib/specimens.ts");
