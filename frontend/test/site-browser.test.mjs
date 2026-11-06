@@ -869,12 +869,15 @@ test("subscription rejects cross-site and non-JSON requests without calling a pr
   }
 });
 
-test("Conga Crawler is coming soon on the homepage and its own plate", async (t) => {
+test("Conga Crawler links to the App Store on the homepage and its own plate", async (t) => {
   const page = await localPage(t);
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   const plate = page.locator("article[aria-labelledby='plate-conga-crawler']");
-  assert.equal(await plate.getByText("Coming soon", { exact: true }).count(), 1);
-  assert.equal(await plate.getByRole("link", { name: /Visit/ }).count(), 0);
+  assert.equal(await plate.getByText("Coming soon", { exact: true }).count(), 0);
+  assert.equal(
+    await plate.getByRole("link", { name: /Visit/ }).getAttribute("href"),
+    "https://apps.apple.com/app/id6795247827",
+  );
   if (process.env.BROWSER_ARTIFACT_DIR) {
     await plate.screenshot({
       path: `${process.env.BROWSER_ARTIFACT_DIR}/conga-${engineName}-plate.png`,
@@ -883,7 +886,7 @@ test("Conga Crawler is coming soon on the homepage and its own plate", async (t)
   await plate.getByRole("link", { name: "Field notes", exact: true }).click();
   await page.waitForURL(`${baseUrl}/projects/conga-crawler`);
   assert.equal(await page.getByRole("heading", { name: "Conga Crawler", exact: true }).count(), 1);
-  assert.equal(await page.getByText("Coming soon", { exact: true }).count(), 1);
+  assert.equal(await page.getByText("Coming soon", { exact: true }).count(), 0);
   assert.equal(
     await page
       .getByRole("img", { name: /silver-helmeted knight beside a yellow-eyed skeleton/ })
@@ -891,10 +894,12 @@ test("Conga Crawler is coming soon on the homepage and its own plate", async (t)
     1,
   );
   assert.equal(
-    await page
-      .getByRole("link", { name: /Visit the site|Repository|Docs|Read the full README/ })
-      .count(),
+    await page.getByRole("link", { name: /Repository|Docs|Read the full README/ }).count(),
     0,
+  );
+  assert.equal(
+    await page.getByRole("link", { name: /Get it on the App Store/ }).getAttribute("href"),
+    "https://apps.apple.com/app/id6795247827",
   );
   assert.equal(await page.locator('a[href*="conga-crawler"][href*="github.com"]').count(), 0);
   assert.equal(await page.getByText("Funded from the shared pool.", { exact: true }).count(), 0);
@@ -909,7 +914,7 @@ test("Conga Crawler is coming soon on the homepage and its own plate", async (t)
     await page.screenshot({
       path: `${process.env.BROWSER_ARTIFACT_DIR}/conga-${engineName}-mobile-top.png`,
     });
-    await page.getByText("Coming soon", { exact: true }).scrollIntoViewIfNeeded();
+    await page.getByRole("link", { name: /Get it on the App Store/ }).scrollIntoViewIfNeeded();
     await page.screenshot({
       path: `${process.env.BROWSER_ARTIFACT_DIR}/conga-${engineName}-mobile-status.png`,
     });

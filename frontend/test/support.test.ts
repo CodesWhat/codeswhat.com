@@ -286,25 +286,25 @@ test("homepage graph lists the same project ids as the project pages", () => {
   assert.deepEqual(home, pages);
 });
 
-test("Conga Crawler is an unreleased game without private or invented launch links", () => {
+test("Conga Crawler links to its released App Store listing without private links", () => {
   const s = SPECIMENS.find((project) => project.slug === "conga-crawler");
   assert.ok(s);
-  assert.equal(s.comingSoon, true);
+  assert.notEqual(s.comingSoon, true);
   assert.equal(s.kind, "Game");
-  assert.equal(s.site, undefined);
+  assert.equal(s.site, "https://apps.apple.com/app/id6795247827");
   assert.equal(s.repo, undefined);
   assert.equal(s.docs, undefined);
   const description = projectDescription(s);
-  assert.match(description, /Coming soon/);
+  assert.doesNotMatch(description, /Coming soon/);
   assert.doesNotMatch(description, /open.source/i);
   const node = projectSoftwareNode(s);
-  assert.equal(node.creativeWorkStatus, "In development");
-  assert.equal("sameAs" in node, false);
+  assert.equal("creativeWorkStatus" in node, false);
+  assert.deepEqual(node.sameAs, [s.site]);
   const entry = buildLlmsTxt()
     .split("\n- [")
     .find((line) => line.startsWith("Conga Crawler]("));
   assert.ok(entry);
-  assert.ok(entry.includes(`${BASE_URL}/projects/conga-crawler`));
-  assert.match(entry, /Coming soon/);
-  assert.doesNotMatch(entry, /github.com|testflight.apple.com|apps.apple.com/);
+  assert.ok(entry.includes(s.site));
+  assert.doesNotMatch(entry, /Coming soon/);
+  assert.doesNotMatch(entry, /github.com|testflight.apple.com/);
 });

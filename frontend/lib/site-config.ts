@@ -168,6 +168,6 @@ export const PROJECTS: Project[] = [
     description:
       "A dungeon crawler for iPhone where you recruit a conga line of heroes, each bringing their own weapon and attack.",
     status: "All rights reserved · GDScript",
-    comingSoon: true,
+    href: "https://apps.apple.com/app/id6795247827",
   },
 ];
