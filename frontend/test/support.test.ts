@@ -216,13 +216,14 @@ test("security.txt carries the RFC 9116 required fields", () => {
 test("each project is one schema.org entity with a stable slug-based id", () => {
   for (const s of SPECIMENS) {
     const node = projectSoftwareNode(s) as Record<string, unknown>;
-    assert.equal(node["@type"], "SoftwareSourceCode");
+    assert.equal(node["@type"], s.kind === "Game" ? "VideoGame" : "SoftwareSourceCode");
     assert.equal(node["@id"], `${BASE_URL}/projects/${s.slug}#software`);
     assert.equal(node["@id"], projectSchemaId(s.slug));
     assert.equal(node.url, `${BASE_URL}/projects/${s.slug}`);
     assert.equal(node.name, s.name, s.slug);
     assert.equal(node.description, s.about);
-    assert.equal(node.programmingLanguage, s.language);
+    if (s.kind === "Game") assert.equal("programmingLanguage" in node, false);
+    else assert.equal(node.programmingLanguage, s.language);
     assert.deepEqual(node.author, { "@id": `${BASE_URL}/#org` });
     assert.deepEqual(node.publisher, { "@id": `${BASE_URL}/#org` });
   }
@@ -264,7 +265,7 @@ test("project page graph has a breadcrumb ending at the project URL", () => {
     assert.equal(crumb.itemListElement[1].item, `${BASE_URL}/projects/${s.slug}`);
     assert.equal(crumb.itemListElement[1].name, s.name);
     assert.deepEqual(
-      ld["@graph"].find((n) => n["@type"] === "SoftwareSourceCode"),
+      ld["@graph"].find((n) => n["@id"] === projectSchemaId(s.slug)),
       projectSoftwareNode(s),
       s.slug,
     );
@@ -279,7 +280,7 @@ test("serializeJsonLd escapes < so markup can't close the script tag", () => {
 
 test("homepage graph lists the same project ids as the project pages", () => {
   const home = (homepageJsonLd["@graph"] as Record<string, unknown>[])
-    .filter((n) => n["@type"] === "SoftwareSourceCode")
+    .filter((n) => n["@type"] === "SoftwareSourceCode" || n["@type"] === "VideoGame")
     .map((n) => n["@id"])
     .sort();
   const pages = SPECIMENS.map((s) => projectSchemaId(s.slug)).sort();
