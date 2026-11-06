@@ -895,10 +895,13 @@
 }
 .figureGrid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 10px 8px;
   align-items: end;
   justify-items: center;
+}
+.figureLink:nth-last-child(2):nth-child(4n + 1) {
+  grid-column: 2;
 }
 .figureGrid svg {
   max-width: 100%;

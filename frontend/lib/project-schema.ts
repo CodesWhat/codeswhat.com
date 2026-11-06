@@ -15,10 +15,11 @@ export function projectSoftwareNode(s: Specimen) {
     description: s.about,
     url,
     programmingLanguage: s.language,
+    ...(s.comingSoon ? { creativeWorkStatus: "In development" } : {}),
     author: ORG,
     publisher: ORG,
     ...(s.repo ? { codeRepository: s.repo, license: `${s.repo}/blob/main/LICENSE` } : {}),
-    ...(s.site !== s.repo ? { sameAs: [s.site] } : {}),
+    ...(s.site && s.site !== s.repo ? { sameAs: [s.site] } : {}),
   };
 }
 

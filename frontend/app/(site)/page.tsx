@@ -42,7 +42,7 @@ export default function Home() {
       />
       <main id="main" className={styles.main}>
         <section className={styles.hero} aria-labelledby="hero-title">
-          <p className={styles.eyebrow}>Open-source tools, and a developer for hire</p>
+          <p className={styles.eyebrow}>Tools, apps, games, and a developer for hire</p>
           <h1 id="hero-title" className={styles.display}>
             One developer. A lot of agents. <em>Small, sharp</em> tools.
           </h1>
@@ -71,8 +71,8 @@ export default function Home() {
 
           <div className={styles.heroCopy}>
             <p className={styles.lede}>
-              CodesWhat is Scott Benson, building open-source tools with a crowd of coding agents.
-              Each one does a single job, in the open, with nothing phoning home. They're filed
+              CodesWhat is Scott Benson, building tools, apps and games with a crowd of coding
+              agents. The collection includes released projects and work in progress. They're filed
               below as specimens. When you need something built, the same crew takes commissions.
             </p>
             <div className={styles.actions}>
@@ -93,8 +93,8 @@ export default function Home() {
               The specimens, <em>filed and labelled.</em>
             </h2>
             <p className={styles.sectionLede}>
-              Nine projects, each drawn from its own mascot, with a Latin name that fits and field
-              notes that are mostly true. Open a plate for the full write-up.
+              {SPECIMENS.length} projects, each drawn from its own mascot, with a Latin name that
+              fits and field notes that are mostly true. Open a plate for the full write-up.
             </p>
           </header>
 
@@ -134,19 +134,26 @@ export default function Home() {
                     </dl>
                     <div className={styles.plateFoot}>
                       <span className={styles.chip}>
-                        {specimen.license} · {specimen.language}
+                        {specimen.comingSoon
+                          ? "Coming soon"
+                          : `${specimen.license} · ${specimen.language}`}
                       </span>
                       <Link href={`/projects/${specimen.slug}`}>Field notes</Link>
-                      <TrackedCtaLink
-                        ctaId={`project_${specimen.slug}`}
-                        placement="projects"
-                        href={specimen.site}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Visit
-                        <span className={styles.srOnly}> {specimen.name} (opens in a new tab)</span>
-                      </TrackedCtaLink>
+                      {specimen.site ? (
+                        <TrackedCtaLink
+                          ctaId={`project_${specimen.slug}`}
+                          placement="projects"
+                          href={specimen.site}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Visit
+                          <span className={styles.srOnly}>
+                            {" "}
+                            {specimen.name} (opens in a new tab)
+                          </span>
+                        </TrackedCtaLink>
+                      ) : null}
                     </div>
                   </div>
                 </article>
@@ -163,8 +170,8 @@ export default function Home() {
                 CodesWhat? <em>Anything for you.</em>
               </h2>
               <p className={styles.sectionLede}>
-                The projects above are only what I have open-sourced. If you are building something,
-                I can help you ship it faster.
+                The projects above are a look at what I build. If you are building something, I can
+                help you ship it faster.
               </p>
             </div>
             <aside className={styles.dotCard} aria-label="Commissions note">
@@ -206,8 +213,8 @@ export default function Home() {
             <div>
               <p className={styles.fundText}>
                 If these tools save you time and you'd like to chip in, you can sponsor me on GitHub
-                or give by card. Either way it goes toward hosting, domains and CI for every
-                project, monthly or one-time, whatever works for you.
+                or give by card. Either way it goes toward hosting, domains and CI for the
+                open-source projects, monthly or one-time, whatever works for you.
               </p>
               <div className={styles.actions}>
                 <SupportLink

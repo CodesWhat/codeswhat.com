@@ -15,7 +15,8 @@ export type Specimen = {
   temperament: string;
   marks: string;
   handling: string;
-  site: string;
+  site?: string;
+  comingSoon?: boolean;
   repo?: string;
   docs?: string;
   alt: string;
@@ -131,6 +132,16 @@ const FIELD: Record<string, Field> = {
     docs: `${GITHUB_URL}/dilated/tree/main/docs`,
     repo: `${GITHUB_URL}/dilated`,
   },
+  "conga-crawler": {
+    latin: "Caterva serpentina",
+    habitat: "Dungeons, on an iPhone held upright",
+    diet: "New recruits, treasure and crowded corridors",
+    temperament: "The longer the queue, the stronger the party.",
+    marks: "A silver-helmeted knight beside a skeleton in a red scarf. An unlikely party.",
+    handling:
+      "Coming soon for iPhone. Recruit heroes, build your conga line and keep the party moving through the dungeon.",
+    alt: "Pixel art of a silver-helmeted knight beside a yellow-eyed skeleton wearing a red scarf",
+  },
 };
 
 export const SPECIMENS: Specimen[] = PROJECTS.map((p, i) => {
@@ -145,6 +156,7 @@ export const SPECIMENS: Specimen[] = PROJECTS.map((p, i) => {
     tagline: p.tagline,
     about: p.description,
     site: p.href,
+    comingSoon: p.comingSoon,
     ...FIELD[p.slug],
   };
 });

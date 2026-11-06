@@ -163,7 +163,8 @@ test("project titles and descriptions fit search snippets and stay unique", () =
       descriptions[i].length >= DESCRIPTION_MIN && descriptions[i].length <= DESCRIPTION_MAX,
       `${s.slug} description is ${descriptions[i].length}`,
     );
-    assert.ok(descriptions[i].includes(s.license), `${s.slug} description omits its licence`);
+    if (s.comingSoon) assert.match(descriptions[i], /Coming soon/);
+    else assert.ok(descriptions[i].includes(s.license), `${s.slug} description omits its licence`);
   }
   assert.equal(new Set(titles).size, titles.length);
   assert.equal(new Set(descriptions).size, descriptions.length);
@@ -283,4 +284,27 @@ test("homepage graph lists the same project ids as the project pages", () => {
     .sort();
   const pages = SPECIMENS.map((s) => projectSchemaId(s.slug)).sort();
   assert.deepEqual(home, pages);
+});
+
+test("Conga Crawler is an unreleased game without private or invented launch links", () => {
+  const s = SPECIMENS.find((project) => project.slug === "conga-crawler");
+  assert.ok(s);
+  assert.equal(s.comingSoon, true);
+  assert.equal(s.kind, "Game");
+  assert.equal(s.site, undefined);
+  assert.equal(s.repo, undefined);
+  assert.equal(s.docs, undefined);
+  const description = projectDescription(s);
+  assert.match(description, /Coming soon/);
+  assert.doesNotMatch(description, /open.source/i);
+  const node = projectSoftwareNode(s);
+  assert.equal(node.creativeWorkStatus, "In development");
+  assert.equal("sameAs" in node, false);
+  const entry = buildLlmsTxt()
+    .split("\n- [")
+    .find((line) => line.startsWith("Conga Crawler]("));
+  assert.ok(entry);
+  assert.ok(entry.includes(`${BASE_URL}/projects/conga-crawler`));
+  assert.match(entry, /Coming soon/);
+  assert.doesNotMatch(entry, /github.com|testflight.apple.com|apps.apple.com/);
 });
