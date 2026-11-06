@@ -139,7 +139,7 @@ const FIELD: Record<string, Field> = {
     temperament: "The longer the queue, the stronger the party.",
     marks: "A silver-helmeted knight beside a skeleton in a red scarf. An unlikely party.",
     handling:
-      "Coming soon for iPhone. Recruit heroes, build your conga line and keep the party moving through the dungeon.",
+      "Available on the App Store for iPhone. Recruit heroes, build your conga line and keep the party moving through the dungeon.",
     alt: "Pixel art of a silver-helmeted knight beside a yellow-eyed skeleton wearing a red scarf",
   },
 };
