@@ -5,16 +5,16 @@ const ORG = { "@id": `${BASE_URL}/#org` };
 
 export const projectSchemaId = (slug: string) => `${BASE_URL}/projects/${slug}#software`;
 
-/** One SoftwareSourceCode node per project, shared by the homepage and the project page. */
+/** One software node per project, shared by the homepage and the project page. */
 export function projectSoftwareNode(s: Specimen) {
   const url = `${BASE_URL}/projects/${s.slug}`;
   return {
-    "@type": "SoftwareSourceCode",
+    "@type": s.kind === "Game" ? "VideoGame" : "SoftwareSourceCode",
     "@id": projectSchemaId(s.slug),
     name: s.name,
     description: s.about,
     url,
-    programmingLanguage: s.language,
+    ...(s.kind === "Game" ? {} : { programmingLanguage: s.language }),
     ...(s.comingSoon ? { creativeWorkStatus: "In development" } : {}),
     author: ORG,
     publisher: ORG,
@@ -44,7 +44,7 @@ export function projectPageJsonLd(s: Specimen) {
   };
 }
 
-// Organization + WebSite + Person (founder) + one SoftwareSourceCode per project.
+// Organization + WebSite + Person (founder) + one software node per project.
 // This is the crawlable/answer-engine backbone, server-rendered on the homepage.
 export const homepageJsonLd = {
   "@context": "https://schema.org",

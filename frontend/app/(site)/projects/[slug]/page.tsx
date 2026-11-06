@@ -98,7 +98,9 @@ export default async function SpecimenPage({ params }: { params: Promise<{ slug:
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    Visit the site
+                    {s.site.startsWith("https://apps.apple.com/")
+                      ? "Get it on the App Store"
+                      : "Visit the site"}
                     <span className={styles.srOnly}> (opens in a new tab)</span>
                   </TrackedCtaLink>
                 ) : null}
@@ -171,7 +173,7 @@ export default async function SpecimenPage({ params }: { params: Promise<{ slug:
           </dl>
         </section>
 
-        {!s.comingSoon ? (
+        {!s.comingSoon && s.license !== "All rights reserved" ? (
           <div className={styles.upkeep}>
             <strong>Upkeep</strong>
             {s.slug === "systema-machinae" ? (
