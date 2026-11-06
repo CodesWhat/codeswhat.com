@@ -14,9 +14,6 @@ Links, `llms.txt` and `.well-known/security.txt`.
 
 ## Open
 
-- [ ] Evaluate the next `posthog-js` upgrade against the public SDK capture
-      contract tests. CI runs both `test:posthog` and the production response
-      check, `test:posthog:browser`.
 - [ ] #57, the public-repo security baseline, is partly done. The remaining
       items are tracked privately.
 - [ ] Decide whether three, react-three-fiber, drei and rapier stay. They're only
