@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { chromium, firefox, webkit } from "playwright-core";
+import { SPECIMEN_EXAMPLES } from "../lib/specimen-examples.ts";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const nextBin = fileURLToPath(new URL("../node_modules/next/dist/bin/next", import.meta.url));
@@ -260,6 +261,7 @@ test("the primary navigation marks Support only while its page is current", {
   await nav.getByRole("link", { name: "Specimens" }).click();
   await page.waitForURL(`${baseUrl}/#specimens`);
   assert.equal(await nav.locator('[aria-current="page"]').count(), 0);
+  assert.equal(await support.evaluate((link) => getComputedStyle(link).textDecorationLine), "none");
   await support.click();
   await page.waitForURL(`${baseUrl}/support`);
   await page.waitForFunction(
@@ -341,8 +343,13 @@ test("field notes show attributed README excerpts and leave unsourced examples a
     const excerpt = await row.locator("pre code").textContent();
     const lines = excerpt.split("\n");
     assert.equal(lines[0], firstLine, slug);
+    assert.equal(excerpt, SPECIMEN_EXAMPLES[slug].excerpt, `${slug}: complete rendered excerpt`);
     assert.ok(lines.length >= 3 && lines.length <= 6, `${slug}: a short excerpt`);
     const source = row.getByRole("link", { name: "Read the full README" });
+    const sourceUrl = await source.getAttribute("href");
+    assert.equal(sourceUrl, SPECIMEN_EXAMPLES[slug].sourceUrl, `${slug}: exact source URL`);
+    const [, start, end] = sourceUrl.match(/#L(\d+)-L(\d+)$/);
+    assert.equal(Number(end) - Number(start) + 1, lines.length, `${slug}: source range length`);
     assert.match(
       await source.getAttribute("href"),
       new RegExp(
