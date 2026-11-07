@@ -124,6 +124,7 @@ test("route sanitization only returns the finite public route manifest", () => {
     "/projects/careerrat",
     "/projects/systema-machinae",
     "/projects/dilated",
+    "/projects/conga-crawler",
   ]);
   assert.equal(sanitizeRoute("/?utm_source=secret#private"), "/");
   assert.equal(sanitizeRoute("/"), "/");
@@ -322,6 +323,7 @@ test("CTA events are limited to the fixed vocabulary", () => {
     "project_careerrat",
     "project_systema-machinae",
     "project_dilated",
+    "project_conga-crawler",
   ]);
   assert.deepEqual(
     sanitizeEvent({
@@ -551,7 +553,7 @@ test("a CTA event shaped like the browser sends it (no path property) survives t
 
 test("project CTAs need a project_ id with the projects placement", () => {
   const accepted = ALLOWED_CTA_IDS.filter((id) => id.startsWith("project_"));
-  assert.equal(accepted.length, 9);
+  assert.equal(accepted.length, 10);
   for (const ctaId of accepted) {
     assert.ok(
       sanitizeEvent({

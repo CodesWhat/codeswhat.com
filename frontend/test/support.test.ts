@@ -163,7 +163,8 @@ test("project titles and descriptions fit search snippets and stay unique", () =
       descriptions[i].length >= DESCRIPTION_MIN && descriptions[i].length <= DESCRIPTION_MAX,
       `${s.slug} description is ${descriptions[i].length}`,
     );
-    assert.ok(descriptions[i].includes(s.license), `${s.slug} description omits its licence`);
+    if (s.comingSoon) assert.match(descriptions[i], /Coming soon/);
+    else assert.ok(descriptions[i].includes(s.license), `${s.slug} description omits its licence`);
   }
   assert.equal(new Set(titles).size, titles.length);
   assert.equal(new Set(descriptions).size, descriptions.length);
@@ -215,13 +216,14 @@ test("security.txt carries the RFC 9116 required fields", () => {
 test("each project is one schema.org entity with a stable slug-based id", () => {
   for (const s of SPECIMENS) {
     const node = projectSoftwareNode(s) as Record<string, unknown>;
-    assert.equal(node["@type"], "SoftwareSourceCode");
+    assert.equal(node["@type"], s.kind === "Game" ? "VideoGame" : "SoftwareSourceCode");
     assert.equal(node["@id"], `${BASE_URL}/projects/${s.slug}#software`);
     assert.equal(node["@id"], projectSchemaId(s.slug));
     assert.equal(node.url, `${BASE_URL}/projects/${s.slug}`);
     assert.equal(node.name, s.name, s.slug);
     assert.equal(node.description, s.about);
-    assert.equal(node.programmingLanguage, s.language);
+    if (s.kind === "Game") assert.equal("programmingLanguage" in node, false);
+    else assert.equal(node.programmingLanguage, s.language);
     assert.deepEqual(node.author, { "@id": `${BASE_URL}/#org` });
     assert.deepEqual(node.publisher, { "@id": `${BASE_URL}/#org` });
   }
@@ -263,7 +265,7 @@ test("project page graph has a breadcrumb ending at the project URL", () => {
     assert.equal(crumb.itemListElement[1].item, `${BASE_URL}/projects/${s.slug}`);
     assert.equal(crumb.itemListElement[1].name, s.name);
     assert.deepEqual(
-      ld["@graph"].find((n) => n["@type"] === "SoftwareSourceCode"),
+      ld["@graph"].find((n) => n["@id"] === projectSchemaId(s.slug)),
       projectSoftwareNode(s),
       s.slug,
     );
@@ -278,9 +280,32 @@ test("serializeJsonLd escapes < so markup can't close the script tag", () => {
 
 test("homepage graph lists the same project ids as the project pages", () => {
   const home = (homepageJsonLd["@graph"] as Record<string, unknown>[])
-    .filter((n) => n["@type"] === "SoftwareSourceCode")
+    .filter((n) => n["@type"] === "SoftwareSourceCode" || n["@type"] === "VideoGame")
     .map((n) => n["@id"])
     .sort();
   const pages = SPECIMENS.map((s) => projectSchemaId(s.slug)).sort();
   assert.deepEqual(home, pages);
+});
+
+test("Conga Crawler links to its released App Store listing without private links", () => {
+  const s = SPECIMENS.find((project) => project.slug === "conga-crawler");
+  assert.ok(s);
+  assert.notEqual(s.comingSoon, true);
+  assert.equal(s.kind, "Game");
+  assert.equal(s.site, "https://apps.apple.com/app/id6795247827");
+  assert.equal(s.repo, undefined);
+  assert.equal(s.docs, undefined);
+  const description = projectDescription(s);
+  assert.doesNotMatch(description, /Coming soon/);
+  assert.doesNotMatch(description, /open.source/i);
+  const node = projectSoftwareNode(s);
+  assert.equal("creativeWorkStatus" in node, false);
+  assert.deepEqual(node.sameAs, [s.site]);
+  const entry = buildLlmsTxt()
+    .split("\n- [")
+    .find((line) => line.startsWith("Conga Crawler]("));
+  assert.ok(entry);
+  assert.ok(entry.includes(s.site));
+  assert.doesNotMatch(entry, /Coming soon/);
+  assert.doesNotMatch(entry, /github.com|testflight.apple.com/);
 });

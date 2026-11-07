@@ -81,44 +81,51 @@ export default async function SpecimenPage({ params }: { params: Promise<{ slug:
             </h1>
             <p className={styles.detailLatin}>{s.latin}</p>
             <p className={styles.lede}>{s.about}</p>
+            {s.comingSoon ? <p className={styles.chip}>Coming soon</p> : null}
             <ul className={styles.metaRow} aria-label="License and language">
               <li>{s.license}</li>
               <li>{s.language}</li>
               <li>{s.kind}</li>
             </ul>
-            <div className={styles.actions}>
-              <TrackedCtaLink
-                ctaId={`project_${s.slug}`}
-                placement="projects"
-                className={styles.btnLime}
-                href={s.site}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Visit the site
-                <span className={styles.srOnly}> (opens in a new tab)</span>
-              </TrackedCtaLink>
-              {s.repo ? (
-                <a
-                  className={styles.btnLine}
-                  href={s.repo}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Repository
-                </a>
-              ) : null}
-              {s.docs ? (
-                <a
-                  className={styles.btnLine}
-                  href={s.docs}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Docs
-                </a>
-              ) : null}
-            </div>
+            {s.site || s.repo || s.docs ? (
+              <div className={styles.actions}>
+                {s.site ? (
+                  <TrackedCtaLink
+                    ctaId={`project_${s.slug}`}
+                    placement="projects"
+                    className={styles.btnLime}
+                    href={s.site}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {s.site.startsWith("https://apps.apple.com/")
+                      ? "Get it on the App Store"
+                      : "Visit the site"}
+                    <span className={styles.srOnly}> (opens in a new tab)</span>
+                  </TrackedCtaLink>
+                ) : null}
+                {s.repo ? (
+                  <a
+                    className={styles.btnLine}
+                    href={s.repo}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Repository
+                  </a>
+                ) : null}
+                {s.docs ? (
+                  <a
+                    className={styles.btnLine}
+                    href={s.docs}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Docs
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -166,28 +173,30 @@ export default async function SpecimenPage({ params }: { params: Promise<{ slug:
           </dl>
         </section>
 
-        <div className={styles.upkeep}>
-          <strong>Upkeep</strong>
-          {s.slug === "systema-machinae" ? (
-            <>
-              <span>Takes support on its own page.</span>
-              <SupportLink
-                href={SYSTEMA.supportUrl}
-                ctaId="support_systema"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Its support page
-                <span className={styles.srOnly}> (opens in a new tab)</span>
-              </SupportLink>
-            </>
-          ) : (
-            <>
-              <span>Funded from the shared pool.</span>
-              <Link href="/support">Support</Link>
-            </>
-          )}
-        </div>
+        {!s.comingSoon && s.license !== "All rights reserved" ? (
+          <div className={styles.upkeep}>
+            <strong>Upkeep</strong>
+            {s.slug === "systema-machinae" ? (
+              <>
+                <span>Takes support on its own page.</span>
+                <SupportLink
+                  href={SYSTEMA.supportUrl}
+                  ctaId="support_systema"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Its support page
+                  <span className={styles.srOnly}> (opens in a new tab)</span>
+                </SupportLink>
+              </>
+            ) : (
+              <>
+                <span>Funded from the shared pool.</span>
+                <Link href="/support">Support</Link>
+              </>
+            )}
+          </div>
+        ) : null}
 
         <nav className={styles.pager} aria-label="More specimens">
           <Link href={`/projects/${prev.slug}`}>
