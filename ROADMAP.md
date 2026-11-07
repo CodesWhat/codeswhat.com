@@ -16,12 +16,13 @@ Links, `llms.txt` and `.well-known/security.txt`.
 
 - [ ] #57, the public-repo security baseline, is partly done. The remaining
       items are tracked privately.
+
+## Parked: coherent 3D brand-asset set
+
 - [ ] Decide whether three, react-three-fiber, drei and rapier stay. They're only
       imported under `frontend/components/studio/`, which backs the dev-only
       `/studio/*` capture routes (they 404 in production), but they're still in
       `frontend/package.json` and the lockfile, so they show up in audits.
-
-## Parked: coherent 3D brand-asset set
 
 The Catalogue uses hand-drawn pixel sprites, so a 3D-minted icon set isn't on
 the critical path. `frontend/scripts/capture-assets.mjs` and the `/studio/*`
