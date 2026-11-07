@@ -55,6 +55,28 @@ after(async () => {
   });
 });
 
+function protectsHtml(cacheControl) {
+  const unquoted = cacheControl.replace(/"(?:[^"\\]|\\.)*"/g, '""');
+  return /(?:^|,)\s*(?:private|no-store)\s*(?:,|$)/i.test(unquoted);
+}
+
+test("HTML cache protection requires an unqualified directive", () => {
+  for (const header of ["private", "no-store", "max-age=0, private", "private, no-store"]) {
+    assert.equal(protectsHtml(header), true, header);
+  }
+  for (const header of [
+    "",
+    "public, max-age=600",
+    'public, private="Set-Cookie"',
+    'private="Set-Cookie, no-store, X-Other"',
+    'x-note="private", public',
+    'public, x-note="a\\"b, no-store, c"',
+    "no-store=true",
+  ]) {
+    assert.equal(protectsHtml(header), false, header);
+  }
+});
+
 test("production browser response keeps PostHog on the exact proxy", async () => {
   const response = await fetch(`${baseUrl}/?query-secret=should-not-leave`, {
     signal: AbortSignal.timeout(15_000),
@@ -66,9 +88,8 @@ test("production browser response keeps PostHog on the exact proxy", async () =>
   assert.match(csp, /script-src[^;]*https:\/\/e\.codeswhat\.com/);
   assert.match(csp, /connect-src[^;]*https:\/\/e\.codeswhat\.com/);
   assert.doesNotMatch(csp, /\*\.posthog\.com|https:\/\/(app|us)\.posthog\.com/);
-  assert.match(
-    response.headers.get("cache-control") ?? "",
-    /\b(private|no-store)\b/,
+  assert.ok(
+    protectsHtml(response.headers.get("cache-control") ?? ""),
     "HTML reflects request data (Next.js flight payload), which is only safe if the page isn't shared-cached",
   );
   // Next.js inlines router state, including the request's own query, in

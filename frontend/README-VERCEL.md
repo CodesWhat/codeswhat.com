@@ -32,7 +32,9 @@ then runs `test:posthog:browser` against an isolated local production server and
 it requires a production build.
 
 `npm run og` regenerates the share cards in `public/og*` with playwright-core
-and the locally installed Google Chrome; it isn't part of the build.
+and the locally installed Google Chrome; it isn't part of the build. After
+`npm ci`, provision Chrome once with `npx playwright-core install chrome` before
+running `npm run og`. Installing `playwright-core` alone doesn't install Chrome.
 
 ## Rendering and security headers
 

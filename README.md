@@ -34,7 +34,7 @@ client components initialized.
 The Content Security Policy uses a fresh request nonce for Next's generated
 scripts and the initial theme script. HTML renders per request; immutable
 JavaScript and static assets keep their existing caching. Keep the request and
-response policies consistent, and verify a real theme toggle and mounted scene
+response policies consistent, and verify a real theme toggle and rendered specimen plates
 when changing scripts, headers or rendering.
 
 Analytics uses the shared CodesWhat Public Websites PostHog project through
