@@ -135,3 +135,24 @@ test("newsletter submissions report a fixed result and error class only", async 
   assert.equal(calls.length, 3);
   for (const [call] of calls) assert.doesNotMatch(call, /email|message|data\./iu);
 });
+
+test("init, listeners and pageviews sit behind the DNT/GPC guard, and before_send re-checks it", async () => {
+  const instrumentation = await read("instrumentation-client.ts");
+  assert.match(
+    instrumentation,
+    /const trackingOptedOut =[\s\S]*?browserRequestsNoTracking\(window\.navigator, window\)/u,
+  );
+  assert.match(
+    instrumentation,
+    /if \(typeof window !== "undefined" && posthogConfig && !trackingOptedOut\) \{\s*posthog\.init\(/u,
+  );
+  assert.match(
+    instrumentation,
+    /onRouterTransitionStart\(url: string\) \{\s*if \(typeof window !== "undefined" && posthogConfig && !trackingOptedOut\)/u,
+  );
+  const beforeSend =
+    instrumentation.match(/before_send: \(event\) =>[\s\S]*?\n\s*\}\);/u)?.[0] ?? "";
+  assert.match(beforeSend, /browserRequestsNoTracking\(window\.navigator, window\)/u);
+  assert.match(beforeSend, /\? null/u);
+  assert.match(instrumentation, /respect_dnt: true/u);
+});

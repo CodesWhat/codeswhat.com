@@ -89,6 +89,35 @@ export function getPostHogConfig(env: PostHogEnvironment) {
   return { token, apiHost: POSTHOG_API_HOST, uiHost: POSTHOG_UI_HOST } as const;
 }
 
+function readSignal(source: unknown, key: string): unknown {
+  if (source === null || (typeof source !== "object" && typeof source !== "function")) {
+    return undefined;
+  }
+  try {
+    return (source as Record<string, unknown>)[key];
+  } catch {
+    return undefined;
+  }
+}
+
+function isYesLike(value: unknown, accepted: readonly string[]): boolean {
+  if (value === true) return true;
+  return typeof value === "string" && accepted.includes(value.toLowerCase());
+}
+
+// posthog-js's is_capturing() returns true under cookieless_mode "always"
+// before it consults respect_dnt, so the browser's opt-out signals have to be
+// checked here instead. A throwing getter counts as no signal.
+export function browserRequestsNoTracking(nav: unknown, win?: unknown): boolean {
+  const dnt = ["1", "yes"] as const;
+  return (
+    isYesLike(readSignal(nav, "doNotTrack"), dnt) ||
+    isYesLike(readSignal(nav, "msDoNotTrack"), dnt) ||
+    isYesLike(readSignal(win, "doNotTrack"), dnt) ||
+    isYesLike(readSignal(nav, "globalPrivacyControl"), ["1", "true", "yes"])
+  );
+}
+
 export function sanitizeRoute(input: unknown): string {
   if (typeof input !== "string" || /^[a-z][a-z\d+.-]*:/i.test(input) || input.startsWith("//")) {
     return OTHER_PATH;
