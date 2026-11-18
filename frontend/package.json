@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/csp-hashes.mjs",
+    "build:test": "node scripts/build-test.mjs",
     "start": "next start",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",

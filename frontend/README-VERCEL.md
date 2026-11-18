@@ -25,11 +25,12 @@ Then run the PostHog response contract against the canonical domain:
 POSTHOG_BROWSER_BASE_URL=https://codeswhat.com npm run test:posthog:browser
 ```
 
-CI (`.github/workflows/website.yml`, `verify` job) runs `test:posthog`, builds,
+CI (`.github/workflows/website.yml`, `verify` job) runs `test:posthog`, builds with `build:test`,
 then runs `test:posthog:browser` against an isolated local production server and
 `test:browser:all` on Chromium, Firefox and WebKit. Without
 `POSTHOG_BROWSER_BASE_URL`, the response contract starts and stops its own server;
-it requires a production build.
+it requires a production build made with `npm run build:test`, because `/support` and
+the Turnstile widget read their fixtures at build time.
 
 `npm run og` regenerates the share cards in `public/og*` with playwright-core
 and the locally installed Google Chrome; it isn't part of the build. After
@@ -113,8 +114,7 @@ CODESWHAT_SUPPORT_LINKS={"monthly-5":"https://buy.stripe.com/...","monthly-10":"
 Only `https://buy.stripe.com/...` and `https://donate.stripe.com/...` links with a
 path and no credentials are accepted. Unknown ids and invalid links are dropped
 with a build warning, and any tier without a link renders as "Opening soon".
-The page is rendered per request, so changing the variable needs a redeploy but
-no rebuild of page code.
+Set `CODESWHAT_SUPPORT_LINKS` before building; changing it needs a new build and deployment.
 
 ## Domain Configuration
 
@@ -125,9 +125,10 @@ no rebuild of page code.
 
 ## Build Settings
 
+Security headers are configured in `next.config.ts`.
+
 The `vercel.json` file includes:
 
-- Additional security headers
 - API route configuration
 - Function timeouts
 - Static-asset caching rules

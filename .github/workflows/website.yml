@@ -54,13 +54,8 @@ jobs:
       - name: Run subscribe verification contracts
         run: npm run test:subscribe
       - name: Build production app
-        # Cloudflare's published always-pass test site key; the browser checks
-        # need the widget compiled in. Real keys live only in Vercel.
-        env:
-          NEXT_PUBLIC_TURNSTILE_SITE_KEY: 1x00000000000000000000AA
-          # /support is prerendered, so the browser checks need their links at build time.
-          CODESWHAT_SUPPORT_LINKS: '{"monthly-5":"https://buy.stripe.com/test_monthly5","once-50":"https://buy.stripe.com/test_once50","monthly-10":"http://insecure.example/not-allowed"}'
-        run: npm run build
+        # Fixtures for the browser checks live in scripts/build-test.mjs. Real keys live only in Vercel.
+        run: npm run build:test
       - name: Verify PostHog production response
         run: npm run test:posthog:browser
       - name: Install browsers for production checks

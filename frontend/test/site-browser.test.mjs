@@ -95,6 +95,15 @@ before(async () => {
     });
   });
 
+  const support = await (
+    await fetch(`${baseUrl}/support`, { signal: AbortSignal.timeout(10_000) })
+  ).text();
+  if (!support.includes("https://buy.stripe.com/test_monthly5")) {
+    throw new Error(
+      "build with `npm run build:test`, the support/Turnstile fixtures are read at build time",
+    );
+  }
+
   // Executable overrides and the system Chrome fallback are Chromium-only.
   // Firefox and WebKit use Playwright's own install.
   let executablePath;
@@ -411,9 +420,9 @@ test("a project page renders its specimen and unknown slugs 404", {
   assert.equal(missing.status, 404);
 });
 
-// CODESWHAT_SUPPORT_LINKS is read at build time, so CI and local runs build with
-// monthly-5 and once-50 set to the buy.stripe.com/test_* URLs asserted here and
-// monthly-10 set to an insecure http link.
+// The support links are baked in at build time by `npm run build:test`
+// (scripts/build-test.mjs): monthly-5 and once-50 are the buy.stripe.com/test_* URLs
+// asserted here and monthly-10 is an insecure http link the page must drop.
 test("support renders GitHub Sponsors first and the six tiers with validated links", {
   timeout: 20_000,
 }, async (t) => {
