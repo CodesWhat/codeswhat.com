@@ -435,7 +435,7 @@
   font-style: italic;
   font-size: 110px;
   line-height: 0.85;
-  color: var(--orange);
+  color: var(--orange-text);
 }
 
 .specs {
