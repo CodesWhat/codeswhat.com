@@ -52,6 +52,7 @@ import { type TestContext, test } from "node:test";
 import {
   ALLOWED_CTA_IDS,
   ALLOWED_ROUTES,
+  browserRequestsNoTracking,
   classifyClientErrorName,
   getPostHogConfig,
   sanitizeEvent,
@@ -863,4 +864,52 @@ test("UTM labels pass only through the bounded vocabulary", () => {
 test("the public PostHog pipeline stops events rejected by before_send", (t) => {
   const capture = createSdkCapture(t);
   assert.equal(capture({ event: "private fixture", properties: ENVELOPE }), undefined);
+});
+
+test("browser opt-out signals are detected", () => {
+  assert.equal(browserRequestsNoTracking({ doNotTrack: "1" }), true);
+  assert.equal(browserRequestsNoTracking({ doNotTrack: "yes" }), true);
+  assert.equal(browserRequestsNoTracking({ doNotTrack: "YES" }), true);
+  assert.equal(browserRequestsNoTracking({ msDoNotTrack: "1" }), true);
+  assert.equal(browserRequestsNoTracking({}, { doNotTrack: "1" }), true);
+  assert.equal(browserRequestsNoTracking({}, { doNotTrack: true }), true);
+  assert.equal(browserRequestsNoTracking({ globalPrivacyControl: true }), true);
+  assert.equal(browserRequestsNoTracking({ globalPrivacyControl: "1" }), true);
+  assert.equal(browserRequestsNoTracking({ globalPrivacyControl: "true" }), true);
+});
+
+test("browsers without an opt-out signal are not flagged", () => {
+  for (const value of ["0", "unspecified", "no", "", null, undefined, 0, false]) {
+    assert.equal(browserRequestsNoTracking({ doNotTrack: value }), false, String(value));
+    assert.equal(browserRequestsNoTracking({}, { doNotTrack: value }), false, String(value));
+  }
+  assert.equal(browserRequestsNoTracking({ globalPrivacyControl: false }), false);
+  assert.equal(browserRequestsNoTracking({ globalPrivacyControl: "false" }), false);
+  assert.equal(browserRequestsNoTracking({}), false);
+  assert.equal(browserRequestsNoTracking(undefined), false);
+  assert.equal(browserRequestsNoTracking(null, null), false);
+  assert.equal(browserRequestsNoTracking("navigator", 42), false);
+});
+
+test("a throwing signal getter counts as no signal unless another says yes", () => {
+  const throwing = {
+    get doNotTrack(): string {
+      throw new Error("blocked");
+    },
+  };
+  assert.equal(browserRequestsNoTracking(throwing), false);
+  assert.equal(browserRequestsNoTracking(throwing, throwing), false);
+  assert.equal(browserRequestsNoTracking(throwing, { doNotTrack: "1" }), true);
+  const gpc = Object.defineProperties(
+    {},
+    {
+      doNotTrack: {
+        get() {
+          throw new Error("blocked");
+        },
+      },
+      globalPrivacyControl: { value: true },
+    },
+  );
+  assert.equal(browserRequestsNoTracking(gpc), true);
 });
