@@ -55,28 +55,6 @@ after(async () => {
   });
 });
 
-function protectsHtml(cacheControl) {
-  const unquoted = cacheControl.replace(/"(?:[^"\\]|\\.)*"/g, '""');
-  return /(?:^|,)\s*(?:private|no-store)\s*(?:,|$)/i.test(unquoted);
-}
-
-test("HTML cache protection requires an unqualified directive", () => {
-  for (const header of ["private", "no-store", "max-age=0, private", "private, no-store"]) {
-    assert.equal(protectsHtml(header), true, header);
-  }
-  for (const header of [
-    "",
-    "public, max-age=600",
-    'public, private="Set-Cookie"',
-    'private="Set-Cookie, no-store, X-Other"',
-    'x-note="private", public',
-    'public, x-note="a\\"b, no-store, c"',
-    "no-store=true",
-  ]) {
-    assert.equal(protectsHtml(header), false, header);
-  }
-});
-
 test("production browser response keeps PostHog on the exact proxy", async () => {
   const response = await fetch(`${baseUrl}/?query-secret=should-not-leave`, {
     signal: AbortSignal.timeout(15_000),
@@ -88,25 +66,9 @@ test("production browser response keeps PostHog on the exact proxy", async () =>
   assert.match(csp, /script-src[^;]*https:\/\/e\.codeswhat\.com/);
   assert.match(csp, /connect-src[^;]*https:\/\/e\.codeswhat\.com/);
   assert.doesNotMatch(csp, /\*\.posthog\.com|https:\/\/(app|us)\.posthog\.com/);
-  assert.ok(
-    protectsHtml(response.headers.get("cache-control") ?? ""),
-    "HTML reflects request data (Next.js flight payload), which is only safe if the page isn't shared-cached",
-  );
-  // Next.js inlines router state, including the request's own query, in
-  // self.__next_f.push(...) scripts. Only scripts whose body starts with that
-  // call are excluded; everything else must not reflect the query.
-  const flightCall =
-    /^\(self\.__next_f\s*=\s*self\.__next_f\s*\|\|\s*\[\]\)\.push\(|^self\.__next_f\.push\(/;
-  let flightScripts = 0;
-  const withoutFlightData = body.replace(/<script\b[^>]*>([\s\S]*?)<\/script>/g, (block, inner) => {
-    if (!flightCall.test(inner.trim())) return block;
-    flightScripts += 1;
-    return "";
-  });
-  assert.ok(
-    flightScripts > 0,
-    "expected Next.js Flight scripts in the HTML; the reflection exclusion is only valid when they exist",
-  );
-  assert.doesNotMatch(withoutFlightData, /query-secret/);
+  // The page is prerendered at build time, so shared caching is safe only because the
+  // HTML cannot reflect anything from the request, query string included.
+  assert.match(response.headers.get("x-nextjs-prerender") ?? "", /^1\b/);
+  assert.doesNotMatch(body, /query-secret/);
   assert.match(body, /<script\b[^>]*\bid="theme-init"/);
 });
