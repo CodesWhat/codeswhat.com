@@ -22,6 +22,23 @@ function capturePageview(url: string) {
   posthog.capture("$pageview", { path: sanitizeRoute(url) });
 }
 
+// Next passes a relative href for Link clicks and an absolute window.location.href
+// for back/forward. Resolve either against the current page; only a same-origin
+// pathname (never the query or hash) is handed on, anything else is /_other.
+function resolveTransition(url: string) {
+  try {
+    const destination = new URL(url, window.location.href);
+    if (destination.origin !== window.location.origin) return { path: "/_other", same: false };
+    const here = window.location;
+    return {
+      path: sanitizeRoute(destination.pathname),
+      same: destination.pathname === here.pathname && destination.search === here.search,
+    };
+  } catch {
+    return { path: "/_other", same: false };
+  }
+}
+
 const MAX_CLIENT_ERRORS_PER_PAGE_LOAD = 5;
 let clientErrorCount = 0;
 
@@ -97,6 +114,12 @@ if (typeof window !== "undefined" && posthogConfig && !trackingOptedOut) {
   capturePageview(window.location.pathname);
 }
 
-export function onRouterTransitionStart(url: string) {
-  if (typeof window !== "undefined" && posthogConfig && !trackingOptedOut) capturePageview(url);
+export function onRouterTransitionStart(url: string, navigationType?: string) {
+  if (typeof window !== "undefined" && posthogConfig && !trackingOptedOut) {
+    const { path, same } = resolveTransition(url);
+    // Hash-only and same-page push/replace are not new pageviews. Traverse is
+    // always one: location already holds the destination during popstate.
+    if (navigationType !== "traverse" && same) return;
+    posthog.capture("$pageview", { path });
+  }
 }

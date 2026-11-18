@@ -148,7 +148,7 @@ test("init, listeners and pageviews sit behind the DNT/GPC guard, and before_sen
   );
   assert.match(
     instrumentation,
-    /onRouterTransitionStart\(url: string\) \{\s*if \(typeof window !== "undefined" && posthogConfig && !trackingOptedOut\)/u,
+    /onRouterTransitionStart\(url: string, navigationType\?: string\) \{\s*if \(typeof window !== "undefined" && posthogConfig && !trackingOptedOut\)/u,
   );
   const beforeSend =
     instrumentation.match(/before_send: \(event\) =>[\s\S]*?\n\s*\}\);/u)?.[0] ?? "";

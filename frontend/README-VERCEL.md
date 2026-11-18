@@ -167,12 +167,14 @@ The `vercel.json` file includes:
 - `/api/subscribe` rejects requests marked `Sec-Fetch-Site: cross-site` or
   carrying a foreign `Origin` (403), and anything that isn't
   `application/json` (415). Requests with neither header, such as curl, are
-  still accepted. The in-memory rate limit is per instance only.
+  still accepted. The in-memory rate limit is per instance only, keyed on
+  `cf-connecting-ip` (else the first `x-forwarded-for` hop).
 - Verify EmailOctopus credentials
-- A 503 from `/api/subscribe` means `TURNSTILE_SECRET_KEY` is missing, siteverify
+- A 503 from `/api/subscribe` means `TURNSTILE_SECRET_KEY`,
+  `EMAILOCTOPUS_API_KEY` or `EMAILOCTOPUS_LIST_ID` is missing, siteverify
   failed (a network error or timeout, a non-2xx status, or a body that isn't valid
-  JSON), or EmailOctopus timed
-  out after 5 seconds or returned a 503 itself. A 403 means the verification was rejected. A 422 means the browser sent no
+  JSON), or EmailOctopus timed out after 5 seconds or answered 5xx, 401, 403, 404
+  or 429. Any other EmailOctopus error (such as a 422) comes back as a 502. A 403 means the verification was rejected. A 422 means the browser sent no
   verification response (a tab left open across a deploy). A blocked widget or script
   stops the form before it calls the API, so it never produces a 422.
 - Check function logs in Vercel dashboard
