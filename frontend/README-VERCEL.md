@@ -38,17 +38,20 @@ running `npm run og`. Installing `playwright-core` alone doesn't install Chrome.
 
 ## Rendering and security headers
 
-The Next proxy sets a fresh script nonce on both the forwarded request policy
-and the response policy. Next uses that nonce for generated inline scripts;
-the root layout applies it to the theme-init script. HTML renders per request
-so nonce values are not reused through static prerendering. Static JS/assets
-retain the caching rules in `vercel.json`.
+Every marketing page is prerendered; only `/api/*` runs on demand. There is no
+middleware. `next.config.ts` sets the security headers, including a static
+hash-based CSP with no `'unsafe-inline'` in `script-src`. The policy carries a
+placeholder at build time. `scripts/csp-hashes.mjs` runs after `next build`, hashes
+every inline script Next wrote into the prerendered HTML (the chunk bootstrap,
+the Flight pushes and the theme-init script), and rewrites
+`.next/routes-manifest.json`, which both `next start` and Vercel read for
+headers. It fails the build if the placeholder is missing or an expected route
+isn't prerendered. `npm run build` runs it, so the build command must stay
+`npm run build`.
 
-Keep the CSP's allowed third-party origins narrow. A fixed hash for only the
-theme script does not permit Next's inline Flight scripts and breaks hydration.
-The production browser regression verifies actual interaction and blocked
-unapproved scripts. The remaining response headers and API cache rules live
-in `vercel.json`.
+Keep the CSP's allowed third-party origins narrow. The production browser
+regression checks every page's hashes and that unapproved inline scripts are
+blocked. Cache rules and the `/api` no-store header live in `vercel.json`.
 
 ## Environment Variables
 
@@ -99,7 +102,7 @@ unset everywhere else so other environments emit no analytics:
 
 ### Support page
 
-`/support` reads `CODESWHAT_SUPPORT_LINKS`, a server-side JSON object mapping tier
+`/support` is prerendered and reads `CODESWHAT_SUPPORT_LINKS` at build time, so changing it needs a redeploy. It is a JSON object mapping tier
 id to a Stripe Payment Link. The six ids are `monthly-5`, `monthly-10`,
 `monthly-25`, `monthly-100`, `once-10` and `once-50`:
 
@@ -109,7 +112,7 @@ CODESWHAT_SUPPORT_LINKS={"monthly-5":"https://buy.stripe.com/...","monthly-10":"
 
 Only `https://buy.stripe.com/...` and `https://donate.stripe.com/...` links with a
 path and no credentials are accepted. Unknown ids and invalid links are dropped
-with a server warning, and any tier without a link renders as "Opening soon".
+with a build warning, and any tier without a link renders as "Opening soon".
 The page is rendered per request, so changing the variable needs a redeploy but
 no rebuild of page code.
 
