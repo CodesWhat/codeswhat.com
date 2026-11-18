@@ -763,7 +763,6 @@ test("every page's CSP hashes each inline script it serves, with no nonce or uns
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'none'",
-      "upgrade-insecure-requests",
     ]) {
       assert.ok(policy.includes(kept), `${path} CSP keeps ${kept}`);
     }
