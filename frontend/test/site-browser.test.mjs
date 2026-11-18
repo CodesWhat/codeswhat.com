@@ -60,8 +60,9 @@ before(async () => {
         ...process.env,
         NODE_ENV: "production",
         NEXT_TELEMETRY_DISABLED: "1",
-        EMAILOCTOPUS_API_KEY: "",
-        EMAILOCTOPUS_LIST_ID: "",
+        // fetch is stubbed; the route 503s without provider config
+        EMAILOCTOPUS_API_KEY: "test-octopus-key",
+        EMAILOCTOPUS_LIST_ID: "test-list-id",
         TURNSTILE_SECRET_KEY: TURNSTILE_TEST_SECRET,
         VERCEL_ENV: "",
       },
@@ -521,6 +522,17 @@ test("an address typed before hydration is still submitted", {
   await field.fill("early@example.com");
   assert.equal(await field.inputValue(), "early@example.com");
 
+  // Before hydration there is no handler, so the submit must be inert: a native
+  // submit would GET /?email=... and leak the address into the URL and history.
+  const submit = page.getByRole("button", { name: "Notify me" });
+  assert.equal(await submit.isDisabled(), true, "Submit is disabled until hydration");
+  const urlBefore = page.url();
+  await field.press("Enter");
+  await page.waitForTimeout(500);
+  assert.equal(page.url(), urlBefore, "Enter before hydration does not navigate");
+  assert.doesNotMatch(page.url(), /email=/);
+  assert.deepEqual(bodies, [], "no /api/subscribe request before hydration");
+
   release();
   const handle = await field.elementHandle();
   await page.waitForFunction(
@@ -528,11 +540,30 @@ test("an address typed before hydration is still submitted", {
     handle,
     { timeout: 15_000 },
   );
-  await page.getByRole("button", { name: "Notify me" }).click();
+  await submit.click();
   await page.getByText("Check your inbox to find out what's next").waitFor({ timeout: 5_000 });
   assert.deepEqual(bodies, [
     { email: "early@example.com", turnstileResponse: TURNSTILE_DUMMY_RESPONSE },
   ]);
+});
+
+test("with JavaScript off, submitting the signup never puts the address in the URL", {
+  timeout: 20_000,
+}, async (t) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  t.after(() => context.close());
+  await context.route("**/*", (route) => {
+    if (new URL(route.request().url()).origin === baseUrl) return route.continue();
+    return route.abort();
+  });
+  const page = await context.newPage();
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  const field = page.getByLabel(/A note when something new ships/);
+  await field.fill("nojs@example.com");
+  await field.press("Enter");
+  await page.getByRole("button", { name: "Notify me" }).click({ force: true });
+  await page.waitForTimeout(500);
+  assert.doesNotMatch(page.url(), /email=|nojs|\?/);
 });
 
 test("the signup loads Turnstile only once the form is touched, then submits its response", {

@@ -79,6 +79,8 @@ export function EmailSignupForm() {
   const [honeypot, setHoneypot] = useState(""); // Bot trap
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  // Until hydration there is no submit handler, so a native submit would navigate.
+  const [hydrated, setHydrated] = useState(false);
 
   const container = useRef<HTMLDivElement>(null);
   const emailInput = useRef<HTMLInputElement>(null);
@@ -99,6 +101,7 @@ export function EmailSignupForm() {
     // empty and would otherwise overwrite it on the next render.
     if (emailInput.current?.value) setEmail(emailInput.current.value.slice(0, 254));
     if (honeypotInput.current?.value) setHoneypot(honeypotInput.current.value);
+    setHydrated(true);
     return () => {
       state.unmounted = true;
       if (state.widgetId) window.turnstile?.remove(state.widgetId);
@@ -262,6 +265,7 @@ export function EmailSignupForm() {
 
   return (
     <form
+      method="post"
       onSubmit={handleSubmit}
       onFocusCapture={() => {
         if (SITE_KEY) startChallenge().catch(() => {});
@@ -302,7 +306,7 @@ export function EmailSignupForm() {
           aria-hidden="true"
         />
 
-        <button type="submit" className={styles.btnLine} disabled={busy}>
+        <button type="submit" className={styles.btnLine} disabled={!hydrated || busy}>
           {status === "loading"
             ? "Subscribing..."
             : status === "success"
