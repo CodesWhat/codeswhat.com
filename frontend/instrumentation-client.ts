@@ -1,5 +1,6 @@
 import posthog from "posthog-js";
 import {
+  browserRequestsNoTracking,
   classifyClientErrorName,
   getPostHogConfig,
   sanitizeEvent,
@@ -11,6 +12,11 @@ const posthogConfig = getPostHogConfig({
   NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   NEXT_PUBLIC_POSTHOG_UI_HOST: process.env.NEXT_PUBLIC_POSTHOG_UI_HOST,
 });
+
+// Computed once. posthog-js treats cookieless_mode "always" as capturing before
+// it checks respect_dnt, so DNT and GPC visitors never get posthog.init at all.
+const trackingOptedOut =
+  typeof window !== "undefined" && browserRequestsNoTracking(window.navigator, window);
 
 function capturePageview(url: string) {
   posthog.capture("$pageview", { path: sanitizeRoute(url) });
@@ -31,7 +37,7 @@ function captureClientError(errorKind: "error" | "unhandled_rejection", cause: u
   });
 }
 
-if (typeof window !== "undefined" && posthogConfig) {
+if (typeof window !== "undefined" && posthogConfig && !trackingOptedOut) {
   posthog.init(posthogConfig.token, {
     api_host: posthogConfig.apiHost,
     ui_host: posthogConfig.uiHost,
@@ -77,7 +83,10 @@ if (typeof window !== "undefined" && posthogConfig) {
       web_vitals_allowed_metrics: ["CLS", "FCP", "INP", "LCP"],
       web_vitals_attribution: false,
     },
-    before_send: (event) => sanitizeEvent(event) as typeof event | null,
+    before_send: (event) =>
+      browserRequestsNoTracking(window.navigator, window)
+        ? null
+        : (sanitizeEvent(event) as typeof event | null),
   });
 
   window.addEventListener("error", (event) => captureClientError("error", event.error));
@@ -89,5 +98,5 @@ if (typeof window !== "undefined" && posthogConfig) {
 }
 
 export function onRouterTransitionStart(url: string) {
-  if (typeof window !== "undefined" && posthogConfig) capturePageview(url);
+  if (typeof window !== "undefined" && posthogConfig && !trackingOptedOut) capturePageview(url);
 }
