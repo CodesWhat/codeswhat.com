@@ -1,4 +1,4 @@
-/* Catalogue tokens. data-theme on <html> is set before paint by the nonce'd theme-init
+/* Catalogue tokens. data-theme on <html> is set before paint by the hash-allowed theme-init
    script (lib/theme-init-script.ts); the media query is the no-JS fallback. */
 :root {
   --paper: #fff;

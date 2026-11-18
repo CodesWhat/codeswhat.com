@@ -41,9 +41,7 @@ export const metadata: Metadata = {
   },
 };
 
-// read per request so the links can change without a rebuild
-export const dynamic = "force-dynamic";
-
+// Prerendered: the links are read at build time, so changing them needs a redeploy.
 export default function SupportPage() {
   const tiers = tiersWith(supportLinksFrom(process.env.CODESWHAT_SUPPORT_LINKS, console.warn));
 

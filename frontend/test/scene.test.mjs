@@ -43,7 +43,6 @@ test("the shipped site never imports three or react-three", () => {
     ...sourceFiles("components/catalogue"),
     ...sourceFiles("lib"),
     "instrumentation-client.ts",
-    "proxy.ts",
   ];
   assert.ok(shipped.length > 10);
   for (const file of shipped) {
