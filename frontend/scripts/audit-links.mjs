@@ -48,8 +48,27 @@ function record(source, url, result, internal) {
   else failures.push({ source, url, result });
 }
 
-const text = async (path) => (await fetch(base + path)).text();
-const sitemap = await text("/sitemap.xml");
+// Discovery fetches must return 200 and finish (headers and body) inside the
+// timeout, otherwise the audit fails instead of parsing an error page.
+async function fetchText(source, url) {
+  try {
+    const response = await fetch(url, {
+      redirect: "follow",
+      headers: { "user-agent": UA },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (response.status !== 200) {
+      failures.push({ source, url, result: response.status });
+      return "";
+    }
+    return await response.text();
+  } catch (error) {
+    failures.push({ source, url, result: `error: ${error.cause?.code ?? error.name}` });
+    return "";
+  }
+}
+
+const sitemap = await fetchText("discovery", `${base}/sitemap.xml`);
 const pages = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
 
 for (const page of pages) {
@@ -58,7 +77,7 @@ for (const page of pages) {
 
 const textUrls = new Map();
 for (const path of ["/robots.txt", "/llms.txt", "/.well-known/security.txt"]) {
-  const body = await text(path);
+  const body = await fetchText("discovery", base + path);
   for (const url of body.match(/https?:\/\/[^\s)>\]"']+/g) ?? []) {
     textUrls.set(url, path);
   }
@@ -79,18 +98,20 @@ async function checkLink(source, href) {
   if (!/^https?:$/.test(url.protocol)) return;
   url.hash = "";
   const internal = url.origin === base || url.origin === PROD_ORIGIN;
-  const target = url.href;
+  const target = internal ? toLocal(url.href) : url.href;
   if (!checked.has(target)) checked.set(target, await status(target));
   record(source, url.href, checked.get(target), internal);
 }
 
 for (const page of pages) {
-  const html = await (await fetch(toLocal(page))).text();
+  const html = await fetchText(page, toLocal(page));
   const hrefs = new Set(
     [...html.matchAll(/<a\s[^>]*?href="([^"]+)"/g)].map((m) => m[1].replaceAll("&amp;", "&")),
   );
   for (const href of hrefs) await checkLink(page, href);
 }
+
+if (pages.length === 0) failures.push({ source: "sitemap.xml", url: base, result: "no URLs" });
 
 console.log(`pages: ${pages.length}, unique links checked: ${checked.size}`);
 if (blocked.length) {

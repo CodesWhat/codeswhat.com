@@ -43,11 +43,18 @@ test("every project slug is a rostered project", () => {
 });
 
 test("llms.txt only links this site's pages that the sitemap lists", () => {
-  const listed = new Set(["/support", ...PROJECT_SLUGS.map((slug) => `/projects/${slug}`)]);
+  const listed = new Set<string>();
+  if (listsHome) listed.add("/");
+  for (const template of templates) {
+    if (template.includes("{slug}")) {
+      for (const slug of PROJECT_SLUGS) listed.add(template.replace(/\$\{slug\}/, slug));
+    } else {
+      listed.add(template);
+    }
+  }
   const own = buildLlmsTxt().match(/https:\/\/codeswhat\.com(\/[^\s)]*)?/g) ?? [];
   for (const url of own) {
     const path = new URL(url).pathname;
-    if (path === "/") continue;
     assert.ok(listed.has(path), `llms.txt links ${path}, not in the sitemap`);
   }
 });
