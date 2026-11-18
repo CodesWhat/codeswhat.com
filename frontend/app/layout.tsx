@@ -32,19 +32,6 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      // Light mode favicon
-      {
-        url: "/favicon-green.svg",
-        media: "(prefers-color-scheme: light)",
-        type: "image/svg+xml",
-      },
-      // Dark mode favicon
-      {
-        url: "/favicon-green.svg",
-        media: "(prefers-color-scheme: dark)",
-        type: "image/svg+xml",
-      },
-      // Fallback for browsers that don't support media queries
       {
         url: "/favicon.ico",
         sizes: "32x32",
