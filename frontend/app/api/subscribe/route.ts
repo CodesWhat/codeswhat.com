@@ -339,7 +339,7 @@ export async function POST(request: Request) {
 
     // EmailOctopus API v2 endpoint
     let response: Response;
-    let data: { title?: string };
+    let data: { title?: string } | null;
     try {
       response = await fetch(
         `https://api.emailoctopus.com/lists/${process.env.EMAILOCTOPUS_LIST_ID}/contacts`,
@@ -358,7 +358,10 @@ export async function POST(request: Request) {
           signal: AbortSignal.timeout(EMAILOCTOPUS_TIMEOUT_MS),
         },
       );
-      data = await response.json();
+      // An error body is best effort: a gateway error can come back as HTML or
+      // empty, and the status alone decides the mapping below. A success body
+      // stays strict.
+      data = response.ok ? await response.json() : await response.json().catch(() => null);
     } catch (error) {
       if (error instanceof DOMException && ["TimeoutError", "AbortError"].includes(error.name)) {
         // A retry is safe: a duplicate comes back as success.
@@ -374,7 +377,7 @@ export async function POST(request: Request) {
     // Handle EmailOctopus API responses
     if (!response.ok) {
       // Check for duplicate subscriber error
-      if (response.status === 409 || data.title?.includes("already exists")) {
+      if (response.status === 409 || data?.title?.includes("already exists")) {
         return NextResponse.json(
           { message: "Hey, you're already on the list! 🎉 No FOMO here." },
           { status: 200 },

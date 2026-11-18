@@ -316,6 +316,21 @@ test("provider failures map to a sanitized 503 or 502", async (t) => {
   }
 });
 
+test("a provider error with a non-JSON body still maps by status", async (t) => {
+  muteErrors(t);
+  const cases: Array<[() => Response, number]> = [
+    [() => new Response("<html>Bad gateway</html>", { status: 503 }), 503],
+    [() => new Response("", { status: 500 }), 503],
+    [() => new Response("not json", { status: 400 }), 502],
+  ];
+  for (const [reply, expected] of cases) {
+    octopusReply = async () => reply();
+    const response = await subscribe(good);
+    assert.equal(response.status, expected);
+    assert.deepEqual(await response.json(), { error: GENERIC_FAILURE });
+  }
+});
+
 test("a provider fetch rejection or invalid JSON returns the generic 500 without leaking", async (t) => {
   const logged = muteErrors(t);
   const replies: Array<() => Promise<Response>> = [
