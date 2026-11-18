@@ -4,7 +4,7 @@ import styles from "./catalogue.module.css";
 
 /**
  * Flips data-theme on <html> and saves the explicit choice under the `theme` key, which the
- * nonce'd init script in the root layout reads back before first paint. Reading the DOM at
+ * hash-allowed init script in the root layout reads back before first paint. Reading the DOM at
  * click time keeps this correct without any state to hydrate.
  */
 export function ThemeToggle() {

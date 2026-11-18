@@ -9,7 +9,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "next build && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/csp-hashes.mjs",
     "start": "next start",
     "lint": "biome lint .",
     "lint:fix": "biome lint --write .",
