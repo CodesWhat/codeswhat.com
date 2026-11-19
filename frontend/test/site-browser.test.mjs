@@ -297,10 +297,10 @@ test("catalogue link targets and mono labels remain readable on desktop and mobi
     await page.setViewportSize(viewport);
     for (const path of ["/", "/support", "/projects/sockguard"]) {
       await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle" });
-      const x = page
+      const github = page
         .locator("footer")
-        .getByRole("link", { name: "X (opens in a new tab)", exact: true });
-      const targets = [x];
+        .getByRole("link", { name: "GitHub (opens in a new tab)", exact: true });
+      const targets = [github];
       if (path === "/support") targets.push(page.getByRole("link", { name: "tier", exact: true }));
       for (const target of targets) {
         const box = await target.boundingBox();

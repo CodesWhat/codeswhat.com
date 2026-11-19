@@ -19,10 +19,6 @@ export const SITE_CONFIG = {
   domain: "codeswhat.com",
   /** GitHub org. */
   githubOrg,
-  /** Twitter/X handle. */
-  twitterCreator: "@codeswhat",
-  /** Twitter/X profile URL (used in JSON-LD sameAs). */
-  twitterUrl: "https://x.com/codeswhat",
   /** Brand logo in /public. */
   logo: "/icon-512x512.png",
   /** Maker credit. */
