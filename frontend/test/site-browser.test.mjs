@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -802,14 +801,7 @@ const SECURITY_HEADERS = {
   "strict-transport-security": "max-age=63072000",
 };
 
-function inlineScriptBodies(html) {
-  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
-    .filter(([, attributes, body]) => body && !/\bsrc\s*=/.test(attributes))
-    .filter(([, attributes]) => !/type="(?!module|text\/javascript)[^"]*"/.test(attributes))
-    .map(([, , body]) => body);
-}
-
-test("every page's CSP hashes each inline script it serves, with no nonce or unsafe-inline", {
+test("every page serves one identical static CSP that allows inline scripts", {
   timeout: 60_000,
 }, async () => {
   const sitemap = await (
@@ -820,26 +812,22 @@ test("every page's CSP hashes each inline script it serves, with no nonce or uns
   );
   assert.ok(paths.includes("/") && paths.includes("/support"));
   assert.ok(paths.length > 3);
-  for (const path of [...paths, "/no-such-page"]) {
+  let expected;
+  for (const path of [...paths, "/no-such-page", "/"]) {
     const response = await fetch(`${baseUrl}${path}`, { signal: AbortSignal.timeout(10_000) });
     assert.equal(response.status, path === "/no-such-page" ? 404 : 200, path);
     const policy = response.headers.get("content-security-policy") ?? "";
+    expected ??= policy;
+    assert.equal(policy, expected, `${path} serves the same CSP as every other route`);
     const scriptSrc = policy
       .split(";")
       .map((directive) => directive.trim())
       .find((directive) => directive.startsWith("script-src "));
     assert.ok(scriptSrc, `${path} must set script-src`);
-    assert.doesNotMatch(scriptSrc, /'unsafe-inline'|'nonce-|__CSP_INLINE_SCRIPT_HASHES__/, path);
-    const bodies = inlineScriptBodies(await response.text());
-    assert.ok(
-      bodies.some((body) => body.includes("self.__next_f")),
-      `${path} has Flight data`,
-    );
-    assert.ok(bodies.length >= 3, `${path} has inline scripts to cover`);
-    for (const body of bodies) {
-      const hash = createHash("sha256").update(body, "utf8").digest("base64");
-      assert.ok(scriptSrc.includes(`'sha256-${hash}'`), `${path} script-src must hash ${hash}`);
-    }
+    assert.match(scriptSrc, /'unsafe-inline'/, path);
+    assert.ok(scriptSrc.includes("https://e.codeswhat.com"), path);
+    assert.ok(scriptSrc.includes("https://challenges.cloudflare.com"), path);
+    assert.doesNotMatch(policy, /'nonce-|'sha256-|__CSP_INLINE_SCRIPT_HASHES__/, path);
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
       assert.equal(response.headers.get(name), value, `${path} ${name}`);
     }
@@ -871,27 +859,34 @@ test("the homepage is prerendered and serves one static CSP", { timeout: 15_000 
   assert.equal(await first.text(), await second.text());
 });
 
-test("the rendered policy still blocks unapproved inline JavaScript", {
+test("the policy blocks scripts and frames from unapproved origins", {
   timeout: 15_000,
 }, async (t) => {
   const page = await localPage(t);
   await page.goto(baseUrl, { waitUntil: "networkidle" });
   const result = await page.evaluate(async () => {
-    const violation = new Promise((resolve) => {
-      document.addEventListener(
-        "securitypolicyviolation",
-        (event) => resolve(event.effectiveDirective),
-        { once: true },
-      );
-      setTimeout(() => resolve(null), 2_000);
-    });
-    const script = document.createElement("script");
-    script.textContent = "window.unapprovedInlineRan = true";
-    document.body.append(script);
-    return { directive: await violation, ran: window.unapprovedInlineRan === true };
+    const inject = (element, attribute) =>
+      new Promise((resolve) => {
+        const onViolation = (event) => {
+          if (event.blockedURI.startsWith("https://evil.example")) {
+            document.removeEventListener("securitypolicyviolation", onViolation);
+            resolve(event.effectiveDirective);
+          }
+        };
+        document.addEventListener("securitypolicyviolation", onViolation);
+        setTimeout(() => resolve(null), 2_000);
+        element.setAttribute(attribute, "https://evil.example/x.js");
+        document.body.append(element);
+      });
+    return {
+      script: await inject(document.createElement("script"), "src"),
+      frame: await inject(document.createElement("iframe"), "src"),
+      ran: window.evilScriptRan === true,
+    };
   });
+  assert.equal(result.script, "script-src-elem");
+  assert.equal(result.frame, "frame-src");
   assert.equal(result.ran, false);
-  assert.equal(result.directive, "script-src-elem");
 });
 
 test("subscription rejects nonobject and malformed bodies without calling a provider", {

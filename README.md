@@ -33,9 +33,9 @@ promotion. A successful build or pageview event does not prove that the page's
 client components initialized.
 
 Marketing pages are prerendered. `next.config.ts` defines the security headers, and
-`npm run build` runs `scripts/csp-hashes.mjs` after `next build` to fill the CSP with
-hashes of the prerendered inline scripts, so keep `npm run build` as the deployment
-build command. Check the theme toggle and specimen plates when changing scripts,
+the CSP is one static policy that allows inline scripts in `script-src`, because Next
+writes per-build inline scripts into every page and Vercel's build adapter consumes
+headers before any post-build step could hash them. Check the theme toggle and specimen plates when changing scripts,
 headers or rendering.
 
 Analytics uses the shared CodesWhat Public Websites PostHog project through
