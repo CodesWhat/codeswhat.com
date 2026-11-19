@@ -6,10 +6,16 @@ import { test } from "node:test";
 // posthog-js SDK is replaced, by a recorder on globalThis.
 registerHooks({
   resolve(specifier, context, nextResolve) {
-    if (specifier === "posthog-js") {
+    if (specifier === "posthog-js/dist/module.slim") {
       return {
         // Evaluated once and cached, so delegate to whichever recorder is current.
         url: "data:text/javascript,export default { init: (...a) => globalThis.__posthogMock.init(...a), capture: (...a) => globalThis.__posthogMock.capture(...a) };",
+        shortCircuit: true,
+      };
+    }
+    if (specifier === "posthog-js/dist/extension-bundles") {
+      return {
+        url: "data:text/javascript,export const AnalyticsExtensions = { webVitalsAutocapture: class {} };",
         shortCircuit: true,
       };
     }

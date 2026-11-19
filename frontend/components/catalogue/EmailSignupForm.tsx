@@ -1,6 +1,6 @@
 "use client";
 
-import posthog from "posthog-js";
+import posthog from "posthog-js/dist/module.slim";
 import { useEffect, useRef, useState } from "react";
 import styles from "./catalogue.module.css";
 
