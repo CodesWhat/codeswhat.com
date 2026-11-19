@@ -32,7 +32,7 @@ function extractSteps(verify) {
     .map((body) => ({
       body,
       run: body.match(/^ {8}run: (.+)$/m)?.[1].trim(),
-      bypass: [...body.matchAll(/^(?: {8})?(if|continue-on-error):/gm)].map((m) => m[1]),
+      bypass: [...body.matchAll(/^(?: {8})?(if|continue-on-error)[ \t]*:/gm)].map((m) => m[1]),
     }));
 }
 
@@ -147,6 +147,16 @@ test("the verification guard rejects a removed step or an if:/continue-on-error:
       verificationProblems(build({ [run]: ["continue-on-error: true"] })),
       [`continue-on-error: on step ${run}`],
       `continue-on-error on ${run}`,
+    );
+    assert.deepEqual(
+      verificationProblems(build({ [run]: ["if : false"] })),
+      [`if: on step ${run}`],
+      `if with a space before the colon on ${run}`,
+    );
+    assert.deepEqual(
+      verificationProblems(build({ [run]: ["continue-on-error : true"] })),
+      [`continue-on-error: on step ${run}`],
+      `continue-on-error with a space before the colon on ${run}`,
     );
   }
 });

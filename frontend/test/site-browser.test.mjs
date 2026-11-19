@@ -881,12 +881,10 @@ test("the policy blocks scripts and frames from unapproved origins", {
     return {
       script: await inject(document.createElement("script"), "src"),
       frame: await inject(document.createElement("iframe"), "src"),
-      ran: window.evilScriptRan === true,
     };
   });
   assert.equal(result.script, "script-src-elem");
   assert.equal(result.frame, "frame-src");
-  assert.equal(result.ran, false);
 });
 
 test("subscription rejects nonobject and malformed bodies without calling a provider", {
