@@ -1,4 +1,4 @@
-import { GITHUB_URL, SITE_CONFIG } from "@/lib/site-config";
+import { GITHUB_URL } from "@/lib/site-config";
 import styles from "./catalogue.module.css";
 import { EmailSignupForm } from "./EmailSignupForm";
 import { SponsorsStrip } from "./SponsorsStrip";
@@ -19,9 +19,6 @@ export function Footer() {
           >
             GitHub<span className={styles.srOnly}> (opens in a new tab)</span>
           </TrackedCtaLink>
-          <a href={SITE_CONFIG.twitterUrl} target="_blank" rel="noopener noreferrer">
-            X<span className={styles.srOnly}> (opens in a new tab)</span>
-          </a>
           <a href="mailto:hello@codeswhat.com">hello@codeswhat.com</a>
         </div>
       </div>

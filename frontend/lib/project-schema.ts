@@ -57,7 +57,7 @@ export const homepageJsonLd = {
       logo: `${BASE_URL}${SITE_CONFIG.logo}`,
       description: SITE_CONFIG.description,
       founder: { "@id": `${BASE_URL}/#scott` },
-      sameAs: [GITHUB_URL, SITE_CONFIG.twitterUrl],
+      sameAs: [GITHUB_URL],
       contactPoint: {
         "@type": "ContactPoint",
         email: "hello@codeswhat.com",
