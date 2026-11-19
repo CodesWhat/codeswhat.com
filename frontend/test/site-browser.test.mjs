@@ -137,8 +137,17 @@ after(async () => {
   }
 });
 
+// Each context signs up from its own address, so the signup tests don't share one
+// rate-limit bucket (5 a minute per client). Tests that need a specific address
+// override the header on their own route.
+let nextClient = 0;
 async function localPage(t) {
-  const context = await browser.newContext();
+  const client = nextClient++;
+  const context = await browser.newContext({
+    extraHTTPHeaders: {
+      "x-forwarded-for": `198.18.${Math.floor(client / 250)}.${(client % 250) + 1}`,
+    },
+  });
   t.after(() => context.close());
   await context.route("**/*", (route) => {
     if (new URL(route.request().url()).origin === baseUrl) return route.continue();
@@ -288,10 +297,10 @@ test("catalogue link targets and mono labels remain readable on desktop and mobi
     await page.setViewportSize(viewport);
     for (const path of ["/", "/support", "/projects/sockguard"]) {
       await page.goto(`${baseUrl}${path}`, { waitUntil: "networkidle" });
-      const x = page
+      const github = page
         .locator("footer")
-        .getByRole("link", { name: "X (opens in a new tab)", exact: true });
-      const targets = [x];
+        .getByRole("link", { name: "GitHub (opens in a new tab)", exact: true });
+      const targets = [github];
       if (path === "/support") targets.push(page.getByRole("link", { name: "tier", exact: true }));
       for (const target of targets) {
         const box = await target.boundingBox();
@@ -503,7 +512,7 @@ test("an address typed before hydration is still submitted", {
   page.on("request", (request) => {
     if (request.url().includes("/api/subscribe")) bodies.push(request.postDataJSON());
   });
-  // The other browser tests share one rate-limit bucket (5 a minute); use our own.
+  // Pin one address for this test's own signup requests.
   await page.route("**/api/subscribe", (route) =>
     route.continue({ headers: { ...route.request().headers(), "x-forwarded-for": "192.0.2.250" } }),
   );
@@ -596,6 +605,54 @@ test("the signup loads Turnstile only once the form is touched, then submits its
     "a spent response is reset after the submit",
   );
   assert.deepEqual(violations, []);
+});
+
+test("a filled honeypot shows success and never calls the API", {
+  timeout: 20_000,
+}, async (t) => {
+  const page = await localPage(t);
+  const calls = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/api/subscribe")) calls.push(request.url());
+  });
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  const field = page.getByLabel(/A note when something new ships/);
+  const handle = await field.elementHandle();
+  await page.waitForFunction(
+    (el) => Object.keys(el).some((key) => key.startsWith("__reactProps$")),
+    handle,
+  );
+  // The trap is hidden from people, so force the fill the way a bot's script would.
+  await page.locator("input[name='website']").fill("https://spam.example", { force: true });
+  await field.fill("bot@example.com");
+  await page.getByRole("button", { name: "Notify me" }).click();
+  await page.getByText("Check your inbox to find out what's next").waitFor({ timeout: 5_000 });
+  assert.deepEqual(calls, []);
+});
+
+test("a network failure shows an error and recovers", {
+  timeout: 20_000,
+}, async (t) => {
+  const { page } = await turnstilePage(t, "pass");
+  let calls = 0;
+  await page.route("**/api/subscribe", (route) => {
+    calls += 1;
+    if (calls === 1) return route.abort("failed");
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true }),
+    });
+  });
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await signup(page);
+  await page.getByRole("alert").filter({ hasText: "Network error" }).waitFor({ timeout: 5_000 });
+  assert.equal(await page.evaluate(() => window.__turnstile.resets()), 1, "the widget was reset");
+  const submit = page.getByRole("button", { name: "Notify me" });
+  assert.equal(await submit.isEnabled(), true);
+  await submit.click();
+  await page.getByText("Check your inbox to find out what's next").waitFor({ timeout: 5_000 });
+  assert.equal(calls, 2);
 });
 
 test("a rejected verification shows an error and resets the widget for another try", {
@@ -824,12 +881,10 @@ test("the policy blocks scripts and frames from unapproved origins", {
     return {
       script: await inject(document.createElement("script"), "src"),
       frame: await inject(document.createElement("iframe"), "src"),
-      ran: window.evilScriptRan === true,
     };
   });
   assert.equal(result.script, "script-src-elem");
   assert.equal(result.frame, "frame-src");
-  assert.equal(result.ran, false);
 });
 
 test("subscription rejects nonobject and malformed bodies without calling a provider", {

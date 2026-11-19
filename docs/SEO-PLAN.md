@@ -68,7 +68,6 @@ const jsonLd = {
   description: 'Digital solutions and software consultancy',
   sameAs: [
     'https://github.com/codeswhat',
-    'https://twitter.com/codeswhat',
   ],
 }
 ```

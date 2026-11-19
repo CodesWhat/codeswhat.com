@@ -192,15 +192,6 @@
   padding: 56px 0 72px;
   border-bottom: 1px solid var(--ink);
 }
-@media (min-width: 1000px) {
-  .hero .statement {
-    width: 340px;
-    justify-self: end;
-    margin-top: -150px;
-    margin-right: 12px;
-    z-index: 2;
-  }
-}
 
 /* buttons */
 .actions {
@@ -248,45 +239,6 @@
   margin-top: 14px;
 }
 
-/* statement card */
-.statement {
-  position: relative;
-  padding: 28px;
-  background-color: var(--panel);
-  background-image: radial-gradient(var(--dot) 1px, transparent 1.5px);
-  background-size: 14px 14px;
-  border: 1px solid var(--ink);
-  border-radius: 4px;
-  transform: rotate(1.6deg);
-  box-shadow: 8px 8px 0 var(--lime);
-}
-.statementRows {
-  margin: 0;
-}
-.statementRows > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px dashed var(--muted);
-}
-.statementRows dt {
-  font-size: 14px;
-  color: var(--muted);
-}
-.statementRows dd {
-  margin: 0;
-  font-family: var(--font-cat-serif), serif;
-  font-size: 24px;
-  line-height: 1.1;
-  text-align: right;
-}
-.statementNote {
-  margin: 16px 0 0;
-  font-size: 14px;
-  font-style: italic;
-}
-
 /* sections */
 .section {
   padding: 72px 0;
@@ -294,112 +246,6 @@
 }
 .sectionHead {
   margin-bottom: 40px;
-}
-
-/* tables */
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 15px;
-}
-.table th,
-.table td {
-  padding: 18px 14px 18px 0;
-  text-align: left;
-  vertical-align: top;
-  border-bottom: 1px solid var(--line);
-}
-.table thead th {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  border-top: 2px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
-  font-family: var(--font-cat-mono), monospace;
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-.table tfoot th,
-.table tfoot td {
-  border-top: 2px solid var(--ink);
-  border-bottom: 2px solid var(--ink);
-  padding-top: 14px;
-  padding-bottom: 14px;
-  font-family: var(--font-cat-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.num {
-  text-align: right !important;
-  white-space: nowrap;
-}
-.cellNo {
-  font-family: var(--font-cat-mono), monospace;
-  font-size: 12px;
-  color: var(--muted);
-  width: 56px;
-}
-.cellTitle {
-  min-width: 240px;
-}
-.titleLink {
-  font-family: var(--font-cat-serif), serif;
-  font-size: 30px;
-  line-height: 1.05;
-  color: var(--ink) !important;
-  text-decoration-color: var(--lime);
-  text-decoration-thickness: 3px;
-  display: inline-block;
-}
-.titleLink:hover {
-  background: var(--lime);
-  color: #111827 !important;
-}
-.oneLiner {
-  display: block;
-  margin-top: 4px;
-  color: var(--muted);
-}
-.tbd {
-  display: inline-block;
-  font-family: var(--font-cat-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-  background: repeating-linear-gradient(-45deg, transparent 0 5px, var(--line) 5px 6px);
-  border: 1px dashed var(--muted);
-  border-radius: 3px;
-  padding: 3px 7px;
-  max-width: 100%;
-  white-space: normal;
-}
-.quiet {
-  font-family: var(--font-cat-mono), monospace;
-  font-size: 12px;
-  color: var(--muted);
-}
-.coveredText {
-  font-family: var(--font-cat-mono), monospace;
-  font-size: 12px;
-}
-.meter {
-  display: block;
-  width: 110px;
-  max-width: 100%;
-  height: 8px;
-  margin-bottom: 8px;
-  border: 1px solid var(--ink);
-  border-radius: 1px;
-  background: repeating-linear-gradient(90deg, transparent 0 9px, var(--line) 9px 10px);
-}
-.tableNote {
-  max-width: 70ch;
-  margin: 24px 0 0;
-  color: var(--muted);
-  font-size: 15px;
 }
 
 /* services */
@@ -541,18 +387,6 @@
   max-width: 44ch;
 }
 
-.clauses {
-  margin: 0;
-  padding: 0 0 0 1.4em;
-  text-align: left;
-  display: grid;
-  gap: 14px;
-}
-.clauses li::marker {
-  font-family: var(--font-cat-mono), monospace;
-  font-size: 12px;
-}
-
 /* footer */
 .footer {
   container-type: inline-size;
@@ -590,87 +424,14 @@
   color: var(--muted);
 }
 
-/* mobile: tables collapse to cards */
+/* mobile: services collapse to cards */
 @media (max-width: 860px) {
-  .table,
-  .table tbody,
-  .table tfoot,
-  .table tr,
-  .table td,
-  .table th {
-    display: block;
-  }
-  .table thead {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-  }
-  .table tbody tr {
-    padding: 18px 0;
-    border-top: 2px solid var(--ink);
-  }
-  .table tbody tr:last-child {
-    border-bottom: 1px solid var(--ink);
-  }
-  .table td {
-    display: grid;
-    grid-template-columns: 96px minmax(0, 1fr);
-    gap: 12px;
-    padding: 8px 0;
-    border: 0;
-    text-align: left !important;
-    white-space: normal;
-  }
-  .table td::before {
-    content: attr(data-label);
-    font-family: var(--font-cat-mono), monospace;
-    font-size: 12px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding-top: 3px;
-  }
-  .table td.cellTitle {
-    display: block;
-    min-width: 0;
-  }
-  .table td.cellTitle::before,
-  .table td.cellNo::before {
-    display: none;
-  }
-  .table td.cellNo {
-    display: block;
-    padding-bottom: 0;
-  }
-  .table td.cellTitle .titleLink {
-    font-size: 34px;
-  }
-  .table tfoot th {
-    border: 0;
-    border-top: 2px solid var(--ink);
-    padding-bottom: 4px;
-  }
-  .table tfoot td {
-    border: 0;
-    padding-top: 4px;
-    padding-bottom: 8px;
-  }
-  .table tfoot tr {
-    border-bottom: 2px solid var(--ink);
-    padding-bottom: 8px;
-  }
   .services li {
     grid-template-columns: 64px minmax(0, 1fr);
     column-gap: 14px;
   }
   .bigNo {
     font-size: 52px;
-  }
-  .statement {
-    transform: rotate(0.8deg);
-    margin-right: 8px;
   }
   .specs > div {
     grid-template-columns: 1fr;
@@ -785,15 +546,6 @@
   min-height: 24px;
 }
 @media (max-width: 860px) {
-  .table tbody tr.rowTbd td.hideTbd {
-    display: none;
-  }
-  .table tbody tr.rowTbd {
-    padding: 14px 0;
-  }
-  .table td.num {
-    white-space: normal;
-  }
   .dotCard {
     max-width: none;
   }
@@ -1399,15 +1151,9 @@
   gap: 16px;
 }
 
-/* support: tiers, costs */
+/* support: tiers */
 .menuAction {
   margin-top: 14px;
-}
-.tierNote {
-  margin: 0;
-  max-width: 70ch;
-  color: var(--muted);
-  font-size: 14px;
 }
 .subhead {
   margin: 40px 0 12px;
@@ -1417,14 +1163,6 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
-}
-.costLink {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-}
-.scrollAnchor {
-  scroll-margin-top: 16px;
 }
 .root button.btnLine {
   background: transparent;

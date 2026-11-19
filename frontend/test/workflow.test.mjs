@@ -23,6 +23,38 @@ function extractBlocks(yaml) {
   };
 }
 
+// Each "- name: ..." entry under steps is one step; a step is whatever sits between
+// two "      - " list markers.
+function extractSteps(verify) {
+  return verify
+    .split(/^ {6}- /m)
+    .slice(1)
+    .map((body) => ({
+      body,
+      run: body.match(/^ {8}run: (.+)$/m)?.[1].trim(),
+      bypass: [...body.matchAll(/^(?: {8})?(if|continue-on-error)[ \t]*:/gm)].map((m) => m[1]),
+    }));
+}
+
+const REQUIRED_RUNS = [
+  "npm run test:support",
+  "npm run test:subscribe",
+  "node --test test/workflow.test.mjs",
+  "npm run test:posthog:browser",
+  "npm run test:browser:all",
+];
+
+function verificationProblems(verify) {
+  const steps = extractSteps(verify);
+  const problems = [];
+  for (const command of REQUIRED_RUNS) {
+    const step = steps.find((candidate) => candidate.run === command);
+    if (!step) problems.push(`missing step: ${command}`);
+    else for (const key of step.bypass) problems.push(`${key}: on step ${command}`);
+  }
+  return problems;
+}
+
 const { jobs, verifyJob, triggers } = extractBlocks(workflow);
 const PATH_FILTER = /\bpaths(-ignore)?:/;
 
@@ -83,4 +115,48 @@ test("a column-zero comment inside on: does not hide a later paths filter", () =
 test("verify runs the PostHog response contract after the production build", () => {
   assert.match(verifyJob, /npm run test:posthog:browser/);
   assert.ok(verifyJob.indexOf("npm run build") < verifyJob.indexOf("npm run test:posthog:browser"));
+});
+
+test("verify keeps every required verification step, unconditional and blocking", () => {
+  assert.deepEqual(verificationProblems(verifyJob), []);
+});
+
+test("the verification guard rejects a removed step or an if:/continue-on-error: bypass", () => {
+  const step = (name, run, extra = []) =>
+    [
+      `      - name: ${name}`,
+      ...extra.map((line) => `        ${line}`),
+      `        run: ${run}`,
+    ].join("\n");
+  const build = (overrides = {}) =>
+    `${REQUIRED_RUNS.map((run) => step(run, run, overrides[run])).join("\n")}\n`;
+
+  assert.deepEqual(verificationProblems(build()), []);
+  for (const run of REQUIRED_RUNS) {
+    const without = build()
+      .split("\n")
+      .filter((line) => !line.endsWith(`run: ${run}`) && !line.endsWith(`name: ${run}`))
+      .join("\n");
+    assert.deepEqual(verificationProblems(without), [`missing step: ${run}`], `removed ${run}`);
+    assert.deepEqual(
+      verificationProblems(build({ [run]: ["if: always()"] })),
+      [`if: on step ${run}`],
+      `if on ${run}`,
+    );
+    assert.deepEqual(
+      verificationProblems(build({ [run]: ["continue-on-error: true"] })),
+      [`continue-on-error: on step ${run}`],
+      `continue-on-error on ${run}`,
+    );
+    assert.deepEqual(
+      verificationProblems(build({ [run]: ["if : false"] })),
+      [`if: on step ${run}`],
+      `if with a space before the colon on ${run}`,
+    );
+    assert.deepEqual(
+      verificationProblems(build({ [run]: ["continue-on-error : true"] })),
+      [`continue-on-error: on step ${run}`],
+      `continue-on-error with a space before the colon on ${run}`,
+    );
+  }
 });

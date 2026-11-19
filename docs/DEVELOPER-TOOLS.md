@@ -2,11 +2,7 @@
 
 ## Linting & Code Quality
 
-For all linting and code quality documentation, see the **[linting101 folder](../linting101/)** which includes:
-- Complete command reference
-- VS Code setup
-- Configuration files
-- Troubleshooting guides
+For setup, checks and the linting commands, see [Development](../README.md#development) in the root README. Run npm commands from `frontend/`.
 
 ## Global Developer Tools with pipx
 
