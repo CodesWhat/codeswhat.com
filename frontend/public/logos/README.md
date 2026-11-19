@@ -1,20 +1,8 @@
-# CodesWhat Logo Assets
+# Logo assets
 
-## Naming Convention
+Images used by the /studio page.
 
-- `codeswhat-logo-original.png` - Original logo with background/border
-- `codeswhat-logo-black.png` - Black logo without border (for light backgrounds)
-- `codeswhat-logo-green.png` - Green/lime logo without border (brand accent color)
+- `codeswhat-coin.png`: the CodesWhat coin.
+- `scott-balloon.png`, `drydock-balloon.png`, `portkey-balloon.png`, `portwing-balloon.png`, `sockguard-balloon.png`: one balloon render per project.
 
-## Usage Guidelines
-
-- **Website Header**: Use `codeswhat-logo-black.png` for light mode
-- **Dark Mode**: Consider using `codeswhat-logo-green.png` for better contrast
-- **Favicons**: Generated from the green variant for brand recognition
-- **Social Media**: Use `codeswhat-logo-original.png` for profile pictures
-
-## Color Values
-
-- Black: `#000000`
-- Green/Lime: `#C4FF00` (approximate)
-- Transparent background on all variants
+The original logo source files (`codeswhat-logo-original`, `-black`, `-green`) aren't kept in this repo.

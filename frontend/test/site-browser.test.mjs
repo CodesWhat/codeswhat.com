@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
+import { gunzipSync } from "node:zlib";
 import { chromium, firefox, webkit } from "playwright-core";
 import { SPECIMEN_EXAMPLES } from "../lib/specimen-examples.ts";
 
@@ -1043,3 +1044,177 @@ test("Conga Crawler links to the App Store on the homepage and its own plate", a
     });
   }
 });
+
+// PostHog. CI builds with fixture public config, so the SDK initializes in every context
+// here. The proxy host is routed locally and nothing reaches the real network.
+const POSTHOG_ORIGIN = "https://e.codeswhat.com";
+const POSTHOG_WEB_VITALS_PATH = fileURLToPath(
+  new URL("../node_modules/posthog-js/dist/web-vitals.js", import.meta.url),
+);
+// posthog-js drops events from headless browsers by user agent and by navigator.webdriver.
+const POSTHOG_BROWSER_UA =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
+const POSTHOG_EVENT_KEYS = new Set([
+  "token",
+  "distinct_id",
+  "$cookieless_mode",
+  "$process_person_profile",
+  "schema_version",
+  "site",
+  "surface",
+  "path",
+  "$raw_user_agent",
+  "$host",
+  "$current_url",
+  "$pathname",
+  "$referring_domain",
+  "utm_source",
+  "utm_medium",
+  "utm_campaign",
+]);
+
+function decodePostHogBody(request) {
+  const raw = request.postDataBuffer();
+  if (!raw) return [];
+  const text = (raw[0] === 0x1f && raw[1] === 0x8b ? gunzipSync(raw) : raw).toString("utf8");
+  const body = JSON.parse(text);
+  const events = Array.isArray(body) ? body : Array.isArray(body.batch) ? body.batch : [body];
+  return events.filter((event) => event && typeof event.event === "string");
+}
+
+// A context with PostHog's proxy host answered locally. Everything else off-origin is aborted
+// like localPage. `requests` lists every request that reached the proxy host, `events` the
+// decoded capture payloads.
+async function posthogPage(t, { privacy } = {}) {
+  const context = await browser.newContext({ userAgent: POSTHOG_BROWSER_UA });
+  t.after(() => context.close());
+  await context.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, "webdriver", {
+      get: () => false,
+      configurable: true,
+    });
+  });
+  if (privacy) {
+    await context.addInitScript((signal) => {
+      const [name, value] = signal === "gpc" ? ["globalPrivacyControl", true] : ["doNotTrack", "1"];
+      Object.defineProperty(Navigator.prototype, name, { get: () => value, configurable: true });
+    }, privacy);
+  }
+  const requests = [];
+  const events = [];
+  await context.route("**/*", (route) => {
+    if (new URL(route.request().url()).origin === baseUrl) return route.continue();
+    return route.abort();
+  });
+  await context.route(`${POSTHOG_ORIGIN}/**`, (route) => {
+    const request = route.request();
+    const { pathname } = new URL(request.url());
+    requests.push({ method: request.method(), pathname });
+    if (pathname.endsWith("/web-vitals.js")) {
+      return route.fulfill({
+        status: 200,
+        contentType: "text/javascript",
+        body: readFileSync(POSTHOG_WEB_VITALS_PATH),
+      });
+    }
+    if (request.method() === "POST") events.push(...decodePostHogBody(request));
+    return route.fulfill({ status: 200, contentType: "application/json", body: "{}" });
+  });
+  return { page: await context.newPage(), requests, events };
+}
+
+// posthog-js batches captures and flushes on a timer, so wait on the condition itself.
+async function waitUntil(condition, description) {
+  const deadline = Date.now() + 15_000;
+  while (Date.now() < deadline) {
+    if (condition()) return;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  assert.fail(`Timed out waiting for ${description}`);
+}
+
+const pageviewPaths = (events) =>
+  events.filter((event) => event.event === "$pageview").map((event) => event.properties.path);
+
+test("PostHog sends a sanitized pageview with no query string or raw URL", {
+  timeout: 30_000,
+}, async (t) => {
+  const { page, requests, events } = await posthogPage(t);
+  await page.goto(`${baseUrl}/?utm_source=github&secret=abc123&gclid=zz`, {
+    waitUntil: "networkidle",
+  });
+  await waitUntil(() => pageviewPaths(events).length > 0, "the $pageview");
+
+  const pageview = events.find((event) => event.event === "$pageview");
+  assert.equal(pageview.properties.path, "/");
+  assert.equal(pageview.properties.$pathname, "/");
+  assert.equal(pageview.properties.$current_url, "https://codeswhat.com/");
+  assert.equal(pageview.properties.utm_source, "github");
+  for (const key of Object.keys(pageview.properties)) {
+    assert.ok(POSTHOG_EVENT_KEYS.has(key), `unexpected $pageview property ${key}`);
+  }
+  assert.doesNotMatch(JSON.stringify(events), /secret=|abc123|gclid|127\.0\.0\.1:\d+\//);
+  // The slim build only has web vitals because the extension is registered by hand.
+  await waitUntil(
+    () => requests.some((request) => request.pathname.endsWith("/web-vitals.js")),
+    "the web-vitals extension to load",
+  );
+});
+
+test("PostHog sends the destination path on client navigation and on Back", {
+  timeout: 30_000,
+}, async (t) => {
+  const { page, events } = await posthogPage(t);
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  const href = await page.locator('main a[href^="/projects/"]').first().getAttribute("href");
+  assert.match(href, /^\/projects\/[a-z0-9-]+$/);
+  await page.locator(`main a[href="${href}"]`).first().click();
+  await page.waitForURL(`${baseUrl}${href}`);
+  await page.goBack();
+  await page.waitForURL(`${baseUrl}/`);
+  await waitUntil(() => pageviewPaths(events).length >= 3, "three pageviews");
+  assert.deepEqual(pageviewPaths(events), ["/", href, "/"]);
+});
+
+test("PostHog sends a sanitized CTA event", { timeout: 30_000 }, async (t) => {
+  const { page, events } = await posthogPage(t);
+  await page.goto(baseUrl, { waitUntil: "networkidle" });
+  await page.evaluate(() => document.addEventListener("click", (event) => event.preventDefault()));
+  await page
+    .getByRole("link", { name: /^GitHub/ })
+    .first()
+    .click();
+  await waitUntil(() => events.some((event) => event.event === "cta activated"), "the CTA event");
+  const cta = events.find((event) => event.event === "cta activated");
+  assert.equal(cta.properties.cta_id, "github_org");
+  assert.equal(cta.properties.path, "/");
+});
+
+for (const [signal, label] of [
+  ["gpc", "Global Privacy Control"],
+  ["dnt", "Do Not Track"],
+]) {
+  test(`PostHog stays silent under ${label}`, { timeout: 30_000 }, async (t) => {
+    const { page, requests, events } = await posthogPage(t, { privacy: signal });
+    await page.goto(baseUrl, { waitUntil: "networkidle" });
+    await page.evaluate(() =>
+      document.addEventListener("click", (event) => event.preventDefault()),
+    );
+    // An initialized SDK fetches its web-vitals extension during page load and flushes its
+    // queue on a timer, so any request here means tracking was not suppressed.
+    await page
+      .getByRole("link", { name: /^GitHub/ })
+      .first()
+      .click();
+    await page.locator('main a[href^="/projects/"]').first().click();
+    await page.waitForURL(/\/projects\//);
+    await page.evaluate(() => {
+      Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+      window.dispatchEvent(new Event("pagehide"));
+    });
+    await page.waitForLoadState("networkidle");
+    assert.deepEqual(requests, []);
+    assert.deepEqual(events, []);
+  });
+}

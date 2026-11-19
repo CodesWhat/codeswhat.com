@@ -9,6 +9,11 @@ const result = spawnSync("npm", ["run", "build"], {
     // Cloudflare's published always-pass test site key; the browser checks need the widget
     // compiled in. Real keys live only in Vercel.
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: "1x00000000000000000000AA",
+    // Fixture public config so PostHog initializes in the browser tests, which route the
+    // proxy host locally. Nothing reaches the real network.
+    NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: "phc_ci_fixture",
+    NEXT_PUBLIC_POSTHOG_HOST: "https://e.codeswhat.com",
+    NEXT_PUBLIC_POSTHOG_UI_HOST: "https://us.posthog.com",
     // /support is prerendered, so its links are baked in at build time. monthly-10 is an
     // insecure link the page must drop.
     CODESWHAT_SUPPORT_LINKS: JSON.stringify({
