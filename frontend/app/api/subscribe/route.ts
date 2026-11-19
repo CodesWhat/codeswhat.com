@@ -2,25 +2,36 @@ import { NextResponse } from "next/server";
 
 // Best-effort, per-instance in-memory limit; not effective across serverless instances, a real limit needs an edge rule.
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60000;
+// Keys are per client, so the map is bounded: expired entries are swept at most
+// once per window, and the oldest entries are dropped past the cap.
+const RATE_LIMIT_MAX_ENTRIES = 10000;
+let lastSweep = 0;
 
 function getRateLimitKey(request: Request): string {
-  // Get IP from headers (works with Vercel)
-  const forwarded = request.headers.get("x-forwarded-for");
-  const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
-  return `rate-limit:${ip}`;
+  return `rate-limit:${getClientIp(request) ?? "unknown"}`;
 }
 
-function checkRateLimit(key: string, limit = 5, windowMs = 60000): boolean {
+function checkRateLimit(key: string, limit = 5, windowMs = RATE_LIMIT_WINDOW_MS): boolean {
   const now = Date.now();
-  const record = rateLimitMap.get(key);
 
-  // Clean up old entries
-  if (record && now > record.resetTime) {
-    rateLimitMap.delete(key);
+  if (now - lastSweep >= windowMs) {
+    lastSweep = now;
+    for (const [entryKey, entry] of rateLimitMap) {
+      if (now > entry.resetTime) rateLimitMap.delete(entryKey);
+    }
   }
 
+  const record = rateLimitMap.get(key);
   if (!record || now > record.resetTime) {
+    // Re-insert so Map order stays oldest-first for the cap below.
+    rateLimitMap.delete(key);
     rateLimitMap.set(key, { count: 1, resetTime: now + windowMs });
+    while (rateLimitMap.size > RATE_LIMIT_MAX_ENTRIES) {
+      const oldest = rateLimitMap.keys().next().value;
+      if (oldest === undefined) break;
+      rateLimitMap.delete(oldest);
+    }
     return true;
   }
 
@@ -39,6 +50,112 @@ const SITEVERIFY_TIMEOUT_MS = 3000;
 const EMAILOCTOPUS_TIMEOUT_MS = 5000;
 // Cloudflare documents 2048 characters as the longest response value.
 const MAX_CHALLENGE_RESPONSE_LENGTH = 2048;
+
+// Block disposable email domains (Set for O(1) lookup).
+const disposableDomains = new Set([
+  // Common disposable email services
+  "tempmail.com",
+  "temp-mail.org",
+  "temp-mail.io",
+  "tempmail.net",
+  "throwaway.email",
+  "throwawaymail.com",
+  "10minutemail.com",
+  "10minutemail.net",
+  "10minute-mail.com",
+  "10minemail.com",
+  "guerrillamail.com",
+  "guerrillamail.net",
+  "guerrillamail.org",
+  "guerrillamail.de",
+  "mailinator.com",
+  "mailinator.net",
+  "mailinator2.com",
+  "yopmail.com",
+  "yopmail.fr",
+  "yopmail.net",
+  "trashmail.com",
+  "trashmails.com",
+  "trashmail.net",
+  "trashmail.ws",
+  "maildrop.cc",
+  "maildrop.cf",
+  "maildrop.ga",
+  "maildrop.gq",
+  "maildrop.ml",
+  "dispostable.com",
+  "disposemail.com",
+  "disposableemailaddresses.com",
+  "sharklasers.com",
+  "spam4.me",
+  "spambox.us",
+  "spamgourmet.com",
+  "fakeinbox.com",
+  "fakemailgenerator.com",
+  "emailondeck.com",
+  "getnada.com",
+  "inboxkitten.com",
+  "mailcatch.com",
+  "mailnesia.com",
+  "mytemp.email",
+  "nwldx.com",
+  "thisisnotmyrealemail.com",
+  // Additional common ones
+  "anonbox.net",
+  "binkmail.com",
+  "bobmail.info",
+  "bugmenot.com",
+  "bumpymail.com",
+  "burnermail.io",
+  "chogmail.com",
+  "dingbone.com",
+  "emaildienst.de",
+  "emailsensei.com",
+  "emailtemporario.com.br",
+  "fakemail.fr",
+  "fornow.id",
+  "getairmail.com",
+  "gmailnator.com",
+  "jetable.org",
+  "jourrapide.com",
+  "kasmail.com",
+  "keemail.me",
+  "mailforspam.com",
+  "mailfree.ga",
+  "mailmetrash.com",
+  "mailmoat.com",
+  "mailnull.com",
+  "mailslapping.com",
+  "mailzilla.com",
+  "mjukglass.nu",
+  "moakt.com",
+  "mohmal.com",
+  "noclickemail.com",
+  "nomail.xl.cx",
+  "nospam4.us",
+  "poofy.org",
+  "pookmail.com",
+  "privacy.net",
+  "quickinbox.com",
+  "receiveee.com",
+  "rtrtr.com",
+  "sbmail.top",
+  "slipry.net",
+  "spam.la",
+  "spamavert.com",
+  "spambob.net",
+  "spambob.org",
+  "spambog.com",
+  "supergreatmail.com",
+  "teleworm.us",
+  "tmailinator.com",
+  "tmail.com",
+  "uggsrock.com",
+  "upliftnow.com",
+  "viditag.com",
+  "viewcastmedia.com",
+  "wegwerfmail.de",
+]);
 
 type Verification = "passed" | "rejected" | "unavailable";
 
@@ -168,112 +285,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Please enter a valid email address" }, { status: 400 });
     }
 
-    // Block disposable email domains (using Set for O(1) lookup performance)
-    const disposableDomains = new Set([
-      // Common disposable email services
-      "tempmail.com",
-      "temp-mail.org",
-      "temp-mail.io",
-      "tempmail.net",
-      "throwaway.email",
-      "throwawaymail.com",
-      "10minutemail.com",
-      "10minutemail.net",
-      "10minute-mail.com",
-      "10minemail.com",
-      "guerrillamail.com",
-      "guerrillamail.net",
-      "guerrillamail.org",
-      "guerrillamail.de",
-      "mailinator.com",
-      "mailinator.net",
-      "mailinator2.com",
-      "yopmail.com",
-      "yopmail.fr",
-      "yopmail.net",
-      "trashmail.com",
-      "trashmails.com",
-      "trashmail.net",
-      "trashmail.ws",
-      "maildrop.cc",
-      "maildrop.cf",
-      "maildrop.ga",
-      "maildrop.gq",
-      "maildrop.ml",
-      "dispostable.com",
-      "disposemail.com",
-      "disposableemailaddresses.com",
-      "sharklasers.com",
-      "spam4.me",
-      "spambox.us",
-      "spamgourmet.com",
-      "fakeinbox.com",
-      "fakemailgenerator.com",
-      "emailondeck.com",
-      "getnada.com",
-      "inboxkitten.com",
-      "mailcatch.com",
-      "mailnesia.com",
-      "mytemp.email",
-      "nwldx.com",
-      "thisisnotmyrealemail.com",
-      // Additional common ones
-      "anonbox.net",
-      "binkmail.com",
-      "bobmail.info",
-      "bugmenot.com",
-      "bumpymail.com",
-      "burnermail.io",
-      "chogmail.com",
-      "dingbone.com",
-      "emaildienst.de",
-      "emailsensei.com",
-      "emailtemporario.com.br",
-      "fakemail.fr",
-      "fornow.id",
-      "getairmail.com",
-      "gmailnator.com",
-      "jetable.org",
-      "jourrapide.com",
-      "kasmail.com",
-      "keemail.me",
-      "mailforspam.com",
-      "mailfree.ga",
-      "mailmetrash.com",
-      "mailmoat.com",
-      "mailnull.com",
-      "mailslapping.com",
-      "mailzilla.com",
-      "mjukglass.nu",
-      "moakt.com",
-      "mohmal.com",
-      "noclickemail.com",
-      "nomail.xl.cx",
-      "nospam4.us",
-      "poofy.org",
-      "pookmail.com",
-      "privacy.net",
-      "quickinbox.com",
-      "receiveee.com",
-      "rtrtr.com",
-      "sbmail.top",
-      "slipry.net",
-      "spam.la",
-      "spamavert.com",
-      "spambob.net",
-      "spambob.org",
-      "spambog.com",
-      "supergreatmail.com",
-      "teleworm.us",
-      "tmailinator.com",
-      "tmail.com",
-      "uggsrock.com",
-      "upliftnow.com",
-      "viditag.com",
-      "viewcastmedia.com",
-      "wegwerfmail.de",
-    ]);
-
     const domain = normalizedEmail.split("@")[1].toLowerCase();
     if (disposableDomains.has(domain)) {
       return NextResponse.json({ error: "Please use a permanent email address" }, { status: 400 });
@@ -284,6 +295,16 @@ export async function POST(request: Request) {
     const secret = process.env.TURNSTILE_SECRET_KEY;
     if (!secret) {
       console.error("Subscription unavailable: TURNSTILE_SECRET_KEY is not set");
+      return NextResponse.json(
+        { error: "Signup is unavailable right now. Please try again later." },
+        { status: 503 },
+      );
+    }
+    const missingProviderConfig = ["EMAILOCTOPUS_API_KEY", "EMAILOCTOPUS_LIST_ID"].filter(
+      (name) => !process.env[name],
+    );
+    if (missingProviderConfig.length > 0) {
+      console.error(`Subscription unavailable: ${missingProviderConfig.join(", ")} is not set`);
       return NextResponse.json(
         { error: "Signup is unavailable right now. Please try again later." },
         { status: 503 },
@@ -318,7 +339,7 @@ export async function POST(request: Request) {
 
     // EmailOctopus API v2 endpoint
     let response: Response;
-    let data: { title?: string };
+    let data: { title?: string } | null;
     try {
       response = await fetch(
         `https://api.emailoctopus.com/lists/${process.env.EMAILOCTOPUS_LIST_ID}/contacts`,
@@ -337,7 +358,10 @@ export async function POST(request: Request) {
           signal: AbortSignal.timeout(EMAILOCTOPUS_TIMEOUT_MS),
         },
       );
-      data = await response.json();
+      // An error body is best effort: a gateway error can come back as HTML or
+      // empty, and the status alone decides the mapping below. A success body
+      // stays strict.
+      data = response.ok ? await response.json() : await response.json().catch(() => null);
     } catch (error) {
       if (error instanceof DOMException && ["TimeoutError", "AbortError"].includes(error.name)) {
         // A retry is safe: a duplicate comes back as success.
@@ -353,7 +377,7 @@ export async function POST(request: Request) {
     // Handle EmailOctopus API responses
     if (!response.ok) {
       // Check for duplicate subscriber error
-      if (response.status === 409 || data.title?.includes("already exists")) {
+      if (response.status === 409 || data?.title?.includes("already exists")) {
         return NextResponse.json(
           { message: "Hey, you're already on the list! 🎉 No FOMO here." },
           { status: 200 },
@@ -363,9 +387,10 @@ export async function POST(request: Request) {
       // Handle other errors. Log the upstream detail server-side only; never
       // pass a third-party response field through to the client.
       console.error("EmailOctopus error:", data);
+      const unavailable = response.status >= 500 || [401, 403, 404, 429].includes(response.status);
       return NextResponse.json(
         { error: "Failed to subscribe. Please try again." },
-        { status: response.status },
+        { status: unavailable ? 503 : 502 },
       );
     }
 

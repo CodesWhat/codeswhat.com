@@ -25,11 +25,12 @@ Then run the PostHog response contract against the canonical domain:
 POSTHOG_BROWSER_BASE_URL=https://codeswhat.com npm run test:posthog:browser
 ```
 
-CI (`.github/workflows/website.yml`, `verify` job) runs `test:posthog`, builds,
+CI (`.github/workflows/website.yml`, `verify` job) runs `test:posthog`, builds with `build:test`,
 then runs `test:posthog:browser` against an isolated local production server and
 `test:browser:all` on Chromium, Firefox and WebKit. Without
 `POSTHOG_BROWSER_BASE_URL`, the response contract starts and stops its own server;
-it requires a production build.
+it requires a production build made with `npm run build:test`, because `/support` and
+the Turnstile widget read their fixtures at build time.
 
 `npm run og` regenerates the share cards in `public/og*` with playwright-core
 and the locally installed Google Chrome; it isn't part of the build. After
@@ -38,17 +39,20 @@ running `npm run og`. Installing `playwright-core` alone doesn't install Chrome.
 
 ## Rendering and security headers
 
-The Next proxy sets a fresh script nonce on both the forwarded request policy
-and the response policy. Next uses that nonce for generated inline scripts;
-the root layout applies it to the theme-init script. HTML renders per request
-so nonce values are not reused through static prerendering. Static JS/assets
-retain the caching rules in `vercel.json`.
+Every marketing page is prerendered; only `/api/*` runs on demand. There is no
+middleware. `next.config.ts` sets the security headers, including a static
+hash-based CSP with no `'unsafe-inline'` in `script-src`. The policy carries a
+placeholder at build time. `scripts/csp-hashes.mjs` runs after `next build`, hashes
+every inline script Next wrote into the prerendered HTML (the chunk bootstrap,
+the Flight pushes and the theme-init script), and rewrites
+`.next/routes-manifest.json`, which both `next start` and Vercel read for
+headers. It fails the build if the placeholder is missing or an expected route
+isn't prerendered. `npm run build` runs it, so the build command must stay
+`npm run build`.
 
-Keep the CSP's allowed third-party origins narrow. A fixed hash for only the
-theme script does not permit Next's inline Flight scripts and breaks hydration.
-The production browser regression verifies actual interaction and blocked
-unapproved scripts. The remaining response headers and API cache rules live
-in `vercel.json`.
+Keep the CSP's allowed third-party origins narrow. The production browser
+regression checks every page's hashes and that unapproved inline scripts are
+blocked. Cache rules and the `/api` no-store header live in `vercel.json`.
 
 ## Environment Variables
 
@@ -99,7 +103,7 @@ unset everywhere else so other environments emit no analytics:
 
 ### Support page
 
-`/support` reads `CODESWHAT_SUPPORT_LINKS`, a server-side JSON object mapping tier
+`/support` is prerendered and reads `CODESWHAT_SUPPORT_LINKS` at build time, so changing it needs a redeploy. It is a JSON object mapping tier
 id to a Stripe Payment Link. The six ids are `monthly-5`, `monthly-10`,
 `monthly-25`, `monthly-100`, `once-10` and `once-50`:
 
@@ -109,9 +113,8 @@ CODESWHAT_SUPPORT_LINKS={"monthly-5":"https://buy.stripe.com/...","monthly-10":"
 
 Only `https://buy.stripe.com/...` and `https://donate.stripe.com/...` links with a
 path and no credentials are accepted. Unknown ids and invalid links are dropped
-with a server warning, and any tier without a link renders as "Opening soon".
-The page is rendered per request, so changing the variable needs a redeploy but
-no rebuild of page code.
+with a build warning, and any tier without a link renders as "Opening soon".
+Set `CODESWHAT_SUPPORT_LINKS` before building; changing it needs a new build and deployment.
 
 ## Domain Configuration
 
@@ -122,9 +125,10 @@ no rebuild of page code.
 
 ## Build Settings
 
+Security headers are configured in `next.config.ts`.
+
 The `vercel.json` file includes:
 
-- Additional security headers
 - API route configuration
 - Function timeouts
 - Static-asset caching rules
@@ -163,12 +167,14 @@ The `vercel.json` file includes:
 - `/api/subscribe` rejects requests marked `Sec-Fetch-Site: cross-site` or
   carrying a foreign `Origin` (403), and anything that isn't
   `application/json` (415). Requests with neither header, such as curl, are
-  still accepted. The in-memory rate limit is per instance only.
+  still accepted. The in-memory rate limit is per instance only, keyed on
+  `cf-connecting-ip` (else the first `x-forwarded-for` hop).
 - Verify EmailOctopus credentials
-- A 503 from `/api/subscribe` means `TURNSTILE_SECRET_KEY` is missing, siteverify
+- A 503 from `/api/subscribe` means `TURNSTILE_SECRET_KEY`,
+  `EMAILOCTOPUS_API_KEY` or `EMAILOCTOPUS_LIST_ID` is missing, siteverify
   failed (a network error or timeout, a non-2xx status, or a body that isn't valid
-  JSON), or EmailOctopus timed
-  out after 5 seconds or returned a 503 itself. A 403 means the verification was rejected. A 422 means the browser sent no
+  JSON), or EmailOctopus timed out after 5 seconds or answered 5xx, 401, 403, 404
+  or 429. Any other EmailOctopus error (such as a 422) comes back as a 502. A 403 means the verification was rejected. A 422 means the browser sent no
   verification response (a tab left open across a deploy). A blocked widget or script
   stops the form before it calls the API, so it never produces a 422.
 - Check function logs in Vercel dashboard

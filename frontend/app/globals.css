@@ -1,4 +1,4 @@
-/* Catalogue tokens. data-theme on <html> is set before paint by the nonce'd theme-init
+/* Catalogue tokens. data-theme on <html> is set before paint by the hash-allowed theme-init
    script (lib/theme-init-script.ts); the media query is the no-JS fallback. */
 :root {
   --paper: #fff;
@@ -10,6 +10,7 @@
   --line: #d9dee5;
   --lime: #d3e58b;
   --orange: #ef8b43;
+  --orange-text: #d56a1a;
   --pine: #315b54;
   --dot: rgba(17, 24, 39, 0.16);
   color-scheme: light;
@@ -22,6 +23,7 @@
   --muted: #9aa3b2;
   --line: #2a3244;
   --pine: #8fc2b6;
+  --orange-text: var(--orange);
   --dot: rgba(243, 244, 246, 0.16);
   --hl: linear-gradient(transparent 14%, var(--lime) 14%, var(--lime) 90%, transparent 90%);
   --hl-ink: #111827;
@@ -36,6 +38,7 @@
     --muted: #9aa3b2;
     --line: #2a3244;
     --pine: #8fc2b6;
+    --orange-text: var(--orange);
     --dot: rgba(243, 244, 246, 0.16);
     --hl: linear-gradient(transparent 14%, var(--lime) 14%, var(--lime) 90%, transparent 90%);
     --hl-ink: #111827;

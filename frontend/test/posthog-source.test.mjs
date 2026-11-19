@@ -48,15 +48,15 @@ test("privacy posture disables persistence, recording, autocapture, and automati
 });
 
 test("CSP allows only the exact PostHog proxy", async () => {
-  const proxy = await read("proxy.ts");
+  const proxy = await read("next.config.ts");
   assert.ok(proxy.includes('"https://e.codeswhat.com"'));
   assert.doesNotMatch(proxy, /https:\/\/(app|us)\.posthog\.com/);
 });
 
 test("CSP admits only Turnstile's origin for its script and challenge frame", async () => {
-  const proxy = await read("proxy.ts");
+  const proxy = await read("next.config.ts");
   assert.ok(proxy.includes('"https://challenges.cloudflare.com"'));
-  assert.match(proxy, /frame-src \$\{turnstileOrigin\}/);
+  assert.match(proxy, /`frame-src \$\{turnstileOrigin\}`/);
   assert.doesNotMatch(proxy, /\*\.cloudflare\.com/);
 });
 
@@ -148,7 +148,7 @@ test("init, listeners and pageviews sit behind the DNT/GPC guard, and before_sen
   );
   assert.match(
     instrumentation,
-    /onRouterTransitionStart\(url: string\) \{\s*if \(typeof window !== "undefined" && posthogConfig && !trackingOptedOut\)/u,
+    /onRouterTransitionStart\(url: string, navigationType\?: string\) \{\s*if \(typeof window !== "undefined" && posthogConfig && !trackingOptedOut\)/u,
   );
   const beforeSend =
     instrumentation.match(/before_send: \(event\) =>[\s\S]*?\n\s*\}\);/u)?.[0] ?? "";

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -59,15 +60,11 @@ before(async () => {
         ...process.env,
         NODE_ENV: "production",
         NEXT_TELEMETRY_DISABLED: "1",
-        EMAILOCTOPUS_API_KEY: "",
-        EMAILOCTOPUS_LIST_ID: "",
+        // fetch is stubbed; the route 503s without provider config
+        EMAILOCTOPUS_API_KEY: "test-octopus-key",
+        EMAILOCTOPUS_LIST_ID: "test-list-id",
         TURNSTILE_SECRET_KEY: TURNSTILE_TEST_SECRET,
         VERCEL_ENV: "",
-        CODESWHAT_SUPPORT_LINKS: JSON.stringify({
-          "monthly-5": "https://buy.stripe.com/test_monthly5",
-          "once-50": "https://buy.stripe.com/test_once50",
-          "monthly-10": "http://insecure.example/not-allowed",
-        }),
       },
       stdio: ["ignore", "pipe", "pipe"],
     },
@@ -98,6 +95,15 @@ before(async () => {
       reject(new Error(`Production server exited (${code}):\n${output}`));
     });
   });
+
+  const support = await (
+    await fetch(`${baseUrl}/support`, { signal: AbortSignal.timeout(10_000) })
+  ).text();
+  if (!support.includes("https://buy.stripe.com/test_monthly5")) {
+    throw new Error(
+      "build with `npm run build:test`, the support/Turnstile fixtures are read at build time",
+    );
+  }
 
   // Executable overrides and the system Chrome fallback are Chromium-only.
   // Firefox and WebKit use Playwright's own install.
@@ -415,6 +421,9 @@ test("a project page renders its specimen and unknown slugs 404", {
   assert.equal(missing.status, 404);
 });
 
+// The support links are baked in at build time by `npm run build:test`
+// (scripts/build-test.mjs): monthly-5 and once-50 are the buy.stripe.com/test_* URLs
+// asserted here and monthly-10 is an insecure http link the page must drop.
 test("support renders GitHub Sponsors first and the six tiers with validated links", {
   timeout: 20_000,
 }, async (t) => {
@@ -513,6 +522,17 @@ test("an address typed before hydration is still submitted", {
   await field.fill("early@example.com");
   assert.equal(await field.inputValue(), "early@example.com");
 
+  // Before hydration there is no handler, so the submit must be inert: a native
+  // submit would GET /?email=... and leak the address into the URL and history.
+  const submit = page.getByRole("button", { name: "Notify me" });
+  assert.equal(await submit.isDisabled(), true, "Submit is disabled until hydration");
+  const urlBefore = page.url();
+  await field.press("Enter");
+  await page.waitForTimeout(500);
+  assert.equal(page.url(), urlBefore, "Enter before hydration does not navigate");
+  assert.doesNotMatch(page.url(), /email=/);
+  assert.deepEqual(bodies, [], "no /api/subscribe request before hydration");
+
   release();
   const handle = await field.elementHandle();
   await page.waitForFunction(
@@ -520,11 +540,30 @@ test("an address typed before hydration is still submitted", {
     handle,
     { timeout: 15_000 },
   );
-  await page.getByRole("button", { name: "Notify me" }).click();
+  await submit.click();
   await page.getByText("Check your inbox to find out what's next").waitFor({ timeout: 5_000 });
   assert.deepEqual(bodies, [
     { email: "early@example.com", turnstileResponse: TURNSTILE_DUMMY_RESPONSE },
   ]);
+});
+
+test("with JavaScript off, submitting the signup never puts the address in the URL", {
+  timeout: 20_000,
+}, async (t) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  t.after(() => context.close());
+  await context.route("**/*", (route) => {
+    if (new URL(route.request().url()).origin === baseUrl) return route.continue();
+    return route.abort();
+  });
+  const page = await context.newPage();
+  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
+  const field = page.getByLabel(/A note when something new ships/);
+  await field.fill("nojs@example.com");
+  await field.press("Enter");
+  await page.getByRole("button", { name: "Notify me" }).click({ force: true });
+  await page.waitForTimeout(500);
+  assert.doesNotMatch(page.url(), /email=|nojs|\?/);
 });
 
 test("the signup loads Turnstile only once the form is touched, then submits its response", {
@@ -697,55 +736,82 @@ test("a missing verification response tells the visitor to refresh", {
   await page.getByRole("alert").filter({ hasText: "Refresh the page" }).waitFor({ timeout: 5_000 });
 });
 
-test("each HTML request gets a fresh nonce that cannot be supplied by the caller", {
-  timeout: 15_000,
+const SECURITY_HEADERS = {
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "DENY",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=()",
+  "x-xss-protection": "0",
+  "strict-transport-security": "max-age=63072000",
+};
+
+function inlineScriptBodies(html) {
+  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
+    .filter(([, attributes, body]) => body && !/\bsrc\s*=/.test(attributes))
+    .filter(([, attributes]) => !/type="(?!module|text\/javascript)[^"]*"/.test(attributes))
+    .map(([, , body]) => body);
+}
+
+test("every page's CSP hashes each inline script it serves, with no nonce or unsafe-inline", {
+  timeout: 60_000,
 }, async () => {
-  const first = await fetch(baseUrl, {
-    signal: AbortSignal.timeout(5_000),
-    headers: {
-      "x-nonce": "caller-supplied",
-      "content-security-policy": "script-src 'nonce-caller-supplied'",
-    },
-  });
-  const second = await fetch(baseUrl, { signal: AbortSignal.timeout(5_000) });
-  const firstPolicy = first.headers.get("content-security-policy") ?? "";
-  const secondPolicy = second.headers.get("content-security-policy") ?? "";
-  const firstNonce = firstPolicy.match(/'nonce-([A-Za-z0-9+/_=-]+)'/)?.[1];
-  const secondNonce = secondPolicy.match(/'nonce-([A-Za-z0-9+/_=-]+)'/)?.[1];
-  assert.ok(firstNonce, "the response must authorize its generated inline scripts");
-  assert.ok(secondNonce);
-  assert.notEqual(firstNonce, secondNonce);
-  assert.notEqual(firstNonce, "caller-supplied");
-  const scriptPolicy = firstPolicy
-    .split(";")
-    .map((directive) => directive.trim())
-    .find((directive) => directive.startsWith("script-src "));
-  assert.equal(
-    scriptPolicy,
-    `script-src 'self' 'nonce-${firstNonce}' https://e.codeswhat.com https://challenges.cloudflare.com`,
+  const sitemap = await (
+    await fetch(`${baseUrl}/sitemap.xml`, { signal: AbortSignal.timeout(5_000) })
+  ).text();
+  const paths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+    ([, loc]) => new URL(loc).pathname,
   );
-  assert.match(firstPolicy, /connect-src 'self' https:\/\/e\.codeswhat\.com;/);
-  assert.match(firstPolicy, /frame-src https:\/\/challenges\.cloudflare\.com;/);
-  for (const kept of ["object-src 'none'", "form-action 'self'", "frame-ancestors 'none'"]) {
-    assert.ok(firstPolicy.includes(kept), kept);
-  }
-  assert.doesNotMatch(firstPolicy, /\*/);
-  const html = await first.text();
-  assert.ok((await second.text()).includes(`nonce="${secondNonce}"`));
-  const scripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)].filter(
-    ([, attributes, body]) => body && !attributes.includes('type="application/ld+json"'),
-  );
-  assert.ok(
-    scripts.some(([, , body]) => body.includes("self.__next_f")),
-    "the response must include actual Flight data",
-  );
-  assert.ok(scripts.some(([, attributes]) => attributes.includes('id="theme-init"')));
-  for (const [, attributes] of scripts) {
+  assert.ok(paths.includes("/") && paths.includes("/support"));
+  assert.ok(paths.length > 3);
+  for (const path of [...paths, "/no-such-page"]) {
+    const response = await fetch(`${baseUrl}${path}`, { signal: AbortSignal.timeout(10_000) });
+    assert.equal(response.status, path === "/no-such-page" ? 404 : 200, path);
+    const policy = response.headers.get("content-security-policy") ?? "";
+    const scriptSrc = policy
+      .split(";")
+      .map((directive) => directive.trim())
+      .find((directive) => directive.startsWith("script-src "));
+    assert.ok(scriptSrc, `${path} must set script-src`);
+    assert.doesNotMatch(scriptSrc, /'unsafe-inline'|'nonce-|__CSP_INLINE_SCRIPT_HASHES__/, path);
+    const bodies = inlineScriptBodies(await response.text());
     assert.ok(
-      attributes.includes(`nonce="${firstNonce}"`),
-      "every executable inline script must match the response nonce",
+      bodies.some((body) => body.includes("self.__next_f")),
+      `${path} has Flight data`,
     );
+    assert.ok(bodies.length >= 3, `${path} has inline scripts to cover`);
+    for (const body of bodies) {
+      const hash = createHash("sha256").update(body, "utf8").digest("base64");
+      assert.ok(scriptSrc.includes(`'sha256-${hash}'`), `${path} script-src must hash ${hash}`);
+    }
+    for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+      assert.equal(response.headers.get(name), value, `${path} ${name}`);
+    }
+    for (const kept of [
+      "default-src 'self'",
+      "connect-src 'self' https://e.codeswhat.com",
+      "frame-src https://challenges.cloudflare.com",
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ]) {
+      assert.ok(policy.includes(kept), `${path} CSP keeps ${kept}`);
+    }
+    assert.doesNotMatch(policy, /\*/);
   }
+});
+
+test("the homepage is prerendered and serves one static CSP", { timeout: 15_000 }, async () => {
+  const first = await fetch(baseUrl, { signal: AbortSignal.timeout(5_000) });
+  const second = await fetch(baseUrl, { signal: AbortSignal.timeout(5_000) });
+  assert.match(first.headers.get("x-nextjs-prerender") ?? "", /^1\b/);
+  assert.match(second.headers.get("x-nextjs-prerender") ?? "", /^1\b/);
+  assert.ok(first.headers.get("content-security-policy"));
+  assert.equal(
+    first.headers.get("content-security-policy"),
+    second.headers.get("content-security-policy"),
+  );
+  assert.equal(await first.text(), await second.text());
 });
 
 test("the rendered policy still blocks unapproved inline JavaScript", {
