@@ -1,4 +1,5 @@
-import posthog from "posthog-js";
+import { AnalyticsExtensions } from "posthog-js/dist/extension-bundles";
+import posthog from "posthog-js/dist/module.slim";
 import {
   browserRequestsNoTracking,
   classifyClientErrorName,
@@ -56,6 +57,8 @@ function captureClientError(errorKind: "error" | "unhandled_rejection", cause: u
 
 if (typeof window !== "undefined" && posthogConfig && !trackingOptedOut) {
   posthog.init(posthogConfig.token, {
+    // The slim build ships no extensions. Web vitals is the only one this config uses.
+    __extensionClasses: { webVitalsAutocapture: AnalyticsExtensions.webVitalsAutocapture },
     api_host: posthogConfig.apiHost,
     ui_host: posthogConfig.uiHost,
     capture_pageview: false,

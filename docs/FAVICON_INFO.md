@@ -25,10 +25,10 @@
    - Poor performance and compatibility
 
 ## Regenerating Favicons
-If you need to regenerate favicons from the green logo:
-1. Use the green logo at `/public/logos/codeswhat-logo-green.png`
-2. Generate sizes: 16x16, 32x32, 48x48 for ICO
-3. Ensure transparent background for better appearance
+The logo source files aren't in the repo, so there is nothing to regenerate from here. To
+change the icons, start from a new source image with a transparent background, export
+16x16, 32x32 and 48x48 for `favicon.ico`, and replace the PNGs listed above at their
+current sizes.
 
 ## Color Considerations
 - The green (#C4FF00) provides good contrast on both light and dark browser tabs

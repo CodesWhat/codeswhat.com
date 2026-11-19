@@ -1,6 +1,6 @@
 "use client";
 
-import posthog from "posthog-js";
+import posthog from "posthog-js/dist/module.slim";
 import type { AnchorHTMLAttributes } from "react";
 
 type TrackedCtaLinkProps = AnchorHTMLAttributes<HTMLAnchorElement> & {
