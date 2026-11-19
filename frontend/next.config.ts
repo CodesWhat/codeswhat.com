@@ -4,15 +4,15 @@ const posthogProxy = "https://e.codeswhat.com";
 // Turnstile loads its script and renders its challenge in an iframe from here.
 const turnstileOrigin = "https://challenges.cloudflare.com";
 
-// Replaced after `next build` by scripts/csp-hashes.mjs, which hashes the inline
-// scripts Next writes into the prerendered HTML. Next has no stable hook for that.
-const CSP_HASH_PLACEHOLDER = "__CSP_INLINE_SCRIPT_HASHES__";
-
 const isDevelopment = process.env.NODE_ENV === "development";
 
+// Production allows inline scripts. Next writes per-build inline bootstrap and Flight
+// scripts into every prerendered page, and Vercel's build adapter consumes these headers
+// before any post-build step could hash them. The pages render no user content, and
+// script sources stay limited to our own origin, the PostHog proxy and Turnstile.
 const scriptSrc = isDevelopment
   ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${posthogProxy} ${turnstileOrigin}`
-  : `script-src 'self' ${CSP_HASH_PLACEHOLDER} ${posthogProxy} ${turnstileOrigin}`;
+  : `script-src 'self' 'unsafe-inline' ${posthogProxy} ${turnstileOrigin}`;
 
 const contentSecurityPolicy = [
   "default-src 'self'",

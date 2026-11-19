@@ -40,19 +40,17 @@ running `npm run og`. Installing `playwright-core` alone doesn't install Chrome.
 ## Rendering and security headers
 
 Every marketing page is prerendered; only `/api/*` runs on demand. There is no
-middleware. `next.config.ts` sets the security headers, including a static
-hash-based CSP with no `'unsafe-inline'` in `script-src`. The policy carries a
-placeholder at build time. `scripts/csp-hashes.mjs` runs after `next build`, hashes
-every inline script Next wrote into the prerendered HTML (the chunk bootstrap,
-the Flight pushes and the theme-init script), and rewrites
-`.next/routes-manifest.json`, which both `next start` and Vercel read for
-headers. It fails the build if the placeholder is missing or an expected route
-isn't prerendered. `npm run build` runs it, so the build command must stay
-`npm run build`.
+middleware. `next.config.ts` sets the security headers, including a
+static CSP that allows inline scripts in `script-src` (`'unsafe-inline'`). Next writes
+per-build inline scripts into every prerendered page (the chunk bootstrap, the Flight
+pushes and the theme-init script), and Vercel's build adapter consumes the headers
+inside `next build`, before any post-build step could hash them. The pages render no
+user content, and script sources stay limited to our own origin, the PostHog proxy and
+Turnstile.
 
 Keep the CSP's allowed third-party origins narrow. The production browser
-regression checks every page's hashes and that unapproved inline scripts are
-blocked. Cache rules and the `/api` no-store header live in `vercel.json`.
+regression checks that every page serves the same policy and that scripts and frames
+from unapproved origins are blocked. Cache rules and the `/api` no-store header live in `vercel.json`.
 
 ## Environment Variables
 
