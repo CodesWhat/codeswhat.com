@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const posthogProxy = "https://e.codeswhat.com";
@@ -6,13 +7,13 @@ const turnstileOrigin = "https://challenges.cloudflare.com";
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
-// Production allows inline scripts. Next writes per-build inline bootstrap and Flight
-// scripts into every prerendered page, and Vercel's build adapter consumes these headers
-// before any post-build step could hash them. The pages render no user content, and
-// script sources stay limited to our own origin, the PostHog proxy and Turnstile.
+// Production hashes its inline scripts. Next writes per-build inline bootstrap and Flight
+// scripts into every prerendered page, so the hashes aren't known until the build ends.
+// csp-adapter.mjs swaps them in for this placeholder once the HTML exists, and fails the
+// build if it can't.
 const scriptSrc = isDevelopment
   ? `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${posthogProxy} ${turnstileOrigin}`
-  : `script-src 'self' 'unsafe-inline' ${posthogProxy} ${turnstileOrigin}`;
+  : `script-src 'self' __CSP_INLINE_SCRIPT_HASHES__ ${posthogProxy} ${turnstileOrigin}`;
 
 const contentSecurityPolicy = [
   "default-src 'self'",
@@ -30,6 +31,9 @@ const contentSecurityPolicy = [
 ].join("; ");
 
 const nextConfig: NextConfig = {
+  // Wraps Vercel's adapter (found through NEXT_ADAPTER_PATH) so the hashes land in the
+  // headers before Vercel reads them. Dev has no placeholder to fill.
+  adapterPath: isDevelopment ? undefined : path.join(process.cwd(), "csp-adapter.mjs"),
   async headers() {
     return [
       {

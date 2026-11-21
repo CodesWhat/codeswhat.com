@@ -41,12 +41,13 @@ running `npm run og`. Installing `playwright-core` alone doesn't install Chrome.
 
 Every marketing page is prerendered; only `/api/*` runs on demand. There is no
 middleware. `next.config.ts` sets the security headers, including a
-static CSP that allows inline scripts in `script-src` (`'unsafe-inline'`). Next writes
+static CSP whose `script-src` lists a sha256 hash for each inline script. Next writes
 per-build inline scripts into every prerendered page (the chunk bootstrap, the Flight
-pushes and the theme-init script), and Vercel's build adapter consumes the headers
-inside `next build`, before any post-build step could hash them. The pages render no
-user content, and script sources stay limited to our own origin, the PostHog proxy and
-Turnstile.
+pushes and the theme-init script), so `next.config.ts` ships a placeholder and
+`csp-adapter.mjs` fills it during `next build`. Vercel builds through Next's adapter API
+and sets `NEXT_ADAPTER_PATH` to its own adapter, so ours takes the `adapterPath` slot,
+hashes the prerendered HTML in `onBuildComplete`, edits the routing headers and then calls
+Vercel's hooks. It fails the build if it can't hash.
 
 Keep the CSP's allowed third-party origins narrow. The production browser
 regression checks that every page serves the same policy and that scripts and frames
