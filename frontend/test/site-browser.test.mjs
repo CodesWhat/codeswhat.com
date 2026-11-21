@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { after, before, test } from "node:test";
 import { fileURLToPath } from "node:url";
@@ -802,7 +803,14 @@ const SECURITY_HEADERS = {
   "strict-transport-security": "max-age=63072000",
 };
 
-test("every page serves one identical static CSP that allows inline scripts", {
+function inlineScriptBodies(html) {
+  return [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)]
+    .filter(([, attributes, body]) => body && !/\bsrc\s*=/.test(attributes))
+    .filter(([, attributes]) => !/type="(?!module|text\/javascript)[^"]*"/.test(attributes))
+    .map(([, , body]) => body);
+}
+
+test("every page serves one identical static CSP that hashes each inline script", {
   timeout: 60_000,
 }, async () => {
   const sitemap = await (
@@ -825,10 +833,19 @@ test("every page serves one identical static CSP that allows inline scripts", {
       .map((directive) => directive.trim())
       .find((directive) => directive.startsWith("script-src "));
     assert.ok(scriptSrc, `${path} must set script-src`);
-    assert.match(scriptSrc, /'unsafe-inline'/, path);
+    assert.doesNotMatch(scriptSrc, /'unsafe-inline'|'nonce-|__CSP_INLINE_SCRIPT_HASHES__/, path);
     assert.ok(scriptSrc.includes("https://e.codeswhat.com"), path);
     assert.ok(scriptSrc.includes("https://challenges.cloudflare.com"), path);
-    assert.doesNotMatch(policy, /'nonce-|'sha256-|__CSP_INLINE_SCRIPT_HASHES__/, path);
+    const bodies = inlineScriptBodies(await response.text());
+    assert.ok(
+      bodies.some((body) => body.includes("self.__next_f")),
+      `${path} has Flight data`,
+    );
+    assert.ok(bodies.length >= 3, `${path} has inline scripts to cover`);
+    for (const body of bodies) {
+      const hash = createHash("sha256").update(body, "utf8").digest("base64");
+      assert.ok(scriptSrc.includes(`'sha256-${hash}'`), `${path} script-src must hash ${hash}`);
+    }
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
       assert.equal(response.headers.get(name), value, `${path} ${name}`);
     }
