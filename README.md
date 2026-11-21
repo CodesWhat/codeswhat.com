@@ -33,9 +33,9 @@ promotion. A successful build or pageview event does not prove that the page's
 client components initialized.
 
 Marketing pages are prerendered. `next.config.ts` defines the security headers, and
-the CSP is one static policy that allows inline scripts in `script-src`, because Next
-writes per-build inline scripts into every page and Vercel's build adapter consumes
-headers before any post-build step could hash them. Check the theme toggle and specimen plates when changing scripts,
+the CSP is one static policy whose `script-src` hashes each inline script. Next writes
+per-build inline scripts into every page, so `csp-adapter.mjs` computes the hashes in
+`next build` and fills them in before delegating to Vercel's build adapter. Check the theme toggle and specimen plates when changing scripts,
 headers or rendering.
 
 Analytics uses the shared CodesWhat Public Websites PostHog project through

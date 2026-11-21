@@ -8,10 +8,10 @@
 // (or to nothing, for a plain `next build`). The hashes go into the routing headers before the
 // delegate sees them, and into routes-manifest.json for `next start`.
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 export const PLACEHOLDER = "__CSP_INLINE_SCRIPT_HASHES__";
 
@@ -41,23 +41,35 @@ const delegatePath = process.env.NEXT_ADAPTER_PATH;
 let delegatePromise;
 function loadDelegate() {
   if (!delegatePath) return Promise.resolve(undefined);
-  delegatePromise ??= import(
-    pathToFileURL(createRequire(import.meta.url).resolve(delegatePath)).href
-  ).then((mod) => mod.default ?? mod);
+  delegatePromise ??= (async () => {
+    const resolved = realpathSync(createRequire(import.meta.url).resolve(delegatePath));
+    // Pointing the variable at this file would make the adapter delegate to itself forever.
+    if (resolved === realpathSync(fileURLToPath(import.meta.url))) return undefined;
+    const mod = await import(pathToFileURL(resolved).href);
+    return mod.default ?? mod;
+  })();
   return delegatePromise;
 }
 
-function collectHashes(outputs) {
+export function collectHashes(outputs) {
   const files = new Set();
   // Pathnames that have HTML behind them: a prerender, the route a prerender was built from
   // (dynamic segments), or a static HTML file. _not-found is served from the static 404.
   const covered = new Set();
+  const htmlLess = new Set();
   for (const prerender of outputs.prerenders) {
-    covered.add(prerender.pathname);
-    covered.add(prerender.route);
     const file = prerender.fallback?.filePath;
-    if (file?.endsWith(".html")) files.add(file);
+    if (file?.endsWith(".html")) {
+      covered.add(prerender.pathname);
+      covered.add(prerender.route);
+      files.add(file);
+    } else if (!file && !prerender.pathname.includes("[")) {
+      // A `response: 'empty'` entry has no file and renders per request. A bracketed
+      // pathname is the fallback:false template of a dynamic route, which serves nothing.
+      htmlLess.add(prerender.pathname);
+    }
   }
+  if (htmlLess.size > 0) fail(`prerenders have no HTML to hash: ${[...htmlLess].join(", ")}`);
   for (const file of outputs.staticFiles) {
     covered.add(file.pathname);
     if (file.filePath.endsWith(".html")) files.add(file.filePath);
