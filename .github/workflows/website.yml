@@ -20,9 +20,99 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  verify:
+  reuse:
+    # Decides whether tests can be skipped because the identical tree already passed on dev.
+    # Every doubt must resolve to reuse=false. continue-on-error keeps a failure here
+    # (checkout, API, anything) from skipping tests through a failed needs job.
+    # The required check is the verify gate job below, which always runs: a skipped
+    # required job reports as passing, so a cancelled reuse must never leave it skipped.
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      reuse: ${{ steps.decide.outputs.reuse }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - name: Decide whether a green dev run covers this tree
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -u
+          echo "reuse=false" >> "$GITHUB_OUTPUT"
+
+          decide() {
+            local source_sha
+            case "$EVENT_NAME" in
+              pull_request)
+                [ "$PR_BASE_REF" = "main" ] || { echo "not a PR into main"; return 1; }
+                [ "$PR_HEAD_REF" = "dev" ] || { echo "PR head is not dev"; return 1; }
+                [ "$PR_HEAD_REPO" = "$GH_REPO" ] || { echo "PR head is a fork"; return 1; }
+                source_sha="$PR_HEAD_SHA"
+                ;;
+              push)
+                [ "$REF_NAME" = "main" ] || { echo "push is not to main"; return 1; }
+                source_sha="$(git rev-parse --verify --quiet HEAD^2)" || { echo "HEAD is not a merge commit"; return 1; }
+                ;;
+              *)
+                echo "event $EVENT_NAME never reuses"
+                return 1
+                ;;
+            esac
+            case "$source_sha" in
+              *[!0-9a-f]* | "") echo "bad source sha"; return 1 ;;
+            esac
+            [ "${#source_sha}" -eq 40 ] || { echo "bad source sha length"; return 1; }
+
+            # The merge commit must carry exactly the tree that dev already verified.
+            [ "$(git rev-parse --verify --quiet HEAD^2)" = "$source_sha" ] || { echo "HEAD^2 is not the source sha"; return 1; }
+            local head_tree source_tree
+            head_tree="$(git rev-parse --verify "HEAD^{tree}")" || return 1
+            source_tree="$(git rev-parse --verify "${source_sha}^{tree}")" || return 1
+            [ "$head_tree" = "$source_tree" ] || { echo "tree differs from dev head ($head_tree vs $source_tree)"; return 1; }
+
+            local run_id
+            run_id="$(gh api "repos/$GH_REPO/actions/workflows/website.yml/runs?branch=dev&event=push&head_sha=$source_sha&status=success&per_page=1" \
+              --jq '.workflow_runs[0] | select(.head_sha == "'"$source_sha"'" and .head_branch == "dev" and .event == "push" and .conclusion == "success") | .id')" || { echo "run lookup failed"; return 1; }
+            case "$run_id" in
+              "" | *[!0-9]*) echo "no successful dev push run for $source_sha"; return 1 ;;
+            esac
+
+            echo "reuse=true" >> "$GITHUB_OUTPUT"
+            echo "Reusing dev run $run_id (head $source_sha, tree $head_tree); verify skipped." >> "$GITHUB_STEP_SUMMARY"
+            echo "reusing dev run $run_id for tree $head_tree"
+          }
+
+          if ! decide; then
+            echo "Full verify runs: no reusable dev result." >> "$GITHUB_STEP_SUMMARY"
+          fi
+  tests:
+    name: tests
+    needs: reuse
+    if: ${{ !cancelled() && needs.reuse.outputs.reuse != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    container:
+      # Keep this tag equal to the playwright-core version in frontend/package-lock.json.
+      # The image ships the browsers at /ms-playwright, so no install step is needed.
+      image: mcr.microsoft.com/playwright:v1.65.0-noble@sha256:9beb546099e11f52d62e505537914870e01a67e0e6b00ae41da4775324e73dbe
+    env:
+      # Firefox in the Playwright image expects HOME=/root; the runner would set /github/home.
+      HOME: /root
     defaults:
       run:
         working-directory: frontend
@@ -72,7 +162,31 @@ jobs:
         run: npm run build:test
       - name: Verify PostHog production response
         run: npm run test:posthog:browser
-      - name: Install browsers for production checks
-        run: node node_modules/playwright-core/cli.js install --with-deps chromium firefox webkit
       - name: Verify production page and API boundaries (Chromium, Firefox, WebKit)
         run: npm run test:browser:all
+  verify:
+    # Required status check. Always runs and fails closed: it passes only when tests
+    # succeeded, or when tests were skipped because a green dev run covers this tree.
+    # A cancelled run, or a skipped tests job without a confirmed reuse, fails here.
+    name: verify
+    needs: [reuse, tests]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Require tests or a confirmed reuse
+        env:
+          REUSE: ${{ needs.reuse.outputs.reuse }}
+          TESTS_RESULT: ${{ needs.tests.result }}
+        run: |
+          if [ "$REUSE" = "true" ] && [ "$TESTS_RESULT" = "skipped" ]; then
+            echo "tests skipped: a green dev run covers this tree"
+            exit 0
+          fi
+          if [ "$TESTS_RESULT" = "success" ]; then
+            echo "tests passed"
+            exit 0
+          fi
+          echo "verify failed: reuse='$REUSE' tests='$TESTS_RESULT'"
+          exit 1
