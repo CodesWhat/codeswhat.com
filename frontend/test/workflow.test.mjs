@@ -276,7 +276,11 @@ test("the Playwright container image tag matches playwright-core in package-lock
     `Playwright image is v${image[2]} but package-lock.json locks playwright-core ${locked}. ` +
       "Bump the image tag and digest in website.yml together with playwright-core.",
   );
-  assert.match(verifyJob, /^ {6}HOME: \/root$/m, "Firefox in the Playwright image needs HOME=/root");
+  assert.match(
+    verifyJob,
+    /^ {6}HOME: \/root$/m,
+    "Firefox in the Playwright image needs HOME=/root",
+  );
 });
 
 test("reuse only considers dev-to-main promotion and fails closed", () => {
@@ -287,7 +291,11 @@ test("reuse only considers dev-to-main promotion and fails closed", () => {
   assert.doesNotMatch(reuseJob, /^ {4}container:/m);
   assert.doesNotMatch(reuseJob, /write/);
   assert.match(reuseJob, /persist-credentials: false/);
-  assert.match(reuseJob, /^ {10}echo "reuse=false" >> "\$GITHUB_OUTPUT"$/m, "default must be false");
+  assert.match(
+    reuseJob,
+    /^ {10}echo "reuse=false" >> "\$GITHUB_OUTPUT"$/m,
+    "default must be false",
+  );
   const script = reuseJob.match(/^ {8}run: \|\n((?: {10}.*\n|\n)*)/m)?.[1];
   assert.ok(script, "reuse must have a decide script");
   assert.match(script, /\[ "\$PR_BASE_REF" = "main" \]/);
@@ -317,7 +325,11 @@ test("run scripts take every GitHub expression through env, never inline", () =>
           body.push(lines[j]);
         }
       }
-      assert.doesNotMatch(body.join("\n"), /\$\{\{/, `${name}: run script at line ${i + 1} interpolates an expression`);
+      assert.doesNotMatch(
+        body.join("\n"),
+        /\$\{\{/,
+        `${name}: run script at line ${i + 1} interpolates an expression`,
+      );
     }
   }
 });
