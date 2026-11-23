@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
 const workflow = readFileSync(
@@ -159,4 +159,101 @@ test("the verification guard rejects a removed step or an if:/continue-on-error:
       `continue-on-error with a space before the colon on ${run}`,
     );
   }
+});
+
+// Every workflow in the repo, including the security scanners, shares the same
+// supply-chain invariants.
+const WORKFLOW_DIR = new URL("../../.github/workflows/", import.meta.url);
+const workflowFiles = readdirSync(WORKFLOW_DIR).filter((name) => /\.ya?ml$/.test(name));
+const readWorkflow = (name) => readFileSync(new URL(name, WORKFLOW_DIR), "utf8");
+
+test("the security scanning workflows exist alongside website.yml", () => {
+  for (const name of ["website.yml", "codeql.yml", "scorecard.yml"]) {
+    assert.ok(workflowFiles.includes(name), `${name} must exist`);
+  }
+});
+
+test("every workflow pins each action to a full commit SHA with a version comment", () => {
+  for (const name of workflowFiles) {
+    const lines = stripComments(readWorkflow(name))
+      .split("\n")
+      .filter((line) => /^\s*(?:- )?uses:/.test(line));
+    assert.ok(lines.length > 0, `${name} uses at least one action`);
+  }
+  for (const name of workflowFiles) {
+    // Read the raw file: the version comment is a trailing comment, not a comment-only line.
+    for (const line of readWorkflow(name).split("\n")) {
+      if (!/^\s*(?:- )?uses:/.test(line)) continue;
+      assert.match(
+        line,
+        /uses:\s*[\w.-]+\/[\w./-]+@[0-9a-f]{40}\s+# v\d+\.\d+\.\d+\s*$/,
+        `${name}: ${line.trim()}`,
+      );
+    }
+  }
+});
+
+test("no workflow uses pull_request_target or persists checkout credentials", () => {
+  for (const name of workflowFiles) {
+    const text = stripComments(readWorkflow(name));
+    assert.doesNotMatch(text, /pull_request_target/, `${name} must not use pull_request_target`);
+    const checkouts = [...text.matchAll(/uses: actions\/checkout@[^\n]*\n((?: {8,}.*\n)*)/g)];
+    assert.ok(checkouts.length > 0, `${name} checks out the repository`);
+    for (const [, withBlock] of checkouts) {
+      assert.match(withBlock, /persist-credentials: false/, `${name} checkout`);
+    }
+  }
+});
+
+test("every workflow declares least-privilege top-level permissions", () => {
+  for (const name of workflowFiles) {
+    const text = stripComments(readWorkflow(name));
+    const top = text.match(/^permissions:[ \t]*(\S*)\n((?: {2}.*\n)*)/m);
+    assert.ok(top, `${name} must declare top-level permissions`);
+    const granted = top[1] || top[2];
+    assert.doesNotMatch(granted, /write/, `${name} top-level permissions must not grant write`);
+  }
+});
+
+test("codeql.yml scans javascript-typescript and actions on push, PR and a schedule", () => {
+  const text = stripComments(readWorkflow("codeql.yml"));
+  const on = extractBlocks(text).triggers;
+  assert.match(on, /^ {2}push:\n {4}branches:\n {6}- main$/m);
+  assert.match(on, /^ {2}pull_request:\n {4}branches:\n {6}- main$/m);
+  assert.match(on, /^ {2}schedule:\n {4}- cron:/m);
+  assert.match(text, /^ {10}- javascript-typescript$/m);
+  assert.match(text, /^ {10}- actions$/m);
+  assert.match(text, /^permissions:\n {2}contents: read$/m);
+  assert.match(text, /^ {6}security-events: write$/m);
+  assert.match(text, /^ {6}actions: read$/m);
+});
+
+test("scorecard.yml follows the OpenSSF template and publishes results", () => {
+  const text = stripComments(readWorkflow("scorecard.yml"));
+  const on = extractBlocks(text).triggers;
+  assert.match(on, /^ {2}push:\n {4}branches:\n {6}- main$/m);
+  assert.match(on, /^ {2}schedule:\n {4}- cron:/m);
+  assert.match(on, /^ {2}branch_protection_rule:/m);
+  assert.match(text, /^permissions: read-all$/m);
+  assert.match(text, /^ {6}security-events: write$/m);
+  assert.match(text, /^ {6}id-token: write$/m);
+  assert.match(text, /uses: ossf\/scorecard-action@/);
+  assert.match(text, /publish_results: true/);
+  assert.match(text, /uses: github\/codeql-action\/upload-sarif@/);
+});
+
+test("verify downloads a pinned gitleaks binary, checks its sha256 and scans history", () => {
+  const step = extractSteps(verifyJob).find((candidate) => /gitleaks/.test(candidate.body));
+  assert.ok(step, "verify must have a gitleaks step");
+  assert.deepEqual(step.bypass, [], "the gitleaks step must be unconditional and blocking");
+  assert.match(step.body, /GITLEAKS_VERSION: \d+\.\d+\.\d+/);
+  assert.match(step.body, /GITLEAKS_SHA256: [0-9a-f]{64}\b/);
+  assert.match(step.body, /sha256sum --check --strict/);
+  assert.match(step.body, /gitleaks" git --redact/);
+  assert.doesNotMatch(workflow, /gitleaks\/gitleaks-action/);
+  assert.match(verifyJob, /fetch-depth: 0/);
+  assert.ok(
+    verifyJob.indexOf("sha256sum --check") < verifyJob.indexOf('gitleaks" git'),
+    "the checksum must be verified before the binary runs",
+  );
 });

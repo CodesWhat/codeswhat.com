@@ -31,6 +31,20 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - name: Scan history for secrets (gitleaks)
+        # Pinned release binary, verified against the sha256 from the v8.30.1 checksums file.
+        working-directory: .
+        env:
+          GITLEAKS_VERSION: 8.30.1
+          GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          scratch="$(mktemp -d)"
+          curl -fsSL -o "$scratch/$archive" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/$archive"
+          echo "$GITLEAKS_SHA256  $scratch/$archive" | sha256sum --check --strict
+          tar -xzf "$scratch/$archive" -C "$scratch" gitleaks
+          "$scratch/gitleaks" git --redact --no-banner --verbose
       - name: Set up Node.js
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
