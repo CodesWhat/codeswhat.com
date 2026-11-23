@@ -21,10 +21,11 @@ concurrency:
 
 jobs:
   reuse:
-    # Decides whether verify can be skipped because the identical tree already passed on dev.
-    # A skipped required job reports as passing, so every doubt must resolve to reuse=false.
-    # continue-on-error keeps a failure here (checkout, API, anything) from skipping verify:
-    # a failed needs job would otherwise skip it, and a skip counts as a pass.
+    # Decides whether tests can be skipped because the identical tree already passed on dev.
+    # Every doubt must resolve to reuse=false. continue-on-error keeps a failure here
+    # (checkout, API, anything) from skipping tests through a failed needs job.
+    # The required check is the verify gate job below, which always runs: a skipped
+    # required job reports as passing, so a cancelled reuse must never leave it skipped.
     runs-on: ubuntu-latest
     timeout-minutes: 5
     continue-on-error: true
@@ -99,9 +100,10 @@ jobs:
           if ! decide; then
             echo "Full verify runs: no reusable dev result." >> "$GITHUB_STEP_SUMMARY"
           fi
-  verify:
+  tests:
+    name: tests
     needs: reuse
-    if: needs.reuse.outputs.reuse != 'true'
+    if: ${{ !cancelled() && needs.reuse.outputs.reuse != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     container:
@@ -162,3 +164,29 @@ jobs:
         run: npm run test:posthog:browser
       - name: Verify production page and API boundaries (Chromium, Firefox, WebKit)
         run: npm run test:browser:all
+  verify:
+    # Required status check. Always runs and fails closed: it passes only when tests
+    # succeeded, or when tests were skipped because a green dev run covers this tree.
+    # A cancelled run, or a skipped tests job without a confirmed reuse, fails here.
+    name: verify
+    needs: [reuse, tests]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: Require tests or a confirmed reuse
+        env:
+          REUSE: ${{ needs.reuse.outputs.reuse }}
+          TESTS_RESULT: ${{ needs.tests.result }}
+        run: |
+          if [ "$REUSE" = "true" ] && [ "$TESTS_RESULT" = "skipped" ]; then
+            echo "tests skipped: a green dev run covers this tree"
+            exit 0
+          fi
+          if [ "$TESTS_RESULT" = "success" ]; then
+            echo "tests passed"
+            exit 0
+          fi
+          echo "verify failed: reuse='$REUSE' tests='$TESTS_RESULT'"
+          exit 1
