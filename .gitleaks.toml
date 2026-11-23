@@ -1,0 +1,13 @@
+title = "codeswhat.com gitleaks config"
+
+[extend]
+useDefault = true
+
+# Only proven public test fixtures are allowlisted. Real keys live in Vercel.
+[[allowlists]]
+description = "Public test fixtures"
+regexTarget = "secret"
+regexes = [
+  '''^1x00000000000000000000AA$''',
+  '''^phc_ci_fixture$''',
+]

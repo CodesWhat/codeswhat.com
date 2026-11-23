@@ -10,3 +10,26 @@ pre-commit:
     - name: typecheck
       root: frontend/
       run: npx tsc --noEmit
+
+    - name: gitleaks
+      run: |
+        if command -v gitleaks >/dev/null 2>&1; then
+          gitleaks git --staged --redact --no-banner
+        else
+          echo "gitleaks not installed, skipping secret scan (brew install gitleaks)"
+        fi
+
+pre-push:
+  jobs:
+    - name: qlty
+      run: |
+        if command -v qlty >/dev/null 2>&1 || [ -x "$HOME/.qlty/bin/qlty" ]; then
+          PATH="$HOME/.qlty/bin:$PATH"
+          if git rev-parse --verify --quiet origin/dev >/dev/null; then
+            qlty check --upstream origin/dev
+          else
+            qlty check
+          fi
+        else
+          echo "qlty not installed, skipping qlty check (https://qlty.sh)"
+        fi
