@@ -18,6 +18,7 @@ function extractBlocks(yaml) {
   const text = stripComments(yaml);
   return {
     jobs: text.match(/^jobs:\n((?: {2,}.*\n|\n)*)/m)?.[1],
+    reuseJob: text.match(/^ {2}reuse:\n((?: {4}.*\n|\n)*)/m)?.[1],
     verifyJob: text.match(/^ {2}verify:\n((?: {4}.*\n|\n)*)/m)?.[1],
     triggers: text.match(/^on:\n((?: {2}.*\n|\n)*)/m)?.[1],
   };
@@ -55,7 +56,7 @@ function verificationProblems(verify) {
   return problems;
 }
 
-const { jobs, verifyJob, triggers } = extractBlocks(workflow);
+const { jobs, reuseJob, verifyJob, triggers } = extractBlocks(workflow);
 const PATH_FILTER = /\bpaths(-ignore)?:/;
 
 test("the workflow defines triggers and a verify job", () => {
@@ -64,14 +65,18 @@ test("the workflow defines triggers and a verify job", () => {
   assert.ok(verifyJob, "jobs.verify must exist");
 });
 
-test("verify has no job-level condition, so it can never be skipped", () => {
-  assert.doesNotMatch(verifyJob, /^ {4}if:/m);
+test("verify's only job-level condition is the reuse skip, so nothing else can skip it", () => {
+  assert.deepEqual(
+    [...verifyJob.matchAll(/^ {4}if:.*$/gm)].map((m) => m[0]),
+    ["    if: needs.reuse.outputs.reuse != 'true'"],
+  );
+  assert.match(verifyJob, /^ {4}needs: reuse$/m);
 });
 
-test("verify is the only job, keeps its key as the check name, and has no matrix", () => {
+test("jobs are reuse and verify, verify keeps its key as the check name, and has no matrix", () => {
   assert.deepEqual(
     [...jobs.matchAll(/^ {2}([\w-]+):/gm)].map((m) => m[1]),
-    ["verify"],
+    ["reuse", "verify"],
   );
   assert.doesNotMatch(verifyJob, /^ {4}name:/m, "a name: would change the check context");
   assert.doesNotMatch(verifyJob, /\bmatrix\b/);
@@ -81,8 +86,8 @@ test("triggers have no paths or paths-ignore filters", () => {
   assert.doesNotMatch(triggers, PATH_FILTER);
 });
 
-test("verify installs and runs all three browser engines", () => {
-  assert.match(verifyJob, /install --with-deps chromium firefox webkit/);
+test("verify runs all three browser engines from the Playwright image, with no install step", () => {
+  assert.doesNotMatch(verifyJob, /playwright(-core)?\/cli\.js install|playwright install/);
   assert.match(verifyJob, /npm run test:browser:all/);
   const pkg = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
   for (const engine of ["chromium", "firefox", "webkit"]) {
@@ -256,4 +261,63 @@ test("verify downloads a pinned gitleaks binary, checks its sha256 and scans his
     verifyJob.indexOf("sha256sum --check") < verifyJob.indexOf('gitleaks" git'),
     "the checksum must be verified before the binary runs",
   );
+});
+
+test("the Playwright container image tag matches playwright-core in package-lock.json", () => {
+  const lock = JSON.parse(readFileSync(new URL("../package-lock.json", import.meta.url), "utf8"));
+  const locked = lock.packages["node_modules/playwright-core"].version;
+  const image = verifyJob.match(
+    /^ {4}container:\n {6}image: (mcr\.microsoft\.com\/playwright:v([\d.]+)-[\w.-]+@sha256:[0-9a-f]{64})$/m,
+  );
+  assert.ok(image, "verify must run in a digest-pinned mcr.microsoft.com/playwright container");
+  assert.equal(
+    image[2],
+    locked,
+    `Playwright image is v${image[2]} but package-lock.json locks playwright-core ${locked}. ` +
+      "Bump the image tag and digest in website.yml together with playwright-core.",
+  );
+  assert.match(verifyJob, /^ {6}HOME: \/root$/m, "Firefox in the Playwright image needs HOME=/root");
+});
+
+test("reuse only considers dev-to-main promotion and fails closed", () => {
+  assert.ok(reuseJob, "jobs.reuse must exist");
+  assert.match(reuseJob, /^ {4}continue-on-error: true$/m, "a reuse failure must not skip verify");
+  assert.match(reuseJob, /^ {6}contents: read$/m);
+  assert.match(reuseJob, /^ {6}actions: read$/m);
+  assert.doesNotMatch(reuseJob, /^ {4}container:/m);
+  assert.doesNotMatch(reuseJob, /write/);
+  assert.match(reuseJob, /persist-credentials: false/);
+  assert.match(reuseJob, /^ {10}echo "reuse=false" >> "\$GITHUB_OUTPUT"$/m, "default must be false");
+  const script = reuseJob.match(/^ {8}run: \|\n((?: {10}.*\n|\n)*)/m)?.[1];
+  assert.ok(script, "reuse must have a decide script");
+  assert.match(script, /\[ "\$PR_BASE_REF" = "main" \]/);
+  assert.match(script, /\[ "\$PR_HEAD_REF" = "dev" \]/);
+  assert.match(script, /\[ "\$PR_HEAD_REPO" = "\$GH_REPO" \]/);
+  assert.match(script, /\[ "\$REF_NAME" = "main" \]/);
+  assert.match(script, /HEAD\^2/);
+  assert.match(script, /\[ "\$head_tree" = "\$source_tree" \]/);
+  assert.match(script, /branch=dev&event=push&head_sha=\$source_sha&status=success/);
+});
+
+test("run scripts take every GitHub expression through env, never inline", () => {
+  for (const name of workflowFiles) {
+    const text = stripComments(readWorkflow(name));
+    // Walk each run: block (single-line or literal block) and reject ${{ }} inside it.
+    const lines = text.split("\n");
+    for (let i = 0; i < lines.length; i++) {
+      const start = lines[i].match(/^(\s*)(?:- )?run:\s*(.*)$/);
+      if (!start) continue;
+      const indent = start[1].length;
+      const body = [start[2]];
+      if (/^[|>]/.test(start[2])) {
+        body.length = 0;
+        for (let j = i + 1; j < lines.length; j++) {
+          const lead = lines[j].match(/^\s*/)[0].length;
+          if (lines[j].trim() !== "" && lead <= indent) break;
+          body.push(lines[j]);
+        }
+      }
+      assert.doesNotMatch(body.join("\n"), /\$\{\{/, `${name}: run script at line ${i + 1} interpolates an expression`);
+    }
+  }
 });
