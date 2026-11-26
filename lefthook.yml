@@ -3,7 +3,7 @@ pre-commit:
   jobs:
     - name: biome
       root: frontend/
-      glob: "*.{js,ts,jsx,tsx,json,css}"
+      glob: "*.{js,mjs,cjs,ts,mts,jsx,tsx,json,css}"
       run: npx @biomejs/biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
 
