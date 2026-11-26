@@ -157,6 +157,12 @@ export default function Home() {
                 </article>
               </li>
             ))}
+            <li className={styles.plateNote} aria-hidden="true">
+              <div className={styles.dotCard}>
+                <p className={styles.eyebrow}>Commissions</p>
+                <p className={styles.dotCardBig}>Taken on, one at a time.</p>
+              </div>
+            </li>
           </ul>
         </section>
 
