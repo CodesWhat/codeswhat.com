@@ -14,10 +14,10 @@ on:
 permissions:
   contents: read
 
-# A newer push to the same PR supersedes the running scan; pushes to main and the
-# weekly run are keyed by their own ref and are never cancelled.
+# A newer push to the same PR supersedes the running scan. Pushes to main and the
+# weekly run get a unique group per run, so a pending scan is never replaced.
 concurrency:
-  group: codeql-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: codeql-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:

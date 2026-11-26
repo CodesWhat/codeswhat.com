@@ -267,7 +267,7 @@ test("codeql.yml scans javascript-typescript and actions on push, PR and a sched
   // Scorecard's SAST check looks for a scan on each merged PR, and dev PRs are most of them.
   assert.match(
     text,
-    /^concurrency:\n {2}group: codeql-.*\n {2}cancel-in-progress: .*pull_request/m,
+    /^concurrency:\n {2}group: codeql-\$\{\{ github\.event\.pull_request\.number \|\| github\.run_id \}\}\n {2}cancel-in-progress: .*pull_request/m,
   );
   assert.match(text, /^ {10}- javascript-typescript$/m);
   assert.match(text, /^ {10}- actions$/m);
