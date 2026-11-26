@@ -7,11 +7,18 @@ on:
   pull_request:
     branches:
       - main
+      - dev
   schedule:
     - cron: "23 4 * * 1"
 
 permissions:
   contents: read
+
+# A newer push to the same PR supersedes the running scan; pushes to main and the
+# weekly run are keyed by their own ref and are never cancelled.
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   analyze:

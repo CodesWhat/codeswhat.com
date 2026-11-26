@@ -262,8 +262,13 @@ test("codeql.yml scans javascript-typescript and actions on push, PR and a sched
   const text = stripComments(readWorkflow("codeql.yml"));
   const on = extractBlocks(text).triggers;
   assert.match(on, /^ {2}push:\n {4}branches:\n {6}- main$/m);
-  assert.match(on, /^ {2}pull_request:\n {4}branches:\n {6}- main$/m);
+  assert.match(on, /^ {2}pull_request:\n {4}branches:\n {6}- main\n {6}- dev$/m);
   assert.match(on, /^ {2}schedule:\n {4}- cron:/m);
+  // Scorecard's SAST check looks for a scan on each merged PR, and dev PRs are most of them.
+  assert.match(
+    text,
+    /^concurrency:\n {2}group: codeql-.*\n {2}cancel-in-progress: .*pull_request/m,
+  );
   assert.match(text, /^ {10}- javascript-typescript$/m);
   assert.match(text, /^ {10}- actions$/m);
   assert.match(text, /^permissions:\n {2}contents: read$/m);
