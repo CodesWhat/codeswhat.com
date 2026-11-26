@@ -7,11 +7,18 @@ on:
   pull_request:
     branches:
       - main
+      - dev
   schedule:
     - cron: "23 4 * * 1"
 
 permissions:
   contents: read
+
+# A newer push to the same PR supersedes the running scan. Pushes to main and the
+# weekly run get a unique group per run, so a pending scan is never replaced.
+concurrency:
+  group: codeql-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   analyze:
