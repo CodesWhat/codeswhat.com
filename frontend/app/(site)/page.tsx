@@ -157,11 +157,11 @@ export default function Home() {
                 </article>
               </li>
             ))}
-            <li className={styles.plateNote} aria-hidden="true">
-              <div className={styles.dotCard}>
+            <li className={styles.plateNote}>
+              <aside className={styles.dotCard} aria-label="Commissions note">
                 <p className={styles.eyebrow}>Commissions</p>
                 <p className={styles.dotCardBig}>Taken on, one at a time.</p>
-              </div>
+              </aside>
             </li>
           </ul>
         </section>
@@ -178,7 +178,7 @@ export default function Home() {
                 help you ship it faster.
               </p>
             </div>
-            <aside className={styles.dotCard} aria-label="Commissions note">
+            <aside className={`${styles.dotCard} ${styles.headNote}`} aria-label="Commissions note">
               <p className={styles.eyebrow}>Commissions</p>
               <p className={styles.dotCardBig}>Taken on, one at a time.</p>
             </aside>

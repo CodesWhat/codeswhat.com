@@ -703,6 +703,9 @@
   display: none;
 }
 @media (min-width: 980px) {
+  .headNote {
+    display: none;
+  }
   .plateNote {
     display: grid;
     place-items: center;
