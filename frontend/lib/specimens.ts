@@ -127,7 +127,7 @@ const FIELD: Record<string, Field> = {
     temperament: "Won't blink first.",
     marks: "Two red eyes on a yellow tile, pupils wide open. It's been up a while.",
     handling:
-      "A menu bar app that keeps your Mac awake: timed holds, triggers, a CLI for agents, and an opt-in closed-lid mode. Public beta.",
+      "A menu bar app that keeps your Mac awake: timed holds, triggers, a CLI for agents, and an opt-in, still experimental closed-lid mode.",
     alt: "Pixel art of a yellow tile with two wide red-outlined eyes and small square pupils",
     docs: `${GITHUB_URL}/dilated/tree/main/docs`,
     repo: `${GITHUB_URL}/dilated`,
