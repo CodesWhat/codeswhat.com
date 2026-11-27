@@ -25,7 +25,7 @@ Then run the PostHog response contract against the canonical domain:
 POSTHOG_BROWSER_BASE_URL=https://codeswhat.com npm run test:posthog:browser
 ```
 
-CI (`.github/workflows/website.yml`, `verify` job) runs `test:posthog`, builds with `build:test`,
+CI (`.github/workflows/website.yml`, `tests` job) runs `test:posthog`, builds with `build:test`,
 then runs `test:posthog:browser` against an isolated local production server and
 `test:browser:all` on Chromium, Firefox and WebKit. Without
 `POSTHOG_BROWSER_BASE_URL`, the response contract starts and stops its own server;
