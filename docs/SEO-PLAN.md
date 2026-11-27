@@ -94,7 +94,7 @@ const jsonLd = {
 
 The organization selected one US PostHog project, `CodesWhat Public Websites`,
 with the managed proxy `https://e.codeswhat.com`. The website initializes the
-pinned `posthog-js@1.417.0` SDK only from `instrumentation-client.ts` and sends
+exact-pinned `posthog-js` SDK (see `frontend/package.json`) only from `instrumentation-client.ts` and sends
 only sanitized `$pageview`, `cta activated`, and `$web_vitals` events. Cookies,
 persistence, autocapture, session recording, and query/hash URL data stay off.
 
@@ -185,13 +185,13 @@ export const metadata: Metadata = {
 ## Implementation Timeline
 
 ### Week 1
-- [ ] Implement robots.txt
-- [ ] Create dynamic sitemap
+- [x] Implement robots.txt
+- [x] Create dynamic sitemap
 - [x] Set up privacy-first PostHog analytics
-- [ ] Verify Google Search Console
+- [x] Verify Google Search Console
 
 ### Week 2
-- [ ] Add structured data
+- [x] Add structured data
 - [ ] Optimize existing metadata
 - [x] Set up PostHog (shared US project and managed proxy)
 - [ ] Create SEO monitoring dashboard

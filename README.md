@@ -17,12 +17,17 @@ Turnstile fixtures the page reads at build time. CI runs `npm run test:browser:a
 which repeats it on Chromium, Firefox and WebKit. It uses a temporary local
 server and blocks external requests.
 The root Lefthook configuration runs staged Biome checks and typechecking at
-commit time. Keep those checks enabled.
+commit time, plus gitleaks on staged changes when it's installed. Pre-push runs
+`qlty check` against `origin/dev` when qlty is installed. Keep those checks enabled.
 
 Changes go through a feature PR into `dev`, followed by a reviewed promotion
 from `dev` to `main`. Preserve the same tested content through promotion.
-The `Website contracts` workflow (`verify` job) checks pull requests and pushes
-to `dev` and `main`.
+The `Website contracts` workflow checks pull requests and pushes to `dev` and
+`main`. The test work runs in a `tests` job inside the digest-pinned Playwright
+container. A `reuse` job skips it when the exact tree already passed on a `dev`
+push, and the always-run `verify` job is the gate (the required check). CodeQL
+runs on pushes to `main`, pull requests to `main` and `dev`, and weekly. OpenSSF
+Scorecard runs on pushes to `main`, weekly and on branch protection changes.
 
 ## Deployment and verification
 
